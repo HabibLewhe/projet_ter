@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stop_watch_timer/stop_watch_timer.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,7 +12,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Time Tracker',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -24,7 +25,7 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'Test chronometre'),
     );
   }
 }
@@ -48,68 +49,217 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  final _isHours = true;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+  final StopWatchTimer _stopWatchTimer = StopWatchTimer(
+    mode: StopWatchMode.countUp,
+    /* DEBUG
+    onChange: (value) => print('onChange $value'),
+    onChangeRawSecond: (value) => print('onChangeRawSecond $value'),
+    onChangeRawMinute: (value) => print('onChangeRawMinute $value'),
+    onStopped: () {
+      print('onStop');
+    },
+    onEnded: () {
+      print('onEnded');
+    },
+    */
+  );
+
+  @override
+  void initState() {
+    super.initState();
+
+    /* DEBUG
+    _stopWatchTimer.rawTime.listen((value) =>
+        print('rawTime $value ${StopWatchTimer.getDisplayTime(value)}'));
+    _stopWatchTimer.minuteTime.listen((value) => print('minuteTime $value'));
+    _stopWatchTimer.secondTime.listen((value) => print('secondTime $value'));
+    _stopWatchTimer.records.listen((value) => print('records $value'));
+    _stopWatchTimer.fetchStopped
+        .listen((value) => print('stopped from stream'));
+    _stopWatchTimer.fetchEnded.listen((value) => print('ended from stream'));
+    */
+  }
+
+  @override
+  void dispose() async {
+    super.dispose();
+    await _stopWatchTimer.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        title: const Text('Test chronometre'),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
+      body: Scrollbar(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              vertical: 32,
+              horizontal: 16,
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                /// Display stop watch time
+                StreamBuilder<int>(
+                  stream: _stopWatchTimer.rawTime,
+                  initialData: _stopWatchTimer.rawTime.value,
+                  builder: (context, snap) {
+                    final value = snap.data!;
+                    final displayTime =
+                    StopWatchTimer.getDisplayTime(value, hours: _isHours);
+                    return Column(
+                      children: <Widget>[
+                        Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Text(
+                            displayTime,
+                            style: const TextStyle(
+                                fontSize: 40,
+                                fontFamily: 'Helvetica',
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Text(
+                            value.toString(),
+                            style: const TextStyle(
+                                fontSize: 16,
+                                fontFamily: 'Helvetica',
+                                fontWeight: FontWeight.w400),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+
+                /// Display every minute.
+                StreamBuilder<int>(
+                  stream: _stopWatchTimer.minuteTime,
+                  initialData: _stopWatchTimer.minuteTime.value,
+                  builder: (context, snap) {
+                    final value = snap.data;
+                    return Column(
+                      children: <Widget>[
+                        Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: <Widget>[
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 4),
+                                  child: Text(
+                                    'minute',
+                                    style: TextStyle(
+                                      fontSize: 17,
+                                      fontFamily: 'Helvetica',
+                                    ),
+                                  ),
+                                ),
+                                Padding(
+                                  padding:
+                                  const EdgeInsets.symmetric(horizontal: 4),
+                                  child: Text(
+                                    value.toString(),
+                                    style: const TextStyle(
+                                        fontSize: 30,
+                                        fontFamily: 'Helvetica',
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            )),
+                      ],
+                    );
+                  },
+                ),
+
+                /// Display every second.
+                StreamBuilder<int>(
+                  stream: _stopWatchTimer.secondTime,
+                  initialData: _stopWatchTimer.secondTime.value,
+                  builder: (context, snap) {
+                    final value = snap.data;
+                    return Column(
+                      children: <Widget>[
+                        Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: <Widget>[
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 4),
+                                  child: Text(
+                                    'second',
+                                    style: TextStyle(
+                                      fontSize: 17,
+                                      fontFamily: 'Helvetica',
+                                    ),
+                                  ),
+                                ),
+                                Padding(
+                                  padding:
+                                  const EdgeInsets.symmetric(horizontal: 4),
+                                  child: Text(
+                                    value.toString(),
+                                    style: const TextStyle(
+                                      fontSize: 30,
+                                      fontFamily: 'Helvetica',
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )),
+                      ],
+                    );
+                  },
+                ),
+
+                /// Button
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: IconButton(
+                        color: Colors.green,
+                        onPressed: _stopWatchTimer.onStartTimer,
+                        icon: const Icon(Icons.play_arrow),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: IconButton(
+                        color: Colors.lightBlue,
+                        onPressed: _stopWatchTimer.onStopTimer,
+                        icon: const Icon(Icons.pause),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: IconButton(
+                        color: Colors.red,
+                        onPressed: _stopWatchTimer.onResetTimer,
+                        icon: const Icon(Icons.clear)
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
