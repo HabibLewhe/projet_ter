@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:stop_watch_timer/stop_watch_timer.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 
 void main() {
   runApp(const MyApp());
@@ -16,8 +18,73 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Test chronometre'),
+      home: const MyHomePage(title: 'Tests chronomètre et localisation'),
     );
+  }
+}
+
+class MapPage extends StatelessWidget {
+  const MapPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        appBar: AppBar(
+          title: const Text('Test carte avec marqueurs'),
+        ),
+        body: FlutterMap(
+          options: MapOptions(
+            center: LatLng(47.8424, 1.9345),
+            zoom: 16,
+            interactiveFlags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+          ),
+          nonRotatedChildren: [
+            AttributionWidget.defaultWidget(
+              source: 'OpenStreetMap contributors',
+              onSourceTapped: null,
+            ),
+          ],
+          children: [
+            TileLayer(
+              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+              userAgentPackageName: 'time_tracker.app',
+            ),
+            MarkerLayer(
+              markers: [
+                Marker(
+                  point: LatLng(47.84519, 1.93985),
+                  width: 40,
+                  height: 40,
+                  builder: (context) => const Icon(
+                    Icons.location_pin,
+                    color: Colors.red,
+                    size: 40,
+                  ),
+                ),
+                Marker(
+                  point: LatLng(47.84473, 1.93752),
+                  width: 40,
+                  height: 40,
+                  builder: (context) => const Icon(
+                    Icons.location_pin,
+                    color: Colors.red,
+                    size: 40,
+                  ),
+                ),
+                Marker(
+                  point: LatLng(47.84663, 1.93659),
+                  width: 40,
+                  height: 40,
+                  builder: (context) => const Icon(
+                    Icons.location_pin,
+                    color: Colors.red,
+                    size: 40,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ));
   }
 }
 
@@ -117,7 +184,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Test chronometre'),
+        title: const Text('Tests chronomètre et localisation'),
       ),
       body: Scrollbar(
         child: SingleChildScrollView(
@@ -284,12 +351,25 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      TextButton(onPressed: _determinePosition, child: const Text('Obtenir la localisation')),
+                      ElevatedButton(
+                          onPressed: _determinePosition,
+                          child: const Text('Obtenir la localisation')),
                       Text('LAT: ${_currentPosition?.latitude ?? ""}'),
                       Text('LNG: ${_currentPosition?.longitude ?? ""}'),
                     ],
                   ),
                 ),
+
+                Center(
+                    child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const MapPage()),
+                          );
+                        },
+                        child: const Text('Voir l\'exemple de carte')))
               ],
             ),
           ),
