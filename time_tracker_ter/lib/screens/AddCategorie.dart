@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 // import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -22,9 +23,8 @@ class _AddCatePageState extends State<AddCatePage> {
   void addCategorie() async {
     Database database = await InitDatabase().database;
     //get id_user connected
-    // SharedPreferences prefs = await SharedPreferences.getInstance();
-    // int id_user = prefs.getInt('userId');
-    int id_user = 1;
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int id_user = prefs.getInt('userId');
     if (id_user != null) {
       //insert new categorie
       await database.insert('categories', {
@@ -36,7 +36,7 @@ class _AddCatePageState extends State<AddCatePage> {
     }
 
     //go back to home page
-    Navigator.of(context).pop(true);
+    Navigator.of(context).pop({'categorie': nom.text, 'couleur': '0xFF73AEF5'});
   }
 
 

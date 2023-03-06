@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_login_ui/model/Categorie.dart';
 import 'package:flutter_login_ui/screens/AddCategorie.dart';
 import 'package:page_transition/page_transition.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
-
 import '../model/InitDatabase.dart';
 import 'login_screen.dart';
 
@@ -23,17 +22,18 @@ class _MyHomePageState extends State<MyHomePage> {
   //list of categories
   List<Categorie> categories = [];
 
-
-  _MyHomePageState() {
+  @override
+  void initState() {
+    super.initState();
     getCategories();
   }
 
   void getCategories() async {
     Database database = await InitDatabase().database;
     //get id_user connected
-    // SharedPreferences prefs = await SharedPreferences.getInstance();
-    // int id_user = prefs.getInt('userId');
-    int id_user = 2;
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int id_user = prefs.getInt('userId');
+    print(id_user);
     if (id_user != null) {
       var cats = await database.query(
           'categories',
@@ -41,16 +41,16 @@ class _MyHomePageState extends State<MyHomePage> {
           where: 'id_categorie_sup = 1 AND id_user = ?',
           whereArgs: [id_user]
       );
-      //print all categories one by one
-      cats.forEach((element) {
-        categories.add(Categorie.fromMap(element));
+      setState(() {
+        categories = cats.map((e) => Categorie.fromMap(e)).toList();
       });
+      //print all categories one by one
+
     }
   }
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppBar(
         title: Text("Overview"),
@@ -256,10 +256,6 @@ class _MyHomePageState extends State<MyHomePage> {
               //for each category in the database, create a row
               for (var categorie in categories)
                 buildRow(Icons.folder,categorie.nom),
-              Divider(
-                color: _color3,
-                thickness: 1,
-              ),
             ],
           ),
         ),

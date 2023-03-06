@@ -34,7 +34,7 @@ class InitDatabase {
     await db.execute(" CREATE TABLE users ("
                         "id	INTEGER NOT NULL,"
                         "username	VARCHAR(255) NOT NULL,"
-                        "email	VARCHAR(255) NOT NULL,"
+                        "email	VARCHAR(255) NOT NULL UNIQUE,"
                         "password	VARCHAR(255) NOT NULL,"
                         "registered_on	DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,"
                         "PRIMARY KEY(id))"
