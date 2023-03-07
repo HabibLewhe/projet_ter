@@ -26,7 +26,7 @@ class InitDatabase {
 
   _initDatabase() async {
     String path = await getDatabasesPath();
-    path = join(path, 'data.db');
+    path = join(path, 'base.db');
     return await openDatabase(path, version: 1, onCreate: _onCreate);
   }
 

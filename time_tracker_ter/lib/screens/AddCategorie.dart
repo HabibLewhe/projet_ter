@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
-
 import '../model/InitDatabase.dart';
+import '../model/Categorie.dart';
 import '../utilities/constants.dart';
 
 class AddCatePage extends StatefulWidget {
+
+  final Function(Categorie) onDataAdded;
+
+  AddCatePage({this.onDataAdded});
+
   @override
   _AddCatePageState createState() => _AddCatePageState();
 }
@@ -23,20 +26,31 @@ class _AddCatePageState extends State<AddCatePage> {
   void addCategorie() async {
     Database database = await InitDatabase().database;
     //get id_user connected
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    int id_user = prefs.getInt('userId');
-    if (id_user != null) {
-      //insert new categorie
-      await database.insert('categories', {
-        'nom': nom.text,
-        'couleur': '0xFF73AEF5',
-        'id_categorie_sup': 1,
-        'id_user': id_user,
-      });
-    }
+    //create new categorie
 
+    var categorie = Categorie(
+        nom: nom.text,
+        couleur: '0xFF73AEF5',
+        id_categorie_sup: 1,
+        id_user: 1);
+
+    final id = await database.insert('categories', {
+      'nom': nom.text,
+      'couleur': '0xFF73AEF5',
+      'id_categorie_sup': 1,
+      'id_user': 1,
+    });
+
+    //get the categorie created
+    var categorieCreated = await database.query(
+        'categories',
+        //where email and password are equal to the email and password entered by the user
+        where: 'id = ?',
+        whereArgs: [id]);
+
+    widget.onDataAdded(Categorie.fromMap(categorieCreated.first));
     //go back to home page
-    Navigator.of(context).pop({'categorie': nom.text, 'couleur': '0xFF73AEF5'});
+    Navigator.of(context).pop();
   }
 
 
