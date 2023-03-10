@@ -1,7 +1,8 @@
-# time_tracker_ter
+# Flutter Login UI
 
-A new Flutter project.
+[YouTube Speed Code](https://www.youtube.com/watch?v=6kaEbTfb444)
 
+<<<<<<< HEAD
 ## Getting Started
 
 This project is a starting point for a Flutter application.
@@ -17,3 +18,6 @@ samples, guidance on mobile development, and a full API reference.
 
 ## Access token
 ### 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
+=======
+[Design Credit](https://dribbble.com/shots/5871600-Login-screen-UI-Design/attachments)
+>>>>>>> new
