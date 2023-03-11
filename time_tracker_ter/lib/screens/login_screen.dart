@@ -1,12 +1,10 @@
 import 'dart:convert';
 
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_login_ui/screens/signUp_screen.dart';
 import 'package:flutter_login_ui/utilities/constants.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:http/http.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:sqflite/sqflite.dart';
 import '../model/InitDatabase.dart';
@@ -71,9 +69,6 @@ class _LoginScreenState extends State<LoginScreen> {
       limit: 1,
     );
     if (result.isNotEmpty) {
-      var user = User.fromMap(result.first);
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setInt('userId', user.id);
        Fluttertoast.showToast(
            msg: "Login successfully",
            toastLength: Toast.LENGTH_SHORT,

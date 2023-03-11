@@ -4,45 +4,49 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:sqflite/sqflite.dart';
 import '../model/InitDatabase.dart';
+import '../model/Categorie.dart';
 import '../utilities/constants.dart';
 
-class AddCatePage extends StatefulWidget {
+class AddTache extends StatefulWidget {
   final Function() onDataAdded;
   final int colorIndex;
+  final Categorie categorie;
 
-  AddCatePage({this.onDataAdded, this.colorIndex});
+  AddTache({this.onDataAdded, this.colorIndex, this.categorie});
 
   @override
-  _AddCatePageState createState() => _AddCatePageState();
+  _AddTacheState createState() => _AddTacheState();
 }
 
-class _AddCatePageState extends State<AddCatePage> {
+class _AddTacheState extends State<AddTache> {
   TextEditingController nom = TextEditingController();
   Color selectedColor = Colors.blue;
 
-  //créer une nouvelle catégorie
-  void ajouterCategorie() async {
+  void addTach() async {
     Database database = await InitDatabase().database;
-
+    //get id_user connected
+    //create new categorie
     //vérifier si le nom de catégorie est vide
     if(nom.text == ''){
       //afficher un message d'erreur
-      showErrorMessage("Veuillez entrer un nom de catégorie");
+      showErrorMessage("Veuillez entrer un nom de tache");
+      //quitter la fonction
       return;
     }
 
-    database.insert('categories', {
+    //insert une nouvelle tache
+    await database.insert('taches', {
       'nom': nom.text,
       'couleur': selectedColor.value.toRadixString(16),
-      'id_categorie_sup': 1,
-      'id_user': 1,
+      //current date
+      'temps_ecoule': 0,
+      'id_categorie': widget.categorie.id,
     });
 
     //afficher un message de succès
-    showSuccessMessage("Catégorie ajoutée avec succès");
+    showSuccessMessage("Tache ajoutée avec succès");
     //notifier le widget parent que les données ont été ajoutées
     widget.onDataAdded();
-
     //go back to home page
     Navigator.of(context).pop();
   }
@@ -58,7 +62,7 @@ class _AddCatePageState extends State<AddCatePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("new Catégorie"),
+        title: Text("new Tache"),
         centerTitle: true,
         flexibleSpace: Container(
           decoration:  BoxDecoration(
@@ -79,7 +83,7 @@ class _AddCatePageState extends State<AddCatePage> {
           Container(
               child: IconButton(
                 color: Colors.white,
-                onPressed: () => ajouterCategorie(),
+                onPressed: () => addTach(),
                 icon: Icon(Icons.save),
               )),
         ],
@@ -116,71 +120,72 @@ class _AddCatePageState extends State<AddCatePage> {
                             nom.clear();
                           },
                         ),
-                        hintText: 'Entrer le nom de la catégorie',
+                        hintText: 'Entrer le nom de la tache',
                         hintStyle: kHintTextStyle,
                       ),
                     ),
                   ),
                  SizedBox(height: 10.0),
-                Container(
-                  alignment: Alignment.center,
-                  margin: EdgeInsets.only(left: 5.0, right: 5.0),
-                  decoration: makeBoxDecoration(allColors[widget.colorIndex][0]),
-                  height: 60.0,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Container(
-                        width: 50.0,
-                        height: 50.0,
-                        decoration: BoxDecoration(
-                          color: selectedColor,
-                          borderRadius: BorderRadius.circular(50.0),
-                        ),
+                //add color picker
+              Container(
+                alignment: Alignment.center,
+                margin: EdgeInsets.only(left: 5.0, right: 5.0),
+                decoration: makeBoxDecoration(allColors[widget.colorIndex][0]),
+                height: 60.0,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Container(
+                      width: 50.0,
+                      height: 50.0,
+                      decoration: BoxDecoration(
+                        color: selectedColor,
+                        borderRadius: BorderRadius.circular(50.0),
                       ),
-                      SizedBox(width: 10.0),
-                      TextButton(
-                          child:  Text('Selectionner une couleur',
-                            style: TextStyle(fontSize: 20.0, color:Colors.white),
-                          ),
-                          onPressed: () => showGeneralDialog(
-                            context: context,
-                            transitionBuilder: (context, animation, secondaryAnimation, child) {
-                              return SlideTransition(
-                                position: Tween<Offset>(
-                                  begin: const Offset(0, 1),
-                                  end: Offset.zero,
-                                ).animate(animation),
-                                child: child,
-                              );
-                            },
-                            pageBuilder:  (ctx, a1, a2) {
-                              return AlertDialog(
-                                title: const Text('Selectionner une couleur'),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.all(Radius.circular(16.0))),
-                                content: SingleChildScrollView(
-                                  child: ColorPicker(
-                                    pickerColor: selectedColor,
-                                    onColorChanged: changeColor,
-                                    colorPickerWidth: 300.0,
-                                    pickerAreaHeightPercent: 0.7,
-                                    enableAlpha: true,
-                                    displayThumbColor: true,
-                                    showLabel: true,
-                                    paletteType: PaletteType.hsv,
-                                    pickerAreaBorderRadius: const BorderRadius.all(
-                                      Radius.circular(16.0),
-                                    ),
-                                  ),
+                    ),
+                    SizedBox(width: 10.0),
+                    TextButton(
+                      child:  Text('Selectionner une couleur',
+                        style: TextStyle(fontSize: 20.0, color:Colors.white),
+                      ),
+                      onPressed: () => showGeneralDialog(
+                        context: context,
+                        transitionBuilder: (context, animation, secondaryAnimation, child) {
+                          return SlideTransition(
+                            position: Tween<Offset>(
+                              begin: const Offset(0, 1),
+                              end: Offset.zero,
+                            ).animate(animation),
+                            child: child,
+                          );
+                        },
+                        pageBuilder:  (ctx, a1, a2) {
+                          return AlertDialog(
+                            title: const Text('Selectionner une couleur'),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.all(Radius.circular(16.0))),
+                            content: SingleChildScrollView(
+                              child: ColorPicker(
+                                pickerColor: selectedColor,
+                                onColorChanged: changeColor,
+                                colorPickerWidth: 300.0,
+                                pickerAreaHeightPercent: 0.7,
+                                enableAlpha: true,
+                                displayThumbColor: true,
+                                showLabel: true,
+                                paletteType: PaletteType.hsv,
+                                pickerAreaBorderRadius: const BorderRadius.all(
+                                  Radius.circular(16.0),
                                 ),
-                              );
-                            },
-                          ),
+                              ),
+                            ),
+                          );
+                        },
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
+              ),
         ],
       ),
     );

@@ -5,9 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_login_ui/screens/login_screen.dart';
 import 'package:flutter_login_ui/utilities/constants.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:http/http.dart';
 import 'package:page_transition/page_transition.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import '../model/InitDatabase.dart';
 import '../model/User.dart';
@@ -68,8 +66,6 @@ class _SignUPScreenState extends State<SignUpScreen> {
         var user = User(username: name, email: email, password: password);
         //insert user to database
         await database.insert('users', user.toMap());
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.setInt('userId', user.id);
         Fluttertoast.showToast(
             msg: "User registered successfully",
             toastLength: Toast.LENGTH_SHORT,
