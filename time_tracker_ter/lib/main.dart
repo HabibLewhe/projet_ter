@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_login_ui/screens/AddCategorie.dart';
 import 'package:flutter_login_ui/screens/Home.dart';
-import 'package:flutter_login_ui/screens/login_screen.dart';
-import 'package:flutter_login_ui/screens/signUp_screen.dart';
 
 void main() => runApp(MyApp());
 

@@ -14,7 +14,7 @@ description: A new Flutter project.
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.1.0 <3.0.0"
+  sdk: ">=2.3.0 <3.0.0"
 
 dependencies:
   flutter:
@@ -28,6 +28,8 @@ dependencies:
   page_transition: ^2.0.9
   sqflite:
   path :
+  flutter_svg: ^1.1.6
+  flutter_colorpicker: ^1.0.3
 
 
 dev_dependencies:
@@ -45,9 +47,12 @@ flutter:
   assets:
    - assets/logos/facebook.jpg
    - assets/logos/google.jpg
-
+   - assets/icons/
 
   fonts:
     - family: OpenSans
       fonts:
         - asset: assets/fonts/OpenSans.ttf
+    - family: Montserrat
+      fonts:
+        - asset: assets/fonts/Montserrat-SemiBold.ttf

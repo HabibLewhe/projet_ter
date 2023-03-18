@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_login_ui/model/Categorie.dart';
 import 'package:flutter_login_ui/screens/AddCategorie.dart';
+import 'package:flutter_login_ui/screens/CategorieDetail.dart';
+import 'package:flutter_login_ui/screens/AllTasks.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:sqflite/sqflite.dart';
 import '../model/InitDatabase.dart';
-import 'login_screen.dart';
-
+import '../utilities/constants.dart';
 
 class MyHomePage extends StatefulWidget {
   @override
@@ -13,35 +15,27 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  static const Color _color = Color(0xFF005DA4);
-  static const Color _color1 = Color(0xFF3B8EA5);
-  static const Color _color2 = Color(0xFF3B8EA5);
-  static const Color _color3 = Color(0xFF005DA4);
+  var colorIndex = 1;
+
+  _MyHomePageState() {
+    getPreferedTheme();
+  }
 
   //list of categories
   List<Categorie> categories = [];
+
   @override
   void initState() {
     super.initState();
     getCategories();
   }
 
-
   void getCategories() async {
     Database database = await InitDatabase().database;
-    //get id_user connected
-    // SharedPreferences prefs = await SharedPreferences.getInstance();
-    //int id_user = 1;
-    var cats = await database.query(
-        'categories',
-        //where user id is equal to 1 (connected user)
-        where: 'id_categorie_sup = 1 AND id_user = 1 and id != 1'
-    );
+    var cats = await database.query('categories');
     setState(() {
       categories = cats.map((e) => Categorie.fromMap(e)).toList();
     });
-    //print all categories one by one
-
   }
 
   void deleteCategorie(int id) async {
@@ -51,150 +45,202 @@ class _MyHomePageState extends State<MyHomePage> {
     getCategories();
   }
 
-  void _addCategorieItem(Categorie dataItem) {
+  void _addCategorieItem() {
     //clear all categories
     categories.clear();
     getCategories();
   }
 
+  void getPreferedTheme() async {
+    Database database = await InitDatabase().database;
+    final Map<String, dynamic> queryResult =
+        (await database.query('parametres')).first;
+    setState(() {
+      colorIndex = queryResult['theme_prefere'];
+    });
+  }
+
+  void updatePreferedTheme(int index) async {
+    Database database = await InitDatabase().database;
+    await database.update('parametres', {'theme_prefere': index});
+    setState(() {
+      colorIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: backgroundColor1,
       appBar: AppBar(
         title: Text("Overview"),
         centerTitle: true,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
+        flexibleSpace: GestureDetector(
+          onLongPress: () {
+            // TODO : faire en sorte que le choix se fasse plus explicitement (bouton paramètres)
+            // sur un appuie long sur la barre du haut
+            // on affiche le popup pour choisir le theme de l'app
+            showColorPickerDialog(context);
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: allColors[colorIndex],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [
-                  _color,
-                  _color1,
-                  _color2,
-                  _color3,
-                ]),
-          ),
-        ),
-        leadingWidth: 100,
-        leading: Container(
-
-            child: MaterialButton(
-              padding: EdgeInsets.zero,
-
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(5.0),
-              ),
-              onPressed: () {},
-              child: Stack(
-                children: [
-                  SizedBox(
-                    width: 24.0,
-                    height: 24.0,
-                    child: Icon(Icons.info, color: Color( 0XFFFFFFFF)),
-                  ),
-
-
-                ],
-              ),
-            )),
-        actions: [
-          Container(
-
-              child: MaterialButton(
-                padding: EdgeInsets.zero,
-
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(5.0),
-                ),
-                onPressed: () {},
-                child: Stack(
-                  children: [
-                    SizedBox(
-                      width: 24.0,
-                      height: 24.0,
-                      child: Icon(Icons.edit, color: Color( 0XFFFFFFFF)),
-                    ),
-
-
-                  ],
-                ),
-              ))
-        ],
-      ),
-      body: Column(
-        children: [
-          Container(
-            width: double.infinity,
-            color: _color,
-            alignment: Alignment.center,
-            height: 93,
-            margin: const EdgeInsets.only(bottom: 35.0),
-            child: Container(
-                width: double.infinity,
-                margin: const EdgeInsets.only(left: 20.0, right: 20.0),
-                height: 50,
-                child: MaterialButton(
-                  color: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(50.0),
-                  ),
-                  onPressed: () {},
-                  child: Text(
-                    "Quick Start",
-                    style: TextStyle(fontSize: 20.0, color: _color),
-                  ),
-                )),
-          ),
-          Container(
-            width: double.infinity,
-            alignment: Alignment.center,
-            margin: const EdgeInsets.only(bottom: 20.0),
-            child: Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color:_color3,width: 1),
-                color: _color,
-              ),
-              margin: const EdgeInsets.only(left: 20.0, right: 20.0),
-              child: Column(
-                children: [
-                  buildRow(Icons.copy_sharp, "All Tasks"),
-                  Divider(
-                      color: _color3,
-                      thickness: 1,
-                  ),
-                  buildRow(Icons.padding_sharp, "Single Task"),
-                ],
               ),
             ),
           ),
-          //container of my categories
-          getCategoriesContainer()
+        ),
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 25.0),
+          child: GestureDetector(
+            onTap: () {
+              // TODO : traiter appuie sur bouton info
+            },
+            child: SvgPicture.asset(
+              'assets/icons/info.svg',
+            ),
+          ),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 25.0),
+            child: GestureDetector(
+              onTap: () {
+                // TODO : traiter appuie sur bouton edit
+              },
+              child: SvgPicture.asset(
+                'assets/icons/edit.svg',
+              ),
+            ),
+          ),
         ],
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Container(
+              width: double.infinity,
+              color: allColors[colorIndex][1],
+              alignment: Alignment.center,
+              height: 93,
+              margin: const EdgeInsets.only(bottom: 35.0),
+              child: Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(left: 20.0, right: 20.0),
+                  height: 50,
+                  child: MaterialButton(
+                    color: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(50.0),
+                    ),
+                    onPressed: () {
+                      // TODO : traiter appuie sur le bouton Quick Start
+                    },
+                    child: Text(
+                      "Quick Start",
+                      style: TextStyle(
+                          fontSize: 20.0, color: allColors[colorIndex][1]),
+                    ),
+                  )),
+            ),
+            Container(
+              width: double.infinity,
+              alignment: Alignment.center,
+              margin: const EdgeInsets.only(bottom: 20.0),
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: allColors[colorIndex][0], width: 1),
+                  color: allColors[colorIndex][1],
+                ),
+                margin: const EdgeInsets.only(left: 20.0, right: 20.0),
+                child: Column(
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        // sur un appuie sur la ligne "All Tasks"
+                        // Naviguer vers la page All Tasks
+                        Navigator.push(
+                            context,
+                            PageTransition(
+                                type: PageTransitionType.rightToLeftWithFade,
+                                child: AllTasksPage(colorIndex: colorIndex),
+                                childCurrent: this.widget,
+                                duration: Duration(milliseconds: 500)));
+                      },
+                      child: buildRow("papers", "All Tasks"),
+                    ),
+                    Divider(
+                      color: backgroundColor2,
+                      thickness: 0.6,
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        // sur un appuie sur la ligne "Single Tasks"
+                        // Naviguer vers la page Single Tasks
+                        // TODO : créer la page Single Tasks et compléter ici
+                      },
+                      child: buildRow("paper", "Single Tasks"),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            //container of my categories
+            getCategoriesContainer()
+          ],
+        ),
       ),
       bottomNavigationBar: BottomNavigationBar(
           onTap: (value) {
-            if (value == 0) Navigator.push(context, PageTransition(type: PageTransitionType.bottomToTop, child: AddCatePage(onDataAdded: _addCategorieItem ),childCurrent: this.widget,duration: Duration(milliseconds: 500)));
+            // cas où on appuie sur le bouton "+"
+            if (value == 0) {
+              // on affiche la page pour créer une catégorie
+              Navigator.push(
+                  context,
+                  PageTransition(
+                      type: PageTransitionType.bottomToTop,
+                      child: AddCatePage(
+                        onDataAdded: _addCategorieItem,
+                        colorIndex: colorIndex,
+                      ),
+                      childCurrent: this.widget,
+                      duration: Duration(milliseconds: 500)));
+            }
+            // cas où on appuie sur le bouton export
+            else if (value == 2) {
+              // TODO : traitement appuie bouton export
+            }
           },
           backgroundColor: Colors.white,
-          selectedItemColor: _color3,
-          unselectedItemColor:_color3,
-          selectedFontSize: 19,
-          unselectedFontSize: 19,
-          items:  <BottomNavigationBarItem>[
+          selectedItemColor: allColors[colorIndex][1],
+          unselectedItemColor: allColors[colorIndex][1],
+          selectedFontSize: 15,
+          unselectedFontSize: 15,
+          showSelectedLabels: false,
+          showUnselectedLabels: false,
+          items: <BottomNavigationBarItem>[
             BottomNavigationBarItem(
               icon: Icon(Icons.add_circle),
-              label: 'Add project',
+              label: '',
             ),
             BottomNavigationBarItem(
-              icon: SizedBox(),
-              label: 'Total 0:00',
+              icon: Text(
+                'Total 0:00',
+                overflow: TextOverflow.visible,
+                style: TextStyle(fontSize: 19, color: allColors[colorIndex][1]),
+              ),
+              label: '',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.mail),
-              label: 'contact',
+              icon: SvgPicture.asset(
+                'assets/icons/mail.svg',
+                color: allColors[colorIndex][1],
+              ),
+              label: '',
             ),
           ],
           iconSize: 40,
@@ -202,7 +248,7 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Row buildRow(IconData icons, String titre) {
+  Row buildRow(String icon, String titre) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -210,160 +256,168 @@ class _MyHomePageState extends State<MyHomePage> {
         Container(
           height: 50,
           width: 50,
-          child: Icon(
-            icons,
-            size: 30,
-            color: Colors.white,),
+          child: (icon == "paper")
+              ? Image.asset(
+                  'assets/icons/paper.png',
+                )
+              : ((icon == "papers")
+                  ? Image.asset(
+                      'assets/icons/papers.png',
+                    )
+                  : Container()),
         ),
+        Container(
+          height: 50,
+          width: 150,
+          alignment: Alignment.center,
+          child: Text(
+            titre,
+            style: TextStyle(fontSize: 20.0, color: Colors.white),
+          ),
+        ),
+        Container(
+          height: 50,
+          width: 100,
+          //add child + text 00:00
+
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                height: 50,
+                width: 50,
+                alignment: Alignment.center,
+                child: Text(
+                  "00:00",
+                  style: TextStyle(fontSize: 20.0, color: Colors.white),
+                ),
+              ),
+              Container(
+                height: 35,
+                width: 35,
+                child: Padding(
+                  padding: EdgeInsets.all(10),
+                  child: SvgPicture.asset(
+                    'assets/icons/arrow_right_in_circle.svg',
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget buildRowCategorie(IconData icons, Categorie categorie) {
+    return GestureDetector(
+      onLongPress: () {
+        // sur un appuie long :
+        // afficher le popup pour supprimer ou éditer la catégorie
+        showDelModDialog(context, categorie.id);
+      },
+      onTap: () {
+        // sur un appuie court :
+        // naviguer vers la page de détail de la catégorie
+        Navigator.push(
+            context,
+            PageTransition(
+                type: PageTransitionType.rightToLeftWithFade,
+                child: CategorieDetail(
+                    categorie: categorie, colorIndex: colorIndex),
+                childCurrent: this.widget,
+                duration: Duration(milliseconds: 500)));
+      },
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            height: 50,
+            width: 50,
+            child: Image.asset('assets/icons/dossier.png'),
+          ),
           Container(
             height: 50,
             width: 150,
             alignment: Alignment.center,
             child: Text(
-              titre,
-              style: TextStyle(fontSize: 20.0, color: Colors.white),
+              categorie.nom,
+              style: TextStyle(fontSize: 20.0, color: Colors.black87),
             ),
           ),
-        Container(
-          height: 50,
-          width: 100,
-          //add child + text 00:00
-
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                height: 50,
-                width: 50,
-                alignment: Alignment.center,
-                child: Text(
-                  "00:00",
-                  style: TextStyle(fontSize: 20.0, color: Colors.white),
-                ),
-              ),
-              Container(
-                height: 50,
-                width: 50,
-                child: Icon(
-                  Icons.arrow_circle_right,
-                  size: 30,
-                  color: Colors.white,),
-              )
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Row buildRowCategorie(IconData icons, String titre,int id) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Container(
-          height: 50,
-          width: 50,
-          child: Icon(
-            icons,
-            size: 30,
-            color: Colors.white,),
-        ),
-        GestureDetector(
-        // get tap location
-        // show the context menu
-        onLongPress: () {
-          showDelModDialog( context, id);
-          print(titre);
-        },
-        child:
-            Container(
-              height: 50,
-              width: 150,
-              alignment: Alignment.center,
-              child: Text(
-                titre,
-                style: TextStyle(fontSize: 20.0, color: Colors.white),
-              ),
-            ),
-        ),
-        Container(
-          height: 50,
-          width: 100,
-          //add child + text 00:00
-
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                height: 50,
-                width: 50,
-                alignment: Alignment.center,
-                child: Text(
-                  "00:00",
-                  style: TextStyle(fontSize: 20.0, color: Colors.white),
-                ),
-              ),
-              Container(
-                height: 50,
-                width: 50,
-                child: Icon(
-                  Icons.arrow_circle_right,
-                  size: 30,
-                  color: Colors.white,),
-              )
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-   Container getCategoriesContainer() {
-      if (categories == null || categories.length == 0) {
-        return Container();
-      }
-      return Container(
-        width: double.infinity,
-        alignment: Alignment.center,
-        margin: const EdgeInsets.only(bottom: 20.0),
-        child: Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color:_color3,width: 1),
-            color: _color,
-          ),
-          margin: const EdgeInsets.only(left: 20.0, right: 20.0),
-          //get the categories from the database
-          child: SingleChildScrollView(
-            scrollDirection: Axis.vertical,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          Container(
+            height: 50,
+            width: 100,
+            //add child + text 00:00
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: categories.length,
-                  itemBuilder: (context, index) {
-                    return buildRowCategorie(Icons.import_contacts_sharp, categories[index].nom,categories[index].id);
-                  },
+                Container(
+                  height: 50,
+                  width: 50,
+                  alignment: Alignment.center,
+                  child: Text(
+                    "00:00",
+                    style: TextStyle(fontSize: 20.0, color: Colors.black87),
+                  ),
+                ),
+                Container(
+                  height: 35,
+                  width: 35,
+                  child: Padding(
+                    padding: EdgeInsets.all(10),
+                    child: SvgPicture.asset(
+                      'assets/icons/arrow_right_in_circle.svg',
+                      color: Color(0xff848484),
+                    ),
+                  ),
                 ),
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
 
-        ),
-      );
+  Container getCategoriesContainer() {
+    if (categories == null || categories.length == 0) {
+      return Container();
     }
+    return Container(
+      width: double.infinity,
+      alignment: Alignment.center,
+      margin: const EdgeInsets.only(bottom: 20.0),
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          color: backgroundColor2,
+        ),
+        margin: const EdgeInsets.only(left: 20.0, right: 20.0),
+        //get the categories from the database
+        child: ListView.builder(
+          shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(),
+          itemCount: categories.length,
+          itemBuilder: (context, index) {
+            return buildRowCategorie(Icons.folder, categories[index]);
+          },
+        ),
+      ),
+    );
+  }
 
   showAlertDialog(BuildContext context) {
     // set up the buttons
 
     Widget continueButton = TextButton(
       child: Icon(Icons.add),
-      onPressed:  () {
+      onPressed: () {
         // do something
       },
     );
@@ -386,31 +440,32 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-
-  showDelModDialog(BuildContext context,int id) {
+  showDelModDialog(BuildContext context, int id) {
     // set up the buttons
     Widget deletBtn = TextButton(
       child: Row(
         children: [
-          Icon(Icons.delete,color: Colors.red),
-          Text("Delete",style: TextStyle(color: Colors.red)),
+          Icon(Icons.delete, color: Colors.red),
+          Text("Delete", style: TextStyle(color: Colors.red)),
         ],
       ),
-      onPressed:  () {
-        //delete the categorie
+      onPressed: () {
+        // appuie bouton delete
+        // on supprime la catégorie
         deleteCategorie(id);
+        // on ferme le popup
         Navigator.of(context).pop();
       },
     );
     Widget editBtn = TextButton(
       child: Row(
         children: [
-          Icon(Icons.edit,color: Colors.blue),
-          Text("Edit",style: TextStyle(color: Colors.blue)),
+          Icon(Icons.edit, color: Colors.blue),
+          Text("Edit", style: TextStyle(color: Colors.blue)),
         ],
       ),
-      onPressed:  () {
-        // do something
+      onPressed: () {
+        // TODO : traitement bouton edit categorie
       },
     );
 
@@ -433,5 +488,158 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-
+  getColorFromName(String name) {
+    switch (name) {
+      case "blue":
+        return Colors.blue;
+      case "red":
+        return Colors.red;
+      case "orange":
+        return Colors.orange;
+    }
   }
+
+  int selectedValue = 0;
+
+  showColorPickerDialog(BuildContext context) {
+    //save button
+    Widget backBtn = TextButton(
+      child: Row(
+        //center the text
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            "Back",
+            style: TextStyle(color: Colors.white),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+      onPressed: () {
+        //save the categorie
+        //get the color from the dropdown
+        var colorIndex_ = colorIndex;
+        updatePreferedTheme(colorIndex_);
+        //saveCategorie(dropdownValue);
+        Navigator.of(context).pop();
+      },
+    );
+
+    var choixCouleur = Column(
+      children: <Widget>[
+        TextButton(
+          style: ButtonStyle(
+            backgroundColor: MaterialStateProperty.all(allColors[0][1]),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text("Red", style: TextStyle(color: Colors.white)),
+            ],
+          ),
+          onPressed: () {
+            //get the color from the dropdown
+            updatePreferedTheme(0);
+            //saveCategorie(dropdownValue);
+          },
+        ),
+        TextButton(
+          style: ButtonStyle(
+            backgroundColor: MaterialStateProperty.all(allColors[1][1]),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text("Blue", style: TextStyle(color: Colors.white)),
+            ],
+          ),
+          onPressed: () {
+            //get the color from the dropdown
+            updatePreferedTheme(1);
+            //saveCategorie(dropdownValue);
+          },
+        ),
+        TextButton(
+          style: ButtonStyle(
+            backgroundColor: MaterialStateProperty.all(allColors[2][1]),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text("Orange", style: TextStyle(color: Colors.white)),
+            ],
+          ),
+          onPressed: () {
+            //get the color from the dropdown
+            updatePreferedTheme(2);
+            //saveCategorie(dropdownValue);
+          },
+        ),
+      ],
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(16.0))),
+      contentPadding: EdgeInsets.only(top: 10.0),
+      content: Container(
+        width: 300.0,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Text(
+                  "Prefered theme",
+                  style: TextStyle(fontSize: 24.0),
+                ),
+              ],
+            ),
+            SizedBox(
+              height: 5.0,
+            ),
+            Divider(
+              color: Colors.grey,
+              height: 4.0,
+            ),
+            Padding(
+              padding: EdgeInsets.only(left: 30.0, right: 30.0),
+              child: choixCouleur,
+            ),
+            InkWell(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: allColors[colorIndex][1],
+                  borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(16.0),
+                      bottomRight: Radius.circular(16.0)),
+                ),
+                child: backBtn,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return alert;
+          },
+        );
+      },
+    );
+  }
+}

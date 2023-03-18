@@ -3,43 +3,46 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:sqflite/sqflite.dart';
 import '../model/InitDatabase.dart';
+import '../model/Categorie.dart';
 import '../utilities/constants.dart';
 
-class AddCatePage extends StatefulWidget {
+class AddTache extends StatefulWidget {
   final Function() onDataAdded;
   final int colorIndex;
+  final Categorie categorie;
 
-  AddCatePage({this.onDataAdded, this.colorIndex});
+  AddTache({this.onDataAdded, this.colorIndex, this.categorie});
 
   @override
-  _AddCatePageState createState() => _AddCatePageState();
+  _AddTacheState createState() => _AddTacheState();
 }
 
-class _AddCatePageState extends State<AddCatePage> {
+class _AddTacheState extends State<AddTache> {
   TextEditingController nom = TextEditingController();
   Color selectedColor = Colors.blue;
 
-  //créer une nouvelle catégorie
-  void ajouterCategorie() async {
+  void addTache() async {
     Database database = await InitDatabase().database;
-
-    //vérifier si le nom de catégorie est vide
+    //vérifier si le nom de tache est vide
     if (nom.text == '') {
       //afficher un message d'erreur
-      showErrorMessage("Veuillez entrer un nom de catégorie");
+      showErrorMessage("Veuillez entrer un nom de tache");
       return;
     }
 
-    database.insert('categories', {
+    //inserer une nouvelle tache
+    await database.insert('taches', {
       'nom': nom.text,
       'couleur': selectedColor.value.toRadixString(16),
+      //current date
+      'temps_ecoule': "00:00:00",
+      'id_categorie': widget.categorie.id,
     });
 
     //afficher un message de succès
-    showSuccessMessage("Catégorie ajoutée avec succès");
+    showSuccessMessage("Tache ajoutée avec succès");
     //notifier le widget parent que les données ont été ajoutées
     widget.onDataAdded();
-
     //go back to home page
     Navigator.of(context).pop();
   }
@@ -53,7 +56,7 @@ class _AddCatePageState extends State<AddCatePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("new Catégorie"),
+        title: Text("new Tache"),
         centerTitle: true,
         flexibleSpace: Container(
           decoration: BoxDecoration(
@@ -75,7 +78,7 @@ class _AddCatePageState extends State<AddCatePage> {
             padding: EdgeInsets.only(right: 20.0),
             child: GestureDetector(
               onTap: () {
-                ajouterCategorie();
+                addTache();
               },
               child: SvgPicture.asset(
                 'assets/icons/save.svg',
@@ -116,12 +119,13 @@ class _AddCatePageState extends State<AddCatePage> {
                     nom.clear();
                   },
                 ),
-                hintText: 'Entrer le nom de la catégorie',
+                hintText: 'Entrer le nom de la tache',
                 hintStyle: kHintTextStyle,
               ),
             ),
           ),
           SizedBox(height: 10.0),
+          //add color picker
           Container(
             alignment: Alignment.center,
             margin: EdgeInsets.only(left: 5.0, right: 5.0),
