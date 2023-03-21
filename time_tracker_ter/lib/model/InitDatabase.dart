@@ -174,5 +174,31 @@ class InitDatabase {
     batch.insert('taches', tache13.toMap());
     batch.insert('taches', tache14.toMap());
     await batch.commit();
+
+    // procédure pour mettre à jour automatiquement le champ temp_ecoule dans la table taches
+    // à chaque fois que l'on insert une nouvelle ligne dans la table deroulement_tache
+    await db.execute('''
+    CREATE TRIGGER update_temps_ecoule AFTER INSERT ON deroulement_tache
+    BEGIN
+      UPDATE taches SET temps_ecoule = (
+        SELECT time(SUM(strftime('%s', datetime(date_fin)) - strftime('%s', datetime(date_debut))), 'unixepoch')
+        FROM deroulement_tache
+        WHERE deroulement_tache.id_tache = taches.id
+      )
+      WHERE id = NEW.id_tache;
+    END;
+  ''');
+
+    // déroulement tache
+    await db.execute(
+        "INSERT INTO deroulement_tache (id_tache, date_debut, date_fin, Longitude, Latitude) VALUES "
+        "(1, '2023-03-09T16:30:00Z', '2023-03-09T17:30:00Z', 48.8566, 2.3522),"
+        "(1, '2023-03-10T09:00:00Z', '2023-03-10T11:00:00Z', 48.8647, 2.3490),"
+        "(2, '2023-03-11T13:30:00Z', '2023-03-11T14:30:00Z', 48.8534, 2.3488),"
+        "(3, '2023-03-12T10:00:00Z', '2023-03-12T11:30:00Z', 48.8606, 2.3522),"
+        "(4, '2023-03-13T14:00:00Z', '2023-03-13T15:00:00Z', 48.8566, 2.3382),"
+        "(4, '2023-03-14T11:00:00Z', '2023-03-14T12:00:00Z', 48.8599, 2.3414),"
+        "(4, '2023-03-15T15:30:00Z', '2023-03-15T17:00:00Z', 48.8631, 2.3455),"
+        "(5, '2023-03-16T08:30:00Z', '2023-03-16T10:00:00Z', 48.8566, 2.3522);");
   }
 }
