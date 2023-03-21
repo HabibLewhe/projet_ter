@@ -278,8 +278,6 @@ class _MyHomePageState extends State<MyHomePage> {
         Container(
           height: 50,
           width: 100,
-          //add child + text 00:00
-
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -342,7 +340,7 @@ class _MyHomePageState extends State<MyHomePage> {
           Container(
             height: 50,
             width: 150,
-            alignment: Alignment.center,
+            alignment: Alignment.centerLeft,
             child: Text(
               categorie.nom,
               style: TextStyle(fontSize: 20.0, color: Colors.black87),
@@ -350,19 +348,18 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           Container(
             height: 50,
-            width: 100,
-            //add child + text 00:00
+            width: 115,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
                   height: 50,
-                  width: 50,
+                  width: 80,
                   alignment: Alignment.center,
                   child: Text(
-                    "00:00",
-                    style: TextStyle(fontSize: 20.0, color: Colors.black87),
+                    categorie.temps_ecoule,
+                    style: TextStyle(fontSize: 20.0, color: colorTime1),
                   ),
                 ),
                 Container(

@@ -1,9 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
-import 'Categorie.dart';
-import 'Tache.dart';
-
 class InitDatabase {
   static final InitDatabase _initDatabase_ = InitDatabase._internal();
 
@@ -37,6 +34,9 @@ class InitDatabase {
            alors on stocke black.value.toRadixString(16) = "ff000000"
          */
         "couleur TEXT NOT NULL,"
+        // temps ecoulé : string au format XX:XX:XX (heures:minutes:secondes)
+        // temps total des taches de la catégorie, calculé automatiquement
+        "temps_ecoule	TEXT DEFAULT '00:00:00',"
         "id_categorie_sup	INTEGER,"
         "FOREIGN KEY(id_categorie_sup) REFERENCES categories(id))");
 
@@ -49,7 +49,8 @@ class InitDatabase {
          */
         "couleur TEXT NOT NULL,"
         // temps ecoulé : string au format XX:XX:XX (heures:minutes:secondes)
-        "temps_ecoule	TEXT NOT NULL,"
+        // calculé automatiquement
+        "temps_ecoule	TEXT DEFAULT '00:00:00',"
         "id_categorie	INTEGER,"
         "FOREIGN KEY(id_categorie) REFERENCES categories(id))");
 
@@ -78,105 +79,38 @@ class InitDatabase {
     await db.execute("INSERT INTO parametres DEFAULT VALUES;");
 
     // categories
-    var categorie1 = Categorie(nom: "Axari Graphics", couleur: "ff2b8713");
-    var categorie2 = Categorie(nom: "Website Ions Inc.", couleur: "ff6c1387");
-    var categorie3 = Categorie(nom: "Categorie3", couleur: "ff453bec");
-    var categorie4 = Categorie(nom: "Categorie4", couleur: "ffec9e3b");
-    var categorie5 = Categorie(nom: "Categorie5", couleur: "ff3b4eec");
-    var categorie6 = Categorie(nom: "Categorie6", couleur: "ffdc3bec");
-    var batch = db.batch();
-    batch.insert('categories', categorie1.toMap());
-    batch.insert('categories', categorie2.toMap());
-    batch.insert('categories', categorie3.toMap());
-    batch.insert('categories', categorie4.toMap());
-    batch.insert('categories', categorie5.toMap());
-    batch.insert('categories', categorie6.toMap());
-    await batch.commit();
+    await db.execute('''
+    INSERT INTO categories (nom, couleur) VALUES 
+      ('Axari Graphics', 'ff2b8713'), 
+      ('Website Ions Inc.', 'ff6c1387'), 
+      ('Categorie3', 'ff453bec'), 
+      ('Categorie4', 'ffec9e3b'), 
+      ('Categorie5', 'ff3b4eec'), 
+      ('Categorie6', 'ffdc3bec')
+    ''');
 
     // taches
-    var tache1 = Tache(
-        nom: "Communication", couleur: "ff000000", temps_ecoule: "00:00:00");
-    var tache2 =
-        Tache(nom: "Invoicing", couleur: "ff000000", temps_ecoule: "00:00:00");
-    var tache3 = Tache(
-        nom: "Logo design",
-        couleur: "ff000000",
-        id_categorie: 1,
-        temps_ecoule: "00:00:00");
-    var tache4 = Tache(
-        nom: "Brochure",
-        couleur: "ff000000",
-        id_categorie: 1,
-        temps_ecoule: "00:00:00");
-    var tache5 = Tache(
-        nom: "Webdesign",
-        couleur: "ff000000",
-        id_categorie: 1,
-        temps_ecoule: "00:00:00");
-    var tache6 = Tache(
-        nom: "Concept",
-        couleur: "ff000000",
-        id_categorie: 2,
-        temps_ecoule: "00:00:00");
-    var tache7 = Tache(
-        nom: "Screendesign",
-        couleur: "ff000000",
-        id_categorie: 2,
-        temps_ecoule: "00:00:00");
-    var tache8 = Tache(
-        nom: "Tache 8",
-        couleur: "ff000000",
-        id_categorie: 3,
-        temps_ecoule: "00:00:00");
-    var tache9 = Tache(
-        nom: "Tache 9",
-        couleur: "ff000000",
-        id_categorie: 3,
-        temps_ecoule: "00:00:00");
-    var tache10 = Tache(
-        nom: "Tache 10",
-        couleur: "ff000000",
-        id_categorie: 4,
-        temps_ecoule: "00:00:00");
-    var tache11 = Tache(
-        nom: "Tache 11",
-        couleur: "ff000000",
-        id_categorie: 5,
-        temps_ecoule: "00:00:00");
-    var tache12 = Tache(
-        nom: "Tache 12",
-        couleur: "ff000000",
-        id_categorie: 5,
-        temps_ecoule: "00:00:00");
-    var tache13 = Tache(
-        nom: "Tache 13",
-        couleur: "ff000000",
-        id_categorie: 6,
-        temps_ecoule: "00:00:00");
-    var tache14 = Tache(
-        nom: "Tache 14",
-        couleur: "ff000000",
-        id_categorie: 6,
-        temps_ecoule: "00:00:00");
-    batch = db.batch();
-    batch.insert('taches', tache1.toMap());
-    batch.insert('taches', tache2.toMap());
-    batch.insert('taches', tache3.toMap());
-    batch.insert('taches', tache4.toMap());
-    batch.insert('taches', tache5.toMap());
-    batch.insert('taches', tache6.toMap());
-    batch.insert('taches', tache7.toMap());
-    batch.insert('taches', tache8.toMap());
-    batch.insert('taches', tache9.toMap());
-    batch.insert('taches', tache10.toMap());
-    batch.insert('taches', tache11.toMap());
-    batch.insert('taches', tache12.toMap());
-    batch.insert('taches', tache13.toMap());
-    batch.insert('taches', tache14.toMap());
-    await batch.commit();
+    await db.execute('''
+      INSERT INTO taches (nom, couleur, id_categorie) VALUES 
+      ("Communication", "ff000000", NULL),
+      ("Invoicing", "ff000000", NULL),
+      ("Logo design", "ff000000", 1),
+      ("Brochure", "ff000000", 1),
+      ("Webdesign", "ff000000", 1),
+      ("Concept", "ff000000", 2),
+      ("Screendesign", "ff000000", 2),
+      ("Tache 8", "ff000000", 3),
+      ("Tache 9", "ff000000", 3),
+      ("Tache 10", "ff000000", 4),
+      ("Tache 11", "ff000000", 5),
+      ("Tache 12", "ff000000", 5),
+      ("Tache 13", "ff000000", 6),
+      ("Tache 14", "ff000000", 6)
+    ''');
 
-    // procédure pour mettre à jour automatiquement le champ temp_ecoule dans la table taches
-    // à chaque fois que l'on insert une nouvelle ligne dans la table deroulement_tache
+    // procédure pour mettre à jour automatiquement les champs temp_ecoule
+    // dans la table taches et dans la table categories à chaque fois que
+    // l'on insert une nouvelle ligne dans la table deroulement_tache
     await db.execute('''
     CREATE TRIGGER update_temps_ecoule AFTER INSERT ON deroulement_tache
     BEGIN
@@ -186,8 +120,20 @@ class InitDatabase {
         WHERE deroulement_tache.id_tache = taches.id
       )
       WHERE id = NEW.id_tache;
+    
+      UPDATE categories SET temps_ecoule = (
+        SELECT time(SUM(strftime('%s', datetime(date_fin)) - strftime('%s', datetime(date_debut))), 'unixepoch')
+        FROM deroulement_tache
+        INNER JOIN taches ON deroulement_tache.id_tache = taches.id
+        WHERE taches.id_categorie = categories.id
+      )
+      WHERE id = (
+        SELECT id_categorie
+        FROM taches
+        WHERE id = NEW.id_tache
+      );
     END;
-  ''');
+    ''');
 
     // déroulement tache
     await db.execute(
@@ -199,6 +145,9 @@ class InitDatabase {
         "(4, '2023-03-13T14:00:00Z', '2023-03-13T15:00:00Z', 48.8566, 2.3382),"
         "(4, '2023-03-14T11:00:00Z', '2023-03-14T12:00:00Z', 48.8599, 2.3414),"
         "(4, '2023-03-15T15:30:00Z', '2023-03-15T17:00:00Z', 48.8631, 2.3455),"
-        "(5, '2023-03-16T08:30:00Z', '2023-03-16T10:00:00Z', 48.8566, 2.3522);");
+        "(5, '2023-03-16T08:30:00Z', '2023-03-16T10:00:00Z', 48.8566, 2.3522),"
+        "(6, '2023-03-17T14:30:00Z', '2023-03-17T15:10:00Z', 48.8566, 2.3522),"
+        "(6, '2023-03-18T08:30:00Z', '2023-03-18T10:00:00Z', 48.8566, 2.3522),"
+        "(7, '2023-03-18T10:30:00Z', '2023-03-18T12:00:00Z', 48.8566, 2.3522);");
   }
 }

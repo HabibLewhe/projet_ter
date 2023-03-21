@@ -6,6 +6,7 @@ const timeFilterColor2 = Color(0xBF1C1B1B);
 const borderColor = Color(0x1A000000);
 const backgroundColor1 = Color(0xFFF3F3F3);
 const backgroundColor2 = Color(0xFFFFFEFE);
+const colorTime1 = Color(0xFF848484);
 
 final kHintTextStyle = TextStyle(
   color: Colors.white54,
