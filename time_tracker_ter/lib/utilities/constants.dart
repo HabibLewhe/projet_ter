@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
-const primaryColor = Color(0xFF005DA4);
-const primaryColor75p = Color(0xBF005DA4);
+const timeFilterColor1 = Color(0xFF7A7A7A);
+const timeFilterColor2 = Color(0xBF1C1B1B);
 const borderColor = Color(0x1A000000);
 const backgroundColor1 = Color(0xFFF3F3F3);
 const backgroundColor2 = Color(0xFFFFFEFE);

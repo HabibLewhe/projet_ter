@@ -44,7 +44,7 @@ class InitDatabase {
         "id	INTEGER PRIMARY KEY AUTOINCREMENT,"
         "nom TEXT NOT NULL,"
         /* couleur stockée en string
-           si Color blue = Color(0xFF000000)
+           si Color black = Color(0xFF000000)
            alors on stocke black.value.toRadixString(16) = "ff000000"
          */
         "couleur TEXT NOT NULL,"
@@ -68,7 +68,9 @@ class InitDatabase {
         // utilisé pour l'autocomplétion du champ email lors de l'export, par défaut le string est vide
         "email_export TEXT DEFAULT '',"
         // theme préféré : 0 = rouge, 1 = bleu, 2 = orange, défaut = 1
-        "theme_prefere INTEGER DEFAULT 1)");
+        "theme_prefere INTEGER DEFAULT 1,"
+        // settings time filter, 0 = jour par jour, 1 = semaine par semaine, 2 = mois par mois
+        "time_filter_preference INTEGER DEFAULT 0)");
 
     // insertion de valeurs
 
@@ -154,7 +156,7 @@ class InitDatabase {
     var tache14 = Tache(
         nom: "Tache 14",
         couleur: "ff000000",
-        id_categorie: 7,
+        id_categorie: 6,
         temps_ecoule: "00:00:00");
     batch = db.batch();
     batch.insert('taches', tache1.toMap());

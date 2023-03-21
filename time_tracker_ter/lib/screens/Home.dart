@@ -167,7 +167,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             context,
                             PageTransition(
                                 type: PageTransitionType.rightToLeftWithFade,
-                                child: AllTasksPage(colorIndex: colorIndex),
+                                child: AllTasksPage(timeFilterCounter: 0, colorIndex: colorIndex),
                                 childCurrent: this.widget,
                                 duration: Duration(milliseconds: 500)));
                       },
