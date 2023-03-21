@@ -10,6 +10,8 @@ import '../utilities/constants.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 
+import 'History_main.dart';
+
 class AllTasksPage extends StatefulWidget {
   final int colorIndex;
   final int timeFilterCounter;
@@ -746,6 +748,16 @@ class _AllTasksPageState extends State<AllTasksPage> {
                   child: GestureDetector(
                     onTap: () {
                       // TODO : naviguer vers l'historique de la tache
+                      Navigator.push(
+                          context,
+                          PageTransition(
+                              type: PageTransitionType.rightToLeftWithFade,
+                              child: HistoryPage(
+                                title: titre,
+                                id: id,
+                              ),
+                              childCurrent: this.widget,
+                              duration: Duration(milliseconds: 500)));
                     },
                     child: Stack(
                       children: [
