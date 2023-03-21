@@ -126,11 +126,22 @@ class CategorieDetail_ extends State<CategorieDetail> {
               label: '',
             ),
             BottomNavigationBarItem(
-              icon: Text(
-                'Total 0:00',
-                overflow: TextOverflow.visible,
-                style: TextStyle(
-                    fontSize: 19, color: allColors[widget.colorIndex][1]),
+              icon: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "Total ",
+                    overflow: TextOverflow.visible,
+                    style: TextStyle(
+                        fontSize: 19, color: allColors[widget.colorIndex][1]),
+                  ),
+                  Text(
+                    widget.categorie.temps_ecoule,
+                    overflow: TextOverflow.visible,
+                    style: TextStyle(
+                        fontSize: 19, color: allColors[widget.colorIndex][1]),
+                  ),
+                ],
               ),
               label: '',
             ),
@@ -192,18 +203,17 @@ class CategorieDetail_ extends State<CategorieDetail> {
           ),
           Container(
             height: 50,
-            width: 100,
-            //add child + text 00:00
+            width: 125,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
                   height: 50,
-                  width: 50,
-                  alignment: Alignment.center,
+                  width: 80,
+                  alignment: Alignment.centerLeft,
                   child: Text(
-                    "00:00",
+                    tache.temps_ecoule,
                     style: TextStyle(fontSize: 20.0, color: Colors.black87),
                   ),
                 ),

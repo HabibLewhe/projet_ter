@@ -16,39 +16,63 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   var colorIndex = 1;
+  String tempsEcouleTotal = "00:00:00";
 
   _MyHomePageState() {
     getPreferedTheme();
   }
 
   //list of categories
+  Future<List<Categorie>> futureCategories;
   List<Categorie> categories = [];
 
   @override
   void initState() {
     super.initState();
-    getCategories();
+    futureCategories = getCategories();
   }
 
-  void getCategories() async {
+  Future<List<Categorie>> getCategories() async {
     Database database = await InitDatabase().database;
     var cats = await database.query('categories');
+    List<Categorie> liste = cats.map((e) => Categorie.fromMap(e)).toList();
     setState(() {
-      categories = cats.map((e) => Categorie.fromMap(e)).toList();
+      categories = liste;
     });
+    String tempsEcoule = "00:00:00";
+    for (int i = 0; i < categories.length; i++) {
+      Duration duration1 = Duration(
+        hours: int.parse(tempsEcoule.split(':')[0]),
+        minutes: int.parse(tempsEcoule.split(':')[1]),
+        seconds: int.parse(tempsEcoule.split(':')[2]),
+      );
+      Duration duration2 = Duration(
+        hours: int.parse(categories[i].temps_ecoule.split(':')[0]),
+        minutes: int.parse(categories[i].temps_ecoule.split(':')[1]),
+        seconds: int.parse(categories[i].temps_ecoule.split(':')[2]),
+      );
+      Duration sum = duration1 + duration2;
+      tempsEcoule =
+      "${sum.inHours}:${sum.inMinutes.remainder(60).toString().padLeft(2, '0')}:${sum.inSeconds.remainder(60).toString().padLeft(2, '0')}";
+    }
+    setState(() {
+      tempsEcouleTotal = tempsEcoule;
+    });
+    return liste;
   }
 
   void deleteCategorie(int id) async {
     Database database = await InitDatabase().database;
     await database.delete('categories', where: 'id = ?', whereArgs: [id]);
+    categories = await futureCategories;
     categories.clear();
     getCategories();
   }
 
-  void _addCategorieItem() {
+  void _addCategorieItem() async {
     //clear all categories
     categories.clear();
-    getCategories();
+    categories = await getCategories();
   }
 
   void getPreferedTheme() async {
@@ -117,138 +141,190 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Container(
-              width: double.infinity,
-              color: allColors[colorIndex][1],
-              alignment: Alignment.center,
-              height: 93,
-              margin: const EdgeInsets.only(bottom: 35.0),
-              child: Container(
-                  width: double.infinity,
-                  margin: const EdgeInsets.only(left: 20.0, right: 20.0),
-                  height: 50,
-                  child: MaterialButton(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(50.0),
+      body: FutureBuilder<List<Categorie>>(
+        future: futureCategories,
+        builder:
+            (BuildContext context, AsyncSnapshot<List<Categorie>> snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return CircularProgressIndicator();
+          } else if (snapshot.hasError) {
+            return BottomAppBar(
+              child: Text('Error loading categories'),
+            );
+          } else {
+            return SingleChildScrollView(
+              child: Column(
+                children: [
+                  Container(
+                    width: double.infinity,
+                    color: allColors[colorIndex][1],
+                    alignment: Alignment.center,
+                    height: 93,
+                    margin: const EdgeInsets.only(bottom: 35.0),
+                    child: Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(left: 20.0, right: 20.0),
+                        height: 50,
+                        child: MaterialButton(
+                          color: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(50.0),
+                          ),
+                          onPressed: () {
+                            // TODO : traiter appuie sur le bouton Quick Start
+                          },
+                          child: Text(
+                            "Quick Start",
+                            style: TextStyle(
+                                fontSize: 20.0,
+                                color: allColors[colorIndex][1]),
+                          ),
+                        )),
+                  ),
+                  Container(
+                    width: double.infinity,
+                    alignment: Alignment.center,
+                    margin: const EdgeInsets.only(bottom: 20.0),
+                    child: Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                            color: allColors[colorIndex][0], width: 1),
+                        color: allColors[colorIndex][1],
+                      ),
+                      margin: const EdgeInsets.only(left: 20.0, right: 20.0),
+                      child: Column(
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              // sur un appuie sur la ligne "All Tasks"
+                              // Naviguer vers la page All Tasks
+                              Navigator.push(
+                                  context,
+                                  PageTransition(
+                                      type: PageTransitionType
+                                          .rightToLeftWithFade,
+                                      child: AllTasksPage(
+                                          timeFilterCounter: 0,
+                                          colorIndex: colorIndex),
+                                      childCurrent: this.widget,
+                                      duration: Duration(milliseconds: 500)));
+                            },
+                            child: buildRow("papers", "All Tasks"),
+                          ),
+                          Divider(
+                            color: backgroundColor2,
+                            thickness: 0.6,
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              // sur un appuie sur la ligne "Single Tasks"
+                              // Naviguer vers la page Single Tasks
+                              // TODO : créer la page Single Tasks et compléter ici
+                            },
+                            child: buildRow("paper", "Single Tasks"),
+                          ),
+                        ],
+                      ),
                     ),
-                    onPressed: () {
-                      // TODO : traiter appuie sur le bouton Quick Start
-                    },
-                    child: Text(
-                      "Quick Start",
-                      style: TextStyle(
-                          fontSize: 20.0, color: allColors[colorIndex][1]),
+                  ),
+                  //container of my categories
+                  getCategoriesContainer()
+                ],
+              ),
+            );
+          }
+        },
+      ),
+      bottomNavigationBar: FutureBuilder<List<Categorie>>(
+          future: futureCategories,
+          builder:
+              (BuildContext context, AsyncSnapshot<List<Categorie>> snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return BottomAppBar(
+                child: CircularProgressIndicator(),
+              );
+            } else if (snapshot.hasError) {
+              return BottomAppBar(
+                child: Text('Error loading categories'),
+              );
+            } else {
+              return BottomNavigationBar(
+                  onTap: (value) {
+                    // cas où on appuie sur le bouton "+"
+                    if (value == 0) {
+                      // on affiche la page pour créer une catégorie
+                      Navigator.push(
+                          context,
+                          PageTransition(
+                              type: PageTransitionType.bottomToTop,
+                              child: AddCatePage(
+                                onDataAdded: _addCategorieItem,
+                                colorIndex: colorIndex,
+                              ),
+                              childCurrent: this.widget,
+                              duration: Duration(milliseconds: 500)));
+                    }
+                    // cas où on appuie sur le bouton export
+                    else if (value == 2) {
+                      // TODO : traitement appuie bouton export
+                    }
+                  },
+                  backgroundColor: Colors.white,
+                  selectedItemColor: allColors[colorIndex][1],
+                  unselectedItemColor: allColors[colorIndex][1],
+                  selectedFontSize: 15,
+                  unselectedFontSize: 15,
+                  showSelectedLabels: false,
+                  showUnselectedLabels: false,
+                  items: <BottomNavigationBarItem>[
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.add_circle),
+                      label: '',
                     ),
-                  )),
-            ),
-            Container(
-              width: double.infinity,
-              alignment: Alignment.center,
-              margin: const EdgeInsets.only(bottom: 20.0),
-              child: Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: allColors[colorIndex][0], width: 1),
-                  color: allColors[colorIndex][1],
-                ),
-                margin: const EdgeInsets.only(left: 20.0, right: 20.0),
-                child: Column(
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        // sur un appuie sur la ligne "All Tasks"
-                        // Naviguer vers la page All Tasks
-                        Navigator.push(
-                            context,
-                            PageTransition(
-                                type: PageTransitionType.rightToLeftWithFade,
-                                child: AllTasksPage(timeFilterCounter: 0, colorIndex: colorIndex),
-                                childCurrent: this.widget,
-                                duration: Duration(milliseconds: 500)));
-                      },
-                      child: buildRow("papers", "All Tasks"),
+                    BottomNavigationBarItem(
+                      icon: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "Total ",
+                            overflow: TextOverflow.visible,
+                            style: TextStyle(
+                                fontSize: 19, color: allColors[colorIndex][1]),
+                          ),
+                          Text(
+                            tempsEcouleTotal,
+                            overflow: TextOverflow.visible,
+                            style: TextStyle(
+                                fontSize: 19, color: allColors[colorIndex][1]),
+                          ),
+                        ],
+                      ),
+                      label: '',
                     ),
-                    Divider(
-                      color: backgroundColor2,
-                      thickness: 0.6,
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        // sur un appuie sur la ligne "Single Tasks"
-                        // Naviguer vers la page Single Tasks
-                        // TODO : créer la page Single Tasks et compléter ici
-                      },
-                      child: buildRow("paper", "Single Tasks"),
+                    BottomNavigationBarItem(
+                      icon: SvgPicture.asset(
+                        'assets/icons/mail.svg',
+                        color: allColors[colorIndex][1],
+                      ),
+                      label: '',
                     ),
                   ],
-                ),
-              ),
-            ),
-            //container of my categories
-            getCategoriesContainer()
-          ],
-        ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-          onTap: (value) {
-            // cas où on appuie sur le bouton "+"
-            if (value == 0) {
-              // on affiche la page pour créer une catégorie
-              Navigator.push(
-                  context,
-                  PageTransition(
-                      type: PageTransitionType.bottomToTop,
-                      child: AddCatePage(
-                        onDataAdded: _addCategorieItem,
-                        colorIndex: colorIndex,
-                      ),
-                      childCurrent: this.widget,
-                      duration: Duration(milliseconds: 500)));
+                  iconSize: 40,
+                  elevation: 5);
             }
-            // cas où on appuie sur le bouton export
-            else if (value == 2) {
-              // TODO : traitement appuie bouton export
-            }
-          },
-          backgroundColor: Colors.white,
-          selectedItemColor: allColors[colorIndex][1],
-          unselectedItemColor: allColors[colorIndex][1],
-          selectedFontSize: 15,
-          unselectedFontSize: 15,
-          showSelectedLabels: false,
-          showUnselectedLabels: false,
-          items: <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-              icon: Icon(Icons.add_circle),
-              label: '',
-            ),
-            BottomNavigationBarItem(
-              icon: Text(
-                'Total 0:00',
-                overflow: TextOverflow.visible,
-                style: TextStyle(fontSize: 19, color: allColors[colorIndex][1]),
-              ),
-              label: '',
-            ),
-            BottomNavigationBarItem(
-              icon: SvgPicture.asset(
-                'assets/icons/mail.svg',
-                color: allColors[colorIndex][1],
-              ),
-              label: '',
-            ),
-          ],
-          iconSize: 40,
-          elevation: 5),
+          }),
     );
   }
 
   Row buildRow(String icon, String titre) {
+    String tempsEcoule = "00:00:00";
+    if (titre == "All Tasks") {
+      tempsEcoule = tempsEcouleTotal;
+    } else if (titre == "Single Tasks") {
+      tempsEcoule = categories[0].temps_ecoule;
+    }
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -269,7 +345,7 @@ class _MyHomePageState extends State<MyHomePage> {
         Container(
           height: 50,
           width: 150,
-          alignment: Alignment.center,
+          alignment: Alignment.centerLeft,
           child: Text(
             titre,
             style: TextStyle(fontSize: 20.0, color: Colors.white),
@@ -277,17 +353,17 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         Container(
           height: 50,
-          width: 100,
+          width: 115,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
                 height: 50,
-                width: 50,
+                width: 80,
                 alignment: Alignment.center,
                 child: Text(
-                  "00:00",
+                  tempsEcoule,
                   style: TextStyle(fontSize: 20.0, color: Colors.white),
                 ),
               ),
@@ -310,75 +386,80 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget buildRowCategorie(IconData icons, Categorie categorie) {
-    return GestureDetector(
-      onLongPress: () {
-        // sur un appuie long :
-        // afficher le popup pour supprimer ou éditer la catégorie
-        showDelModDialog(context, categorie.id);
-      },
-      onTap: () {
-        // sur un appuie court :
-        // naviguer vers la page de détail de la catégorie
-        Navigator.push(
-            context,
-            PageTransition(
-                type: PageTransitionType.rightToLeftWithFade,
-                child: CategorieDetail(
-                    categorie: categorie, colorIndex: colorIndex),
-                childCurrent: this.widget,
-                duration: Duration(milliseconds: 500)));
-      },
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Container(
-            height: 50,
-            width: 50,
-            child: Image.asset('assets/icons/dossier.png'),
-          ),
-          Container(
-            height: 50,
-            width: 150,
-            alignment: Alignment.centerLeft,
-            child: Text(
-              categorie.nom,
-              style: TextStyle(fontSize: 20.0, color: Colors.black87),
+    // id != 1 pour ne pas afficher la categorie "Single Tasks"
+    if (categorie.id != 1) {
+      return GestureDetector(
+        onLongPress: () {
+          // sur un appuie long :
+          // afficher le popup pour supprimer ou éditer la catégorie
+          showDelModDialog(context, categorie.id);
+        },
+        onTap: () {
+          // sur un appuie court :
+          // naviguer vers la page de détail de la catégorie
+          Navigator.push(
+              context,
+              PageTransition(
+                  type: PageTransitionType.rightToLeftWithFade,
+                  child: CategorieDetail(
+                      categorie: categorie, colorIndex: colorIndex),
+                  childCurrent: this.widget,
+                  duration: Duration(milliseconds: 500)));
+        },
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              height: 50,
+              width: 50,
+              child: Image.asset('assets/icons/dossier.png'),
             ),
-          ),
-          Container(
-            height: 50,
-            width: 115,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Container(
-                  height: 50,
-                  width: 80,
-                  alignment: Alignment.center,
-                  child: Text(
-                    categorie.temps_ecoule,
-                    style: TextStyle(fontSize: 20.0, color: colorTime1),
-                  ),
-                ),
-                Container(
-                  height: 35,
-                  width: 35,
-                  child: Padding(
-                    padding: EdgeInsets.all(10),
-                    child: SvgPicture.asset(
-                      'assets/icons/arrow_right_in_circle.svg',
-                      color: Color(0xff848484),
+            Container(
+              height: 50,
+              width: 150,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                categorie.nom,
+                style: TextStyle(fontSize: 20.0, color: Colors.black87),
+              ),
+            ),
+            Container(
+              height: 50,
+              width: 115,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    height: 50,
+                    width: 80,
+                    alignment: Alignment.center,
+                    child: Text(
+                      categorie.temps_ecoule,
+                      style: TextStyle(fontSize: 20.0, color: colorTime1),
                     ),
                   ),
-                ),
-              ],
+                  Container(
+                    height: 35,
+                    width: 35,
+                    child: Padding(
+                      padding: EdgeInsets.all(10),
+                      child: SvgPicture.asset(
+                        'assets/icons/arrow_right_in_circle.svg',
+                        color: Color(0xff848484),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
+    } else {
+      return Container();
+    }
   }
 
   Container getCategoriesContainer() {

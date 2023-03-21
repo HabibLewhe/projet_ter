@@ -21,7 +21,9 @@ class AllTasksPage extends StatefulWidget {
 }
 
 class _AllTasksPageState extends State<AllTasksPage> {
+  Future<List<Categorie>> futureCategories;
   List<Categorie> categories = [];
+  String tempsEcouleTotal = "00:00:00";
   List<Tache> taches = [];
   bool _isTimeFilterVisible = false;
   int timeFilterPreference;
@@ -32,7 +34,7 @@ class _AllTasksPageState extends State<AllTasksPage> {
   @override
   void initState() {
     super.initState();
-    getCategories();
+    futureCategories = getCategories();
     getTaches();
     getTimeFilterPreference();
     localTimeFilterCounter = widget.timeFilterCounter;
@@ -62,12 +64,33 @@ class _AllTasksPageState extends State<AllTasksPage> {
     getTaches();
   }
 
-  void getCategories() async {
+  Future<List<Categorie>> getCategories() async {
     Database database = await InitDatabase().database;
     var cats = await database.query('categories');
+    List<Categorie> liste = cats.map((e) => Categorie.fromMap(e)).toList();
     setState(() {
-      categories = cats.map((e) => Categorie.fromMap(e)).toList();
+      categories = liste;
     });
+    String tempsEcoule = "00:00:00";
+    for (int i = 0; i < categories.length; i++) {
+      Duration duration1 = Duration(
+        hours: int.parse(tempsEcoule.split(':')[0]),
+        minutes: int.parse(tempsEcoule.split(':')[1]),
+        seconds: int.parse(tempsEcoule.split(':')[2]),
+      );
+      Duration duration2 = Duration(
+        hours: int.parse(categories[i].temps_ecoule.split(':')[0]),
+        minutes: int.parse(categories[i].temps_ecoule.split(':')[1]),
+        seconds: int.parse(categories[i].temps_ecoule.split(':')[2]),
+      );
+      Duration sum = duration1 + duration2;
+      tempsEcoule =
+          "${sum.inHours}:${sum.inMinutes.remainder(60).toString().padLeft(2, '0')}:${sum.inSeconds.remainder(60).toString().padLeft(2, '0')}";
+    }
+    setState(() {
+      tempsEcouleTotal = tempsEcoule;
+    });
+    return liste;
   }
 
   List<Tache> getTachesCategorie(Categorie categorie) {
@@ -96,489 +119,521 @@ class _AllTasksPageState extends State<AllTasksPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: backgroundColor1,
-      appBar: AppBar(
-        title: Text("All Tasks"),
-        centerTitle: true,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: allColors[widget.colorIndex],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          ),
-        ),
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 25.0),
-          child: GestureDetector(
-            onTap: () {
-              // TODO : traiter appuie sur bouton info
-            },
-            child: SvgPicture.asset(
-              'assets/icons/info.svg',
-            ),
-          ),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 25.0),
-            child: GestureDetector(
-              onTap: () {
-                // TODO : traiter appuie sur bouton edit
-              },
-              child: SvgPicture.asset(
-                'assets/icons/edit.svg',
-              ),
-            ),
-          ),
-        ],
-      ),
-      body: Stack(
-        children: [
-          Container(
-            height: _isTimeFilterVisible ? 65 : 0,
+        backgroundColor: backgroundColor1,
+        appBar: AppBar(
+          title: Text("All Tasks"),
+          centerTitle: true,
+          flexibleSpace: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [timeFilterColor1, timeFilterColor2],
+                colors: allColors[widget.colorIndex],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
             ),
-            child: Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Padding(
-                    padding: EdgeInsets.only(left: 30.0),
-                    child: GestureDetector(
-                      onTap: (() {
-                        String text = '';
-                        String date = '';
-                        DateTime now = DateTime.now();
-                        DateFormat formatter = DateFormat('dd/MM/yyyy');
-                        // jour par jour
-                        if (timeFilterPreference == 0) {
-                          DateTime before = now.subtract(
-                              Duration(days: localTimeFilterCounter + 1));
-                          date = formatter.format(before);
-                          if (localTimeFilterCounter + 1 == 1) {
-                            text = "Yesterday";
-                          } else {
-                            text = (localTimeFilterCounter + 1).toString() +
-                                " days ago";
-                          }
-                        }
-                        // semaine par semaine
-                        else if (timeFilterPreference == 1) {
-                          DateTime datePremierJour = now
-                              .subtract(Duration(days: 7))
-                              .subtract(Duration(
-                                  days:
-                                      7 * (localTimeFilterCounter + 1) - 1));
-                          DateTime dateDernierJour = now
-                              .subtract(Duration(days: now.weekday - 1))
-                              .subtract(Duration(
-                                  days: 7 * localTimeFilterCounter + 1));
-                          date = formatter.format(datePremierJour) +
-                              " - " +
-                              formatter.format(dateDernierJour);
-                          if (localTimeFilterCounter + 1 == 1) {
-                            text = "Last Week";
-                          } else {
-                            text = (localTimeFilterCounter + 1).toString() +
-                                " weeks ago";
-                          }
-                        }
-                        // mois par mois
-                        else if (timeFilterPreference == 2) {
-                          DateTime datePremierJour = DateTime(now.year,
-                              now.month - localTimeFilterCounter - 1, 1);
-                          DateTime dateDernierJour = DateTime(now.year,
-                              now.month - localTimeFilterCounter, 0);
-                          date = formatter.format(datePremierJour) +
-                              " - " +
-                              formatter.format(dateDernierJour);
-                          if (localTimeFilterCounter + 1 == 1) {
-                            text = "Last Month";
-                          } else {
-                            text = (localTimeFilterCounter + 1).toString() +
-                                " months ago";
-                          }
-                        }
-                        setState(() {
-                          timeFilterText = text;
-                          timeFilterDate = date;
-                          localTimeFilterCounter++;
-                        });
-                      }),
-                      child: SvgPicture.asset('assets/icons/left.svg'),
-                    ),
-                  ),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () async {
-                        int t = await Navigator.push(
-                            context,
-                            PageTransition(
-                                type: PageTransitionType.rightToLeftWithFade,
-                                child: SettingsTimeFilter(
-                                    timeFilterPreference: timeFilterPreference,
-                                    timeFilterCounter: localTimeFilterCounter,
-                                    colorIndex: widget.colorIndex),
-                                childCurrent: this.widget,
-                                duration: Duration(milliseconds: 500)));
-                        if (t != null){
-                          String text = '';
-                          String date = '';
-                          DateTime now = DateTime.now();
-                          DateFormat formatter = DateFormat('dd/MM/yyyy');
-                          await getTimeFilterPreference();
-                          // jour
-                          if (timeFilterPreference == 0) {
-                            if (t == 0) {
-                              date = formatter.format(now);
-                              text = "Today";
-                            } else if (t == 1) {
-                              date = formatter
-                                  .format(now.subtract(Duration(days: 1)));
-                              text = "Yesterday";
-                            }
-                          }
-                          // semaine
-                          else if (timeFilterPreference == 1) {
-                            if (t == 0) {
-                              DateTime datePremierJour =
-                              now.subtract(Duration(days: now.weekday - 1));
-                              DateTime dateDernierJour =
-                              datePremierJour.add(Duration(days: 6));
-                              date = formatter.format(datePremierJour) +
-                                  " - " +
-                                  formatter.format(dateDernierJour);
-                              text = "This Week";
-                            } else if (t == 1) {
-                              DateTime datePremierJour = now
-                                  .subtract(Duration(days: 7))
-                                  .subtract(Duration(days: 7 * 2 - 1));
-                              DateTime dateDernierJour = now
-                                  .subtract(Duration(days: now.weekday - 1))
-                                  .subtract(Duration(days: 7 + 1));
-                              date = formatter.format(datePremierJour) +
-                                  " - " +
-                                  formatter.format(dateDernierJour);
-                              text = "Last Week";
-                            }
-                          }
-                          // mois
-                          else if (timeFilterPreference == 2) {
-                            if (t == 0) {
-                              DateTime datePremierJour =
-                              DateTime(now.year, now.month, 1);
-                              DateTime dateDernierJour =
-                              DateTime(now.year, now.month + 1, 0);
-                              date = formatter.format(datePremierJour) +
-                                  " - " +
-                                  formatter.format(dateDernierJour);
-                              text = "This Month";
-                            } else if (t == 1) {
-                              DateTime datePremierJour =
-                              DateTime(now.year, now.month - 1, 1);
-                              DateTime dateDernierJour =
-                              DateTime(now.year, now.month, 0);
-                              date = formatter.format(datePremierJour) +
-                                  " - " +
-                                  formatter.format(dateDernierJour);
-                              text = "Last Month";
-                            }
-                          }
-                          setState(() {
-                            timeFilterDate = date;
-                            timeFilterText = text;
-                            localTimeFilterCounter = t;
-                          });
-                        }
-                      },
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            timeFilterText,
-                            style: kLabelStyle,
-                          ),
-                          Text(
-                            timeFilterDate,
-                            style: kLabelStyle,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Visibility(
-                    visible: localTimeFilterCounter == 0 ? false : true,
-                    maintainSize: true,
-                    maintainAnimation: true,
-                    maintainState: true,
-                    child: Padding(
-                      padding: EdgeInsets.only(right: 30.0),
-                      child: GestureDetector(
-                        onTap: (() {
-                          String text = '';
-                          String date = '';
-                          DateFormat formatter = DateFormat('dd/MM/yyyy');
-                          // jour par jour
-                          if (timeFilterPreference == 0) {
-                            DateTime before = DateTime.parse(
-                                timeFilterDate.split('/').reversed.join('-'));
-                            DateTime after = before.add(Duration(days: 1));
-                            date = formatter.format(after);
-                            if (localTimeFilterCounter - 1 == 1) {
-                              text = "Yesterday";
-                            } else if (localTimeFilterCounter - 1 == 0) {
-                              text = "Today";
-                            } else {
-                              text = (localTimeFilterCounter - 1).toString() +
-                                  " days ago";
-                            }
-                          }
-                          // semaine par semaine
-                          else if (timeFilterPreference == 1) {
-                            DateTime beforePremierJour =
-                                formatter.parse(timeFilterDate.split("-")[0]);
-                            DateTime beforeDernierJour = formatter.parse(
-                                timeFilterDate
-                                    .split("-")[1]
-                                    .replaceAll(' ', ''));
-                            DateTime datePremierJour =
-                                beforePremierJour.add(Duration(days: 7));
-                            DateTime dateDernierJour =
-                                beforeDernierJour.add(Duration(days: 7));
-                            date = formatter.format(datePremierJour) +
-                                " - " +
-                                formatter.format(dateDernierJour);
-                            if (localTimeFilterCounter - 1 == 1) {
-                              text = "Last Week";
-                            } else if (localTimeFilterCounter - 1 == 0) {
-                              text = "This Week";
-                            } else {
-                              text = (localTimeFilterCounter - 1).toString() +
-                                  " weeks ago";
-                            }
-                          }
-                          // mois par mois
-                          else if (timeFilterPreference == 2) {
-                            DateTime beforePremierJour =
-                                formatter.parse(timeFilterDate.split("-")[0]);
-                            DateTime beforeDernierJour = formatter.parse(
-                                timeFilterDate
-                                    .split("-")[1]
-                                    .replaceAll(' ', ''));
-                            DateTime datePremierJour = DateTime(
-                                beforePremierJour.year,
-                                beforePremierJour.month + 1,
-                                1);
-                            DateTime dateDernierJour = DateTime(
-                                beforeDernierJour.year,
-                                beforeDernierJour.month + 2,
-                                0);
-                            date = formatter.format(datePremierJour) +
-                                " - " +
-                                formatter.format(dateDernierJour);
-                            if (localTimeFilterCounter - 1 == 1) {
-                              text = "Last Month";
-                            } else if (localTimeFilterCounter - 1 == 0) {
-                              text = "This Month";
-                            } else {
-                              text = (localTimeFilterCounter - 1).toString() +
-                                  " months ago";
-                            }
-                          }
-                          setState(() {
-                            timeFilterText = text;
-                            timeFilterDate = date;
-                            localTimeFilterCounter--;
-                          });
-                        }),
-                        child: SvgPicture.asset('assets/icons/right.svg'),
-                      ),
-                    ),
-                  ),
-                ],
+          ),
+          leading: Padding(
+            padding: const EdgeInsets.only(left: 25.0),
+            child: GestureDetector(
+              onTap: () {
+                // TODO : traiter appuie sur bouton info
+              },
+              child: SvgPicture.asset(
+                'assets/icons/info.svg',
               ),
             ),
           ),
-          Padding(
-              padding: _isTimeFilterVisible
-                  ? EdgeInsets.only(top: 85.0)
-                  : EdgeInsets.only(top: 20.0),
-              child:
-                  //affiche la page dynamiquement
-                  getPageContainer()),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-          type: BottomNavigationBarType.fixed,
-          onTap: (value) {
-            // cas où appuie sur le bouton +
-            if (value == 0) {
-              // afficher la page pour ajouter une catégorie
-              Navigator.push(
-                  context,
-                  PageTransition(
-                      type: PageTransitionType.bottomToTop,
-                      child: AddCatePage(
-                        onDataAdded: _addCategorieItem,
-                        colorIndex: widget.colorIndex,
-                      ),
-                      childCurrent: this.widget,
-                      duration: Duration(milliseconds: 500)));
-            }
-            // cas où appuie sur le bouton balai
-            else if (value == 1) {
-              // TODO : traitement appuie bouton balai
-            }
-            // cas où appuie sur le bouton export
-            else if (value == 3) {
-              // TODO : traitement appuie bouton export
-            }
-            // cas où appuie sur le bouton time filter
-            else if (value == 4) {
-              String text = '';
-              String date = '';
-              DateTime now = DateTime.now();
-              DateFormat formatter = DateFormat('dd/MM/yyyy');
-              // jour
-              if (timeFilterPreference == 0) {
-                date = formatter.format(now);
-                text = "Today";
-              }
-              // semaine
-              else if (timeFilterPreference == 1) {
-                DateTime datePremierJour =
-                    now.subtract(Duration(days: now.weekday - 1));
-                DateTime dateDernierJour =
-                    datePremierJour.add(Duration(days: 6));
-                date = formatter.format(datePremierJour) +
-                    " - " +
-                    formatter.format(dateDernierJour);
-                text = "This Week";
-              }
-              // mois
-              else if (timeFilterPreference == 2) {
-                DateTime datePremierJour = DateTime(now.year, now.month, 1);
-                DateTime dateDernierJour = DateTime(now.year, now.month + 1, 0);
-                date = formatter.format(datePremierJour) +
-                    " - " +
-                    formatter.format(dateDernierJour);
-                text = "This Month";
-              }
-              setState(() {
-                timeFilterDate = date;
-                timeFilterText = text;
-                // si le bandeau de filtre est affiché on le retire, sinon on l'affiche
-                _isTimeFilterVisible = !_isTimeFilterVisible;
-                localTimeFilterCounter = 0;
-              });
-            }
-          },
-          backgroundColor: backgroundColor2,
-          selectedItemColor: allColors[widget.colorIndex][1],
-          unselectedItemColor: allColors[widget.colorIndex][1],
-          selectedFontSize: 15,
-          unselectedFontSize: 15,
-          showSelectedLabels: false,
-          showUnselectedLabels: false,
-          items: <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-              icon: Icon(Icons.add_circle),
-              label: '',
-            ),
-            BottomNavigationBarItem(
-              icon: SvgPicture.asset(
-                'assets/icons/broom.svg',
-                color: allColors[widget.colorIndex][1],
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 25.0),
+              child: GestureDetector(
+                onTap: () {
+                  // TODO : traiter appuie sur bouton edit
+                },
+                child: SvgPicture.asset(
+                  'assets/icons/edit.svg',
+                ),
               ),
-              label: '',
-            ),
-            BottomNavigationBarItem(
-              icon: Text(
-                'Total 0:00',
-                overflow: TextOverflow.visible,
-                style: TextStyle(
-                    fontSize: 19, color: allColors[widget.colorIndex][1]),
-              ),
-              label: '',
-            ),
-            BottomNavigationBarItem(
-              icon: SvgPicture.asset(
-                'assets/icons/mail.svg',
-                color: allColors[widget.colorIndex][1],
-              ),
-              label: '',
-            ),
-            BottomNavigationBarItem(
-              icon: SvgPicture.asset(
-                'assets/icons/calendar.svg',
-                color: allColors[widget.colorIndex][1],
-              ),
-              label: '',
             ),
           ],
-          iconSize: 40,
-          elevation: 5),
-    );
+        ),
+        body: FutureBuilder<List<Categorie>>(
+            future: futureCategories,
+            builder: (BuildContext context,
+                AsyncSnapshot<List<Categorie>> snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return CircularProgressIndicator();
+              } else if (snapshot.hasError) {
+                return BottomAppBar(
+                  child: Text('Error loading categories'),
+                );
+              } else {
+                return Stack(
+                  children: [
+                    Container(
+                      height: _isTimeFilterVisible ? 65 : 0,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [timeFilterColor1, timeFilterColor2],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                        ),
+                      ),
+                      child: Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.only(left: 30.0),
+                              child: GestureDetector(
+                                onTap: (() {
+                                  String text = '';
+                                  String date = '';
+                                  DateTime now = DateTime.now();
+                                  DateFormat formatter =
+                                      DateFormat('dd/MM/yyyy');
+                                  // jour par jour
+                                  if (timeFilterPreference == 0) {
+                                    DateTime before = now.subtract(Duration(
+                                        days: localTimeFilterCounter + 1));
+                                    date = formatter.format(before);
+                                    if (localTimeFilterCounter + 1 == 1) {
+                                      text = "Yesterday";
+                                    } else {
+                                      text = (localTimeFilterCounter + 1)
+                                              .toString() +
+                                          " days ago";
+                                    }
+                                  }
+                                  // semaine par semaine
+                                  else if (timeFilterPreference == 1) {
+                                    DateTime datePremierJour = now
+                                        .subtract(Duration(days: 7))
+                                        .subtract(Duration(
+                                            days: 7 *
+                                                    (localTimeFilterCounter +
+                                                        1) -
+                                                1));
+                                    DateTime dateDernierJour = now
+                                        .subtract(
+                                            Duration(days: now.weekday - 1))
+                                        .subtract(Duration(
+                                            days: 7 * localTimeFilterCounter +
+                                                1));
+                                    date = formatter.format(datePremierJour) +
+                                        " - " +
+                                        formatter.format(dateDernierJour);
+                                    if (localTimeFilterCounter + 1 == 1) {
+                                      text = "Last Week";
+                                    } else {
+                                      text = (localTimeFilterCounter + 1)
+                                              .toString() +
+                                          " weeks ago";
+                                    }
+                                  }
+                                  // mois par mois
+                                  else if (timeFilterPreference == 2) {
+                                    DateTime datePremierJour = DateTime(
+                                        now.year,
+                                        now.month - localTimeFilterCounter - 1,
+                                        1);
+                                    DateTime dateDernierJour = DateTime(
+                                        now.year,
+                                        now.month - localTimeFilterCounter,
+                                        0);
+                                    date = formatter.format(datePremierJour) +
+                                        " - " +
+                                        formatter.format(dateDernierJour);
+                                    if (localTimeFilterCounter + 1 == 1) {
+                                      text = "Last Month";
+                                    } else {
+                                      text = (localTimeFilterCounter + 1)
+                                              .toString() +
+                                          " months ago";
+                                    }
+                                  }
+                                  setState(() {
+                                    timeFilterText = text;
+                                    timeFilterDate = date;
+                                    localTimeFilterCounter++;
+                                  });
+                                }),
+                                child:
+                                    SvgPicture.asset('assets/icons/left.svg'),
+                              ),
+                            ),
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () async {
+                                  int t = await Navigator.push(
+                                      context,
+                                      PageTransition(
+                                          type: PageTransitionType
+                                              .rightToLeftWithFade,
+                                          child: SettingsTimeFilter(
+                                              timeFilterPreference:
+                                                  timeFilterPreference,
+                                              timeFilterCounter:
+                                                  localTimeFilterCounter,
+                                              colorIndex: widget.colorIndex),
+                                          childCurrent: this.widget,
+                                          duration:
+                                              Duration(milliseconds: 500)));
+                                  if (t != null) {
+                                    String text = '';
+                                    String date = '';
+                                    DateTime now = DateTime.now();
+                                    DateFormat formatter =
+                                        DateFormat('dd/MM/yyyy');
+                                    await getTimeFilterPreference();
+                                    // jour
+                                    if (timeFilterPreference == 0) {
+                                      if (t == 0) {
+                                        date = formatter.format(now);
+                                        text = "Today";
+                                      } else if (t == 1) {
+                                        date = formatter.format(
+                                            now.subtract(Duration(days: 1)));
+                                        text = "Yesterday";
+                                      }
+                                    }
+                                    // semaine
+                                    else if (timeFilterPreference == 1) {
+                                      if (t == 0) {
+                                        DateTime datePremierJour = now.subtract(
+                                            Duration(days: now.weekday - 1));
+                                        DateTime dateDernierJour =
+                                            datePremierJour
+                                                .add(Duration(days: 6));
+                                        date = formatter
+                                                .format(datePremierJour) +
+                                            " - " +
+                                            formatter.format(dateDernierJour);
+                                        text = "This Week";
+                                      } else if (t == 1) {
+                                        DateTime datePremierJour = now
+                                            .subtract(Duration(days: 7))
+                                            .subtract(
+                                                Duration(days: 7 * 2 - 1));
+                                        DateTime dateDernierJour = now
+                                            .subtract(
+                                                Duration(days: now.weekday - 1))
+                                            .subtract(Duration(days: 7 + 1));
+                                        date = formatter
+                                                .format(datePremierJour) +
+                                            " - " +
+                                            formatter.format(dateDernierJour);
+                                        text = "Last Week";
+                                      }
+                                    }
+                                    // mois
+                                    else if (timeFilterPreference == 2) {
+                                      if (t == 0) {
+                                        DateTime datePremierJour =
+                                            DateTime(now.year, now.month, 1);
+                                        DateTime dateDernierJour = DateTime(
+                                            now.year, now.month + 1, 0);
+                                        date = formatter
+                                                .format(datePremierJour) +
+                                            " - " +
+                                            formatter.format(dateDernierJour);
+                                        text = "This Month";
+                                      } else if (t == 1) {
+                                        DateTime datePremierJour = DateTime(
+                                            now.year, now.month - 1, 1);
+                                        DateTime dateDernierJour =
+                                            DateTime(now.year, now.month, 0);
+                                        date = formatter
+                                                .format(datePremierJour) +
+                                            " - " +
+                                            formatter.format(dateDernierJour);
+                                        text = "Last Month";
+                                      }
+                                    }
+                                    setState(() {
+                                      timeFilterDate = date;
+                                      timeFilterText = text;
+                                      localTimeFilterCounter = t;
+                                    });
+                                  }
+                                },
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      timeFilterText,
+                                      style: kLabelStyle,
+                                    ),
+                                    Text(
+                                      timeFilterDate,
+                                      style: kLabelStyle,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            Visibility(
+                              visible:
+                                  localTimeFilterCounter == 0 ? false : true,
+                              maintainSize: true,
+                              maintainAnimation: true,
+                              maintainState: true,
+                              child: Padding(
+                                padding: EdgeInsets.only(right: 30.0),
+                                child: GestureDetector(
+                                  onTap: (() {
+                                    String text = '';
+                                    String date = '';
+                                    DateFormat formatter =
+                                        DateFormat('dd/MM/yyyy');
+                                    // jour par jour
+                                    if (timeFilterPreference == 0) {
+                                      DateTime before = DateTime.parse(
+                                          timeFilterDate
+                                              .split('/')
+                                              .reversed
+                                              .join('-'));
+                                      DateTime after =
+                                          before.add(Duration(days: 1));
+                                      date = formatter.format(after);
+                                      if (localTimeFilterCounter - 1 == 1) {
+                                        text = "Yesterday";
+                                      } else if (localTimeFilterCounter - 1 ==
+                                          0) {
+                                        text = "Today";
+                                      } else {
+                                        text = (localTimeFilterCounter - 1)
+                                                .toString() +
+                                            " days ago";
+                                      }
+                                    }
+                                    // semaine par semaine
+                                    else if (timeFilterPreference == 1) {
+                                      DateTime beforePremierJour = formatter
+                                          .parse(timeFilterDate.split("-")[0]);
+                                      DateTime beforeDernierJour =
+                                          formatter.parse(timeFilterDate
+                                              .split("-")[1]
+                                              .replaceAll(' ', ''));
+                                      DateTime datePremierJour =
+                                          beforePremierJour
+                                              .add(Duration(days: 7));
+                                      DateTime dateDernierJour =
+                                          beforeDernierJour
+                                              .add(Duration(days: 7));
+                                      date = formatter.format(datePremierJour) +
+                                          " - " +
+                                          formatter.format(dateDernierJour);
+                                      if (localTimeFilterCounter - 1 == 1) {
+                                        text = "Last Week";
+                                      } else if (localTimeFilterCounter - 1 ==
+                                          0) {
+                                        text = "This Week";
+                                      } else {
+                                        text = (localTimeFilterCounter - 1)
+                                                .toString() +
+                                            " weeks ago";
+                                      }
+                                    }
+                                    // mois par mois
+                                    else if (timeFilterPreference == 2) {
+                                      DateTime beforePremierJour = formatter
+                                          .parse(timeFilterDate.split("-")[0]);
+                                      DateTime beforeDernierJour =
+                                          formatter.parse(timeFilterDate
+                                              .split("-")[1]
+                                              .replaceAll(' ', ''));
+                                      DateTime datePremierJour = DateTime(
+                                          beforePremierJour.year,
+                                          beforePremierJour.month + 1,
+                                          1);
+                                      DateTime dateDernierJour = DateTime(
+                                          beforeDernierJour.year,
+                                          beforeDernierJour.month + 2,
+                                          0);
+                                      date = formatter.format(datePremierJour) +
+                                          " - " +
+                                          formatter.format(dateDernierJour);
+                                      if (localTimeFilterCounter - 1 == 1) {
+                                        text = "Last Month";
+                                      } else if (localTimeFilterCounter - 1 ==
+                                          0) {
+                                        text = "This Month";
+                                      } else {
+                                        text = (localTimeFilterCounter - 1)
+                                                .toString() +
+                                            " months ago";
+                                      }
+                                    }
+                                    setState(() {
+                                      timeFilterText = text;
+                                      timeFilterDate = date;
+                                      localTimeFilterCounter--;
+                                    });
+                                  }),
+                                  child: SvgPicture.asset(
+                                      'assets/icons/right.svg'),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Padding(
+                        padding: _isTimeFilterVisible
+                            ? EdgeInsets.only(top: 85.0)
+                            : EdgeInsets.only(top: 20.0),
+                        child:
+                            //affiche la page dynamiquement
+                            getPageContainer()),
+                  ],
+                );
+              }
+            }),
+        bottomNavigationBar: FutureBuilder<List<Categorie>>(
+          future: futureCategories,
+          builder:
+              (BuildContext context, AsyncSnapshot<List<Categorie>> snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return CircularProgressIndicator();
+            } else if (snapshot.hasError) {
+              return BottomAppBar(
+                child: Text('Error loading categories'),
+              );
+            } else {
+              return BottomNavigationBar(
+                  type: BottomNavigationBarType.fixed,
+                  onTap: (value) {
+                    // cas où appuie sur le bouton +
+                    if (value == 0) {
+                      // afficher la page pour ajouter une catégorie
+                      Navigator.push(
+                          context,
+                          PageTransition(
+                              type: PageTransitionType.bottomToTop,
+                              child: AddCatePage(
+                                onDataAdded: _addCategorieItem,
+                                colorIndex: widget.colorIndex,
+                              ),
+                              childCurrent: this.widget,
+                              duration: Duration(milliseconds: 500)));
+                    }
+                    // cas où appuie sur le bouton balai
+                    else if (value == 1) {
+                      // TODO : traitement appuie bouton balai
+                    }
+                    // cas où appuie sur le bouton export
+                    else if (value == 3) {
+                      // TODO : traitement appuie bouton export
+                    }
+                    // cas où appuie sur le bouton time filter
+                    else if (value == 4) {
+                      String text = '';
+                      String date = '';
+                      DateTime now = DateTime.now();
+                      DateFormat formatter = DateFormat('dd/MM/yyyy');
+                      // jour
+                      if (timeFilterPreference == 0) {
+                        date = formatter.format(now);
+                        text = "Today";
+                      }
+                      // semaine
+                      else if (timeFilterPreference == 1) {
+                        DateTime datePremierJour =
+                            now.subtract(Duration(days: now.weekday - 1));
+                        DateTime dateDernierJour =
+                            datePremierJour.add(Duration(days: 6));
+                        date = formatter.format(datePremierJour) +
+                            " - " +
+                            formatter.format(dateDernierJour);
+                        text = "This Week";
+                      }
+                      // mois
+                      else if (timeFilterPreference == 2) {
+                        DateTime datePremierJour =
+                            DateTime(now.year, now.month, 1);
+                        DateTime dateDernierJour =
+                            DateTime(now.year, now.month + 1, 0);
+                        date = formatter.format(datePremierJour) +
+                            " - " +
+                            formatter.format(dateDernierJour);
+                        text = "This Month";
+                      }
+                      setState(() {
+                        timeFilterDate = date;
+                        timeFilterText = text;
+                        // si le bandeau de filtre est affiché on le retire, sinon on l'affiche
+                        _isTimeFilterVisible = !_isTimeFilterVisible;
+                        localTimeFilterCounter = 0;
+                      });
+                    }
+                  },
+                  backgroundColor: backgroundColor2,
+                  selectedItemColor: allColors[widget.colorIndex][1],
+                  unselectedItemColor: allColors[widget.colorIndex][1],
+                  selectedFontSize: 15,
+                  unselectedFontSize: 15,
+                  showSelectedLabels: false,
+                  showUnselectedLabels: false,
+                  items: <BottomNavigationBarItem>[
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.add_circle),
+                      label: '',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: SvgPicture.asset(
+                        'assets/icons/broom.svg',
+                        color: allColors[widget.colorIndex][1],
+                      ),
+                      label: '',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "Total ",
+                            overflow: TextOverflow.visible,
+                            style: TextStyle(
+                                fontSize: 19, color: allColors[widget.colorIndex][1]),
+                          ),
+                          Text(
+                            tempsEcouleTotal,
+                            overflow: TextOverflow.visible,
+                            style: TextStyle(
+                                fontSize: 19, color: allColors[widget.colorIndex][1]),
+                          ),
+                        ],
+                      ),
+                      label: '',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: SvgPicture.asset(
+                        'assets/icons/mail.svg',
+                        color: allColors[widget.colorIndex][1],
+                      ),
+                      label: '',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: SvgPicture.asset(
+                        'assets/icons/calendar.svg',
+                        color: allColors[widget.colorIndex][1],
+                      ),
+                      label: '',
+                    ),
+                  ],
+                  iconSize: 40,
+                  elevation: 5);
+            }
+          },
+        ));
   }
 
   Widget getPageContainer() {
-    List<Tache> singleTasks = [];
-    for (int i = 0; i < taches.length; i++) {
-      if (taches[i].id_categorie == null) {
-        singleTasks.add(taches[i]);
-      }
-    }
-    if (singleTasks.isEmpty) {
-      return Container();
-    }
     return SingleChildScrollView(
       child: Column(
         children: [
-          if (singleTasks.isNotEmpty)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: EdgeInsets.only(left: 16.0),
-                  child: Text(
-                    "Single Tasks",
-                    style: TextStyle(
-                        fontSize: 20,
-                        color: allColors[widget.colorIndex][1],
-                        fontFamily: 'Montserrat'),
-                  ),
-                ),
-                Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: borderColor, width: 1),
-                    color: backgroundColor2,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: NeverScrollableScrollPhysics(),
-                        itemCount: singleTasks.length,
-                        itemBuilder: (BuildContext context, int index) {
-                          final singleTask = singleTasks[index];
-                          return buildRowTache((singleTask.nom), singleTask.id);
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
           ...categories.map((categorie) {
             final tachesCategorie = getTachesCategorie(categorie);
             return buildRowCategorie(
@@ -671,17 +726,17 @@ class _AllTasksPageState extends State<AllTasksPage> {
           ),
           Container(
             height: 50,
-            width: 100,
+            width: 125,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
                   height: 50,
-                  width: 50,
-                  alignment: Alignment.center,
+                  width: 80,
+                  alignment: Alignment.centerLeft,
                   child: Text(
-                    "00:00",
+                    taches[id - 1].temps_ecoule,
                     style: TextStyle(fontSize: 20.0, color: Colors.black),
                   ),
                 ),

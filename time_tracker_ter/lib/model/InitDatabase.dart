@@ -51,7 +51,8 @@ class InitDatabase {
         // temps ecoulé : string au format XX:XX:XX (heures:minutes:secondes)
         // calculé automatiquement
         "temps_ecoule	TEXT DEFAULT '00:00:00',"
-        "id_categorie	INTEGER,"
+        // id_categorie = 1 si la tache est une single task
+        "id_categorie	INTEGER NOT NULL,"
         "FOREIGN KEY(id_categorie) REFERENCES categories(id))");
 
     await db.execute("CREATE TABLE IF NOT EXISTS deroulement_tache ("
@@ -81,6 +82,7 @@ class InitDatabase {
     // categories
     await db.execute('''
     INSERT INTO categories (nom, couleur) VALUES 
+      ('Single Tasks', 'ff000000'),
       ('Axari Graphics', 'ff2b8713'), 
       ('Website Ions Inc.', 'ff6c1387'), 
       ('Categorie3', 'ff453bec'), 
@@ -92,20 +94,20 @@ class InitDatabase {
     // taches
     await db.execute('''
       INSERT INTO taches (nom, couleur, id_categorie) VALUES 
-      ("Communication", "ff000000", NULL),
-      ("Invoicing", "ff000000", NULL),
-      ("Logo design", "ff000000", 1),
-      ("Brochure", "ff000000", 1),
-      ("Webdesign", "ff000000", 1),
-      ("Concept", "ff000000", 2),
-      ("Screendesign", "ff000000", 2),
-      ("Tache 8", "ff000000", 3),
-      ("Tache 9", "ff000000", 3),
-      ("Tache 10", "ff000000", 4),
-      ("Tache 11", "ff000000", 5),
-      ("Tache 12", "ff000000", 5),
-      ("Tache 13", "ff000000", 6),
-      ("Tache 14", "ff000000", 6)
+      ("Communication", "ff000000", 1),
+      ("Invoicing", "ff000000", 1),
+      ("Logo design", "ff000000", 2),
+      ("Brochure", "ff000000", 2),
+      ("Webdesign", "ff000000", 2),
+      ("Concept", "ff000000", 3),
+      ("Screendesign", "ff000000", 3),
+      ("Tache 8", "ff000000", 4),
+      ("Tache 9", "ff000000", 4),
+      ("Tache 10", "ff000000", 5),
+      ("Tache 11", "ff000000", 6),
+      ("Tache 12", "ff000000", 6),
+      ("Tache 13", "ff000000", 7),
+      ("Tache 14", "ff000000", 7)
     ''');
 
     // procédure pour mettre à jour automatiquement les champs temp_ecoule
