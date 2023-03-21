@@ -10,6 +10,8 @@ import '../utilities/constants.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 
+import 'History_main.dart';
+
 class AllTasksPage extends StatefulWidget {
   final int colorIndex;
   final int timeFilterCounter;
@@ -174,8 +176,7 @@ class _AllTasksPageState extends State<AllTasksPage> {
                           DateTime datePremierJour = now
                               .subtract(Duration(days: 7))
                               .subtract(Duration(
-                                  days:
-                                      7 * (localTimeFilterCounter + 1) - 1));
+                                  days: 7 * (localTimeFilterCounter + 1) - 1));
                           DateTime dateDernierJour = now
                               .subtract(Duration(days: now.weekday - 1))
                               .subtract(Duration(
@@ -194,8 +195,8 @@ class _AllTasksPageState extends State<AllTasksPage> {
                         else if (timeFilterPreference == 2) {
                           DateTime datePremierJour = DateTime(now.year,
                               now.month - localTimeFilterCounter - 1, 1);
-                          DateTime dateDernierJour = DateTime(now.year,
-                              now.month - localTimeFilterCounter, 0);
+                          DateTime dateDernierJour = DateTime(
+                              now.year, now.month - localTimeFilterCounter, 0);
                           date = formatter.format(datePremierJour) +
                               " - " +
                               formatter.format(dateDernierJour);
@@ -228,7 +229,7 @@ class _AllTasksPageState extends State<AllTasksPage> {
                                     colorIndex: widget.colorIndex),
                                 childCurrent: this.widget,
                                 duration: Duration(milliseconds: 500)));
-                        if (t != null){
+                        if (t != null) {
                           String text = '';
                           String date = '';
                           DateTime now = DateTime.now();
@@ -249,9 +250,9 @@ class _AllTasksPageState extends State<AllTasksPage> {
                           else if (timeFilterPreference == 1) {
                             if (t == 0) {
                               DateTime datePremierJour =
-                              now.subtract(Duration(days: now.weekday - 1));
+                                  now.subtract(Duration(days: now.weekday - 1));
                               DateTime dateDernierJour =
-                              datePremierJour.add(Duration(days: 6));
+                                  datePremierJour.add(Duration(days: 6));
                               date = formatter.format(datePremierJour) +
                                   " - " +
                                   formatter.format(dateDernierJour);
@@ -273,18 +274,18 @@ class _AllTasksPageState extends State<AllTasksPage> {
                           else if (timeFilterPreference == 2) {
                             if (t == 0) {
                               DateTime datePremierJour =
-                              DateTime(now.year, now.month, 1);
+                                  DateTime(now.year, now.month, 1);
                               DateTime dateDernierJour =
-                              DateTime(now.year, now.month + 1, 0);
+                                  DateTime(now.year, now.month + 1, 0);
                               date = formatter.format(datePremierJour) +
                                   " - " +
                                   formatter.format(dateDernierJour);
                               text = "This Month";
                             } else if (t == 1) {
                               DateTime datePremierJour =
-                              DateTime(now.year, now.month - 1, 1);
+                                  DateTime(now.year, now.month - 1, 1);
                               DateTime dateDernierJour =
-                              DateTime(now.year, now.month, 0);
+                                  DateTime(now.year, now.month, 0);
                               date = formatter.format(datePremierJour) +
                                   " - " +
                                   formatter.format(dateDernierJour);
@@ -691,6 +692,16 @@ class _AllTasksPageState extends State<AllTasksPage> {
                   child: GestureDetector(
                     onTap: () {
                       // TODO : naviguer vers l'historique de la tache
+                      Navigator.push(
+                          context,
+                          PageTransition(
+                              type: PageTransitionType.rightToLeftWithFade,
+                              child: HistoryPage(
+                                title: titre,
+                                id: id,
+                              ),
+                              childCurrent: this.widget,
+                              duration: Duration(milliseconds: 500)));
                     },
                     child: Stack(
                       children: [
