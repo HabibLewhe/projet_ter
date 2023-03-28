@@ -3,10 +3,10 @@ class DeroulementTache{
   int id_tache;
   String date_debut;
   String date_fin;
-  double Latitude;
-  double Longitude;
+  double latitude;
+  double longitude;
 
-  DeroulementTache({this.id, this.id_tache, this.date_debut, this.date_fin, this.Latitude, this.Longitude});
+  DeroulementTache({this.id, this.id_tache, this.date_debut, this.date_fin, this.latitude, this.longitude});
 
   Map<String, dynamic> toMap() {
     return {
@@ -14,8 +14,8 @@ class DeroulementTache{
       'id_tache' : id_tache,
       'date_debut': date_debut,
       'date_fin': date_fin,
-      'latitude': Latitude,
-      'longitude': Longitude
+      'latitude': latitude,
+      'longitude': longitude
     };
   }
 
@@ -24,12 +24,12 @@ class DeroulementTache{
         id_tache = map['id_tache'],
         date_debut = map['date_debut'],
         date_fin = map['date_fin'],
-        Latitude = map['latitude'],
-        Longitude = map['longitude'];
+        latitude = map['Latitude'],
+        longitude = map['Longitude'];
 
   @override
   String toString() {
-    return 'DeroulementTache{id: $id, id_tache: $id_tache, date_debut: $date_debut, date_fin: $date_fin, latitude: $Latitude, longitude: $Longitude}';
+    return 'DeroulementTache{id: $id, id_tache: $id_tache, date_debut: $date_debut, date_fin: $date_fin, latitude: $latitude, longitude: $longitude}';
   }
 
 }

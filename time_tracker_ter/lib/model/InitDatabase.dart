@@ -139,7 +139,7 @@ class InitDatabase {
 
     // déroulement tache
     await db.execute(
-        "INSERT INTO deroulement_tache (id_tache, date_debut, date_fin, Longitude, Latitude) VALUES "
+        "INSERT INTO deroulement_tache (id_tache, date_debut, date_fin, latitude, longitude) VALUES "
         "(1, '2023-03-09T16:30:00Z', '2023-03-09T17:30:00Z', 48.8566, 2.3522),"
         "(1, '2023-03-10T09:00:00Z', '2023-03-10T11:00:00Z', 48.8647, 2.3490),"
         "(2, '2023-03-11T13:30:00Z', '2023-03-11T14:30:00Z', 48.8534, 2.3488),"

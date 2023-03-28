@@ -2,11 +2,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:sqflite/sqflite.dart';
-import '../model/DeroulementTache.dart';
 import '../model/InitDatabase.dart';
 import '../utilities/constants.dart';
 
-class TimeDetailsPage extends StatefulWidget {
+class AddCreneauPage extends StatefulWidget {
   final Function() onDataAdded;
   final String title;
   final DateTime start;
@@ -14,10 +13,10 @@ class TimeDetailsPage extends StatefulWidget {
   final Duration duration;
   final double latitude;
   final double longitude;
-  final DeroulementTache deroulementTache;
+  final int id_tache;
 
-  const TimeDetailsPage({
-    this.deroulementTache,
+  const AddCreneauPage({
+    this.id_tache,
     this.title,
     this.start,
     this.end,
@@ -28,10 +27,10 @@ class TimeDetailsPage extends StatefulWidget {
   });
 
   @override
-  State<TimeDetailsPage> createState() => _TimeDetailsPageState();
+  State<AddCreneauPage> createState() => _AddCreneauPageState();
 }
 
-class _TimeDetailsPageState extends State<TimeDetailsPage> {
+class _AddCreneauPageState extends State<AddCreneauPage> {
   static const Color _mainColor = Color.fromRGBO(0, 93, 164, 1);
   static const Color _sndColor = Color.fromRGBO(0, 93, 164, .25);
 
@@ -50,22 +49,21 @@ class _TimeDetailsPageState extends State<TimeDetailsPage> {
   double newLatitude = 47.8430441;
   double newLongitude = 1.9365067;
 
-  void updateCreneau() async {
+  void addNewCreneau() async {
     Database database = await InitDatabase().database;
 
-    print("widget.deroulementTache : ${widget.deroulementTache}");
-    //mettre à jour un créneau
-    await database.update('deroulement_tache', {
-      'id_tache' : widget.deroulementTache.id_tache,
+    //inserer un nouveau créneau
+    await database.insert('deroulement_tache', {
+      'id_tache': widget.id_tache,
       'date_debut': newStartDate.toUtc().toIso8601String(),
       'date_fin': newEndDate.toUtc().toIso8601String(),
       'latitude': newLatitude,
       'longitude': newLongitude
-    }, where: 'id = ?', whereArgs: [widget.deroulementTache.id]);
+    });
 
     //afficher un message de succès
-    showSuccessMessage("Créneau mis à jour");
-    //notifier le widget parent que les données ont été mise à jour
+    showSuccessMessage("Créneau ajoutée avec succès");
+    //notifier le widget parent que les données ont été ajoutées
     widget.onDataAdded();
     //go back to history page
     Navigator.of(context).pop();
@@ -88,7 +86,7 @@ class _TimeDetailsPageState extends State<TimeDetailsPage> {
         ),
         actions: [IconButton(icon: const Icon(Icons.save), onPressed: () {
           setState(() {
-            updateCreneau();
+            addNewCreneau();
           });
         })],
       ),
@@ -115,13 +113,13 @@ class _TimeDetailsPageState extends State<TimeDetailsPage> {
                   trailing: Text(
                     (startDateChanged == true)
                         ? "${DateFormat('yMMMEd').format(newStartDate)} "
-                            "${DateFormat('Hm').format(newStartDate)}"
+                        "${DateFormat('Hm').format(newStartDate)}"
                         : "${DateFormat('yMMMEd').format(widget.start)} "
-                            "${DateFormat('Hm').format(widget.start)}",
+                        "${DateFormat('Hm').format(widget.start)}",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color:
-                          (clickStart == true) ? Colors.white : Colors.black38,
+                      (clickStart == true) ? Colors.white : Colors.black38,
                     ),
                     textAlign: TextAlign.end,
                   ),
@@ -135,18 +133,18 @@ class _TimeDetailsPageState extends State<TimeDetailsPage> {
                       showCupertinoModalPopup(
                           context: context,
                           builder: (BuildContext context) => SizedBox(
-                                height: 250,
-                                child: CupertinoDatePicker(
-                                  backgroundColor: Colors.white,
-                                  initialDateTime: widget.start,
-                                  onDateTimeChanged: (DateTime newTime) {
-                                    setState(() {
-                                      startDateChanged = true;
-                                      newStartDate = newTime;
-                                    });
-                                  },
-                                ),
-                              ));
+                            height: 250,
+                            child: CupertinoDatePicker(
+                              backgroundColor: Colors.white,
+                              initialDateTime: widget.start,
+                              onDateTimeChanged: (DateTime newTime) {
+                                setState(() {
+                                  startDateChanged = true;
+                                  newStartDate = newTime;
+                                });
+                              },
+                            ),
+                          ));
                     });
                   },
                 ),
@@ -165,7 +163,7 @@ class _TimeDetailsPageState extends State<TimeDetailsPage> {
                     style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color:
-                            (clickEnd == true) ? Colors.white : Colors.black),
+                        (clickEnd == true) ? Colors.white : Colors.black),
                   ),
                   trailing: Text(
                       (endDateChanged == true)
@@ -174,7 +172,7 @@ class _TimeDetailsPageState extends State<TimeDetailsPage> {
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color:
-                              (clickEnd == true) ? Colors.white : Colors.grey)),
+                          (clickEnd == true) ? Colors.white : Colors.grey)),
                   onTap: () {
                     setState(() {
                       clickStart = false;
@@ -185,18 +183,18 @@ class _TimeDetailsPageState extends State<TimeDetailsPage> {
                       showCupertinoModalPopup(
                           context: context,
                           builder: (BuildContext context) => SizedBox(
-                                height: 250,
-                                child: CupertinoDatePicker(
-                                  backgroundColor: Colors.white,
-                                  initialDateTime: widget.end,
-                                  onDateTimeChanged: (DateTime newTime) {
-                                    setState(() {
-                                      endDateChanged = true;
-                                      newEndDate = newTime;
-                                    });
-                                  },
-                                ),
-                              ));
+                            height: 250,
+                            child: CupertinoDatePicker(
+                              backgroundColor: Colors.white,
+                              initialDateTime: widget.end,
+                              onDateTimeChanged: (DateTime newTime) {
+                                setState(() {
+                                  endDateChanged = true;
+                                  newEndDate = newTime;
+                                });
+                              },
+                            ),
+                          ));
                     });
                   },
                 ),
@@ -217,11 +215,11 @@ class _TimeDetailsPageState extends State<TimeDetailsPage> {
                   trailing: Text(
                       (durationChanged == true)
                           ? "${newDuration.inHours}:"
-                              "${(newDuration.inMinutes % 60).toString().padLeft(2, '0')}:"
-                              "${(newDuration.inSeconds % 60).toString().padLeft(2, '0')}"
+                          "${(newDuration.inMinutes % 60).toString().padLeft(2, '0')}:"
+                          "${(newDuration.inSeconds % 60).toString().padLeft(2, '0')}"
                           : "${widget.duration.inHours}:"
-                              "${(widget.duration.inMinutes % 60).toString().padLeft(2, '0')}:"
-                              "${(widget.duration.inSeconds % 60).toString().padLeft(2, '0')}",
+                          "${(widget.duration.inMinutes % 60).toString().padLeft(2, '0')}:"
+                          "${(widget.duration.inSeconds % 60).toString().padLeft(2, '0')}",
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: (clickDuration == true)

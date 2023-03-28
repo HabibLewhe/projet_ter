@@ -7,6 +7,22 @@ const borderColor = Color(0x1A000000);
 const backgroundColor1 = Color(0xFFF3F3F3);
 const backgroundColor2 = Color(0xFFFFFEFE);
 const colorTime1 = Color(0xFF848484);
+const start = "Start";
+const end = "End";
+const duration = "Duration";
+const longitude = "Longitude";
+const latitude = "Latitude";
+const delete = "Delete";
+const now = "Now";
+const today = "Today";
+const thisWeek = "This week";
+const thisMonth = "This month";
+const total = "Total";
+const confirmerSuppression = "Confirmer la suppression";
+const supprimerCreneau = "Supprimer ce créneau ?";
+const viderHistorique  = "Vider l'historique de cette tâche ?";
+const annuler = "Annuler";
+const supprimer = "Supprimer";
 
 final kHintTextStyle = TextStyle(
   color: Colors.white54,

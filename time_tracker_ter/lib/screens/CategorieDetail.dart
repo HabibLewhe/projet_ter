@@ -7,6 +7,7 @@ import 'package:sqflite/sqflite.dart';
 import '../model/InitDatabase.dart';
 import '../model/Tache.dart';
 import '../utilities/constants.dart';
+import 'History_main.dart';
 
 class CategorieDetail extends StatefulWidget {
   final Categorie categorie;
@@ -223,6 +224,17 @@ class CategorieDetail_ extends State<CategorieDetail> {
                   child: GestureDetector(
                     onTap: () {
                       // TODO : naviguer vers l'historique de la tache
+                      Navigator.push(
+                          context,
+                          PageTransition(
+                              type: PageTransitionType.rightToLeftWithFade,
+                              child: HistoryPage(
+                                title: tache.nom,
+                                id: tache.id,
+                                colorIndex: widget.colorIndex,
+                              ),
+                              childCurrent: this.widget,
+                              duration: Duration(milliseconds: 500)));
                     },
                     child: Stack(
                       children: [

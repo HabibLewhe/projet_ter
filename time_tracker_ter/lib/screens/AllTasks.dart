@@ -755,6 +755,7 @@ class _AllTasksPageState extends State<AllTasksPage> {
                               child: HistoryPage(
                                 title: titre,
                                 id: id,
+                                colorIndex: widget.colorIndex,
                               ),
                               childCurrent: this.widget,
                               duration: Duration(milliseconds: 500)));
