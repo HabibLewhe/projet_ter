@@ -1,16 +1,14 @@
-//import 'dart:html';
-
-import 'package:eva_icons_flutter/eva_icons_flutter.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_login_ui/screens/EditTask.dart';
-import 'package:provider/provider.dart';
+
+//import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-
-// import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 
 import '../model/Categorie.dart';
 import '../model/InitDatabase.dart';
@@ -59,19 +57,19 @@ class _AllTasksEditState extends State<AllTasksEdit> {
   }
 
   //INSERT to Tache
-  Future<void> insertTaches(Database db, List<Tache> taches) async {
-    final batch = db.batch();
-    for (final tache in taches) {
-      batch.insert('taches', {
-        'id': tache.id,
-        'nom': tache.nom,
-        'couleur': tache.couleur,
-        'temps_ecoule': tache.temps_ecoule.toIso8601String(),
-        'id_categorie': tache.id_categorie
-      });
-    }
-    await batch.commit();
-  }
+  // Future<void> insertTaches(Database db, List<Tache> taches) async {
+  //   final batch = db.batch();
+  //   for (final tache in taches) {
+  //     batch.insert('taches', {
+  //       'id': tache.id,
+  //       'nom': tache.nom,
+  //       'couleur': tache.couleur,
+  //       'temps_ecoule': tache.temps_ecoule.toIso8601String(),
+  //       'id_categorie': tache.id_categorie
+  //     });
+  //   }
+  //   await batch.commit();
+  // }
 
   //GET categorie from data
   List<Categorie> categories = [];
@@ -80,16 +78,11 @@ class _AllTasksEditState extends State<AllTasksEdit> {
     //get id_user connected
     SharedPreferences prefs = await SharedPreferences.getInstance();
     int id_user = prefs.getInt('userId');
-    if (id_user != null) {
-      var cats = await database.query('categories',
-          //where email and password are equal to the email and password entered by the user
-          where: 'id_categorie_sup = 1 AND id_user = ?',
-          whereArgs: [id_user]);
-      setState(() {
-        categories = cats.map((e) => Categorie.fromMap(e)).toList();
-      });
-      //print all categories one by one
-    }
+    var cats = await database.query('categories');
+    setState(() {
+      categories = cats.map((e) => Categorie.fromMap(e)).toList();
+    });
+    //print all categories one by one
   }
 
   void getTaches() async {
@@ -113,6 +106,8 @@ class _AllTasksEditState extends State<AllTasksEdit> {
     print(result.toString());
     return result;
   }
+
+  bool _isDeleteButtonPressed = false;
 
   @override
   Widget build(BuildContext context) {
@@ -185,71 +180,221 @@ class _AllTasksEditState extends State<AllTasksEdit> {
                           itemCount: item['items'].length,
                           itemBuilder: (ctx, index) {
                             final task = item['items'][index];
-                            return ListTile(
-                              title: Row(
-                                children: [
-                                  GestureDetector(
-                                    onTap: () {
-                                      //DETELE TACHE
-                                      showDialog(
-                                          context: context,
-                                          builder: (BuildContext context) {
-                                            return AlertDialog(
-                                              title:
-                                                  Text('Delete Confirmation'),
-                                              content: Text(
-                                                  'Are you sure you want to delete this task?'),
-                                              actions: [
-                                                TextButton(
-                                                  child: const Text('Cancel'),
-                                                  onPressed: () {
-                                                    Navigator.of(context)
-                                                        .pop(); //Dismiss Dialog
-                                                  },
-                                                ),
-                                                ElevatedButton(
-                                                  onPressed: () async {
-                                                    Navigator.of(context)
-                                                        .pop(); //Dismiss Dialog
-                                                    setState(() {
-                                                      DeleteTache(task.id);
-                                                      refreshData();
-                                                    });
-                                                  },
-                                                  child: const Text('Delete'),
-                                                ),
-                                              ],
-                                            );
-                                          });
-                                    },
-                                    child: Icon(
-                                      Icons.delete_sharp,
-                                      color: Colors.blueGrey,
-                                    ),
+                            return SlidableAutoCloseBehavior(
+                                closeWhenOpened: true,
+                                closeWhenTapped: true,
+                                child: Slidable(
+                                  // Specify a key if the Slidable is dismissible.
+                                  key: const ValueKey(0),
+                                  groupTag: '0',
+
+                                  // The start action pane is the one at the left or the top side.
+                                  endActionPane: ActionPane(
+                                    extentRatio: 0.4,
+                                    // A motion is a widget used to control how the pane animates.
+                                    motion: const DrawerMotion(),
+
+                                    // A pane can dismiss the Slidable.
+                                    // dismissible:
+                                    //     DismissiblePane(onDismissed: () {}),
+
+                                    // All actions are defined in the children parameter.\
+
+                                    children: [
+                                      SlidableAction(
+                                        onPressed: (context) => {
+                                          //TODO EDIT SLIDABLE
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (context) => EditTask(
+                                                  task,
+                                                  categories,
+                                                  refreshData),
+                                            ),
+                                          )
+                                        },
+                                        backgroundColor: Color(0xFF21B7CA),
+                                        foregroundColor: Colors.white,
+                                        icon: Icons.edit,
+                                      ),
+                                      SlidableAction(
+                                        onPressed: (context) => {
+                                          // setState(
+                                          //   () =>
+                                          //       {_isDeleteButtonPressed = true},
+                                          // ),
+                                          // if (_isDeleteButtonPressed)
+                                          //   {
+                                          //     print("TRUE ROI NE MAAAAAAA"),
+
+                                          //   }
+
+                                          //TODO delete slidable
+                                          showDialog(
+                                              context: context,
+                                              builder: (BuildContext context) {
+                                                return AlertDialog(
+                                                  title: Text(
+                                                      'Delete Confirmation'),
+                                                  content: Text(
+                                                      'Are you sure you want to delete this task?'),
+                                                  actions: [
+                                                    TextButton(
+                                                      child:
+                                                          const Text('Cancel'),
+                                                      onPressed: () {
+                                                        Navigator.of(context)
+                                                            .pop(); //Dismiss Dialog
+                                                      },
+                                                    ),
+                                                    ElevatedButton(
+                                                      onPressed: () async {
+                                                        Navigator.of(context)
+                                                            .pop(); //Dismiss Dialog
+                                                        setState(() {
+                                                          DeleteTache(task.id);
+                                                          refreshData();
+                                                        });
+                                                      },
+                                                      child:
+                                                          const Text('Delete'),
+                                                    ),
+                                                  ],
+                                                );
+                                              }),
+                                        },
+                                        backgroundColor: Color(0xFFFE4A49),
+                                        foregroundColor: Colors.white,
+                                        icon: Icons.delete,
+                                      ),
+                                    ],
                                   ),
-                                  SizedBox(
-                                    width: 18,
+                                  child: ListTile(
+                                    title: Row(children: [
+                                      SizedBox(
+                                        width: 18,
+                                      ),
+                                      Expanded(
+                                        child: Text(task.nom),
+                                      ),
+                                    ]),
                                   ),
-                                  Expanded(
-                                    child: Text(task.nom),
-                                  ),
-                                  GestureDetector(
-                                    onTap: () {
-                                      Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (context) => EditTask(
-                                              task, categories, refreshData),
-                                        ),
-                                      );
-                                    },
-                                    child: Icon(
-                                      Icons.create,
-                                      color: Colors.blueGrey,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
+                                ));
+                            // return Slidable(
+                            //   // Specify a key if the Slidable is dismissible.
+                            //   key: const ValueKey(0),
+                            //   groupTag: '0',
+
+                            //   // The start action pane is the one at the left or the top side.
+                            //   endActionPane: ActionPane(
+                            //     extentRatio: 0.4,
+                            //     // A motion is a widget used to control how the pane animates.
+                            //     motion: const DrawerMotion(),
+
+                            //     // A pane can dismiss the Slidable.
+                            //     // dismissible:
+                            //     //     DismissiblePane(onDismissed: () {}),
+
+                            //     // All actions are defined in the children parameter.\
+
+                            //     children: [
+                            //       SlidableAction(
+                            //         onPressed: (context) => {
+                            //           print("this is action EDIT SLIDABALE"),
+                            //           print("tai sao la dau phay??????")
+                            //         },
+                            //         backgroundColor: Color(0xFF21B7CA),
+                            //         foregroundColor: Colors.white,
+                            //         icon: Icons.edit,
+                            //       ),
+                            //       SlidableAction(
+                            //         onPressed: (context) => {
+                            //           print("this is action DELTE SLIDABLE")
+                            //         },
+                            //         backgroundColor: Color(0xFFFE4A49),
+                            //         foregroundColor: Colors.white,
+                            //         icon: Icons.delete,
+                            //       ),
+                            //     ],
+                            //   ),
+                            //   child: ListTile(
+                            //     title: Row(children: [
+                            //       SizedBox(
+                            //         width: 18,
+                            //       ),
+                            //       Expanded(
+                            //         child: Text(task.nom),
+                            //       ),
+                            //     ]),
+                            //   ),
+                            // );
+
+                            // return ListTile(
+                            //   title: Row(
+                            //     children: [
+                            //       GestureDetector(
+                            //         onTap: () {
+                            //           //DETELE TACHE
+                            //           showDialog(
+                            //               context: context,
+                            //               builder: (BuildContext context) {
+                            //                 return AlertDialog(
+                            //                   title:
+                            //                       Text('Delete Confirmation'),
+                            //                   content: Text(
+                            //                       'Are you sure you want to delete this task?'),
+                            //                   actions: [
+                            //                     TextButton(
+                            //                       child: const Text('Cancel'),
+                            //                       onPressed: () {
+                            //                         Navigator.of(context)
+                            //                             .pop(); //Dismiss Dialog
+                            //                       },
+                            //                     ),
+                            //                     ElevatedButton(
+                            //                       onPressed: () async {
+                            //                         Navigator.of(context)
+                            //                             .pop(); //Dismiss Dialog
+                            //                         setState(() {
+                            //                           DeleteTache(task.id);
+                            //                           refreshData();
+                            //                         });
+                            //                       },
+                            //                       child: const Text('Delete'),
+                            //                     ),
+                            //                   ],
+                            //                 );
+                            //               });
+                            //         },
+                            //         child: Icon(
+                            //           Icons.delete_sharp,
+                            //           color: Colors.blueGrey,
+                            //         ),
+                            //       ),
+                            //       SizedBox(
+                            //         width: 18,
+                            //       ),
+                            //       Expanded(
+                            //         child: Text(task.nom),
+                            //       ),
+                            //       GestureDetector(
+                            //         onTap: () {
+                            //           //EDIT BUTTON
+                            //           Navigator.of(context).push(
+                            //             MaterialPageRoute(
+                            //               builder: (context) => EditTask(
+                            //                   task, categories, refreshData),
+                            //             ),
+                            //           );
+                            //         },
+                            //         child: Icon(
+                            //           Icons.create,
+                            //           color: Colors.blueGrey,
+                            //         ),
+                            //       ),
+                            //     ],
+                            //   ),
+                            // );
                           })
                     ],
                   ),

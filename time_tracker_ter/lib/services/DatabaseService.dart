@@ -1,5 +1,8 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'dart:typed_data';
+import 'dart:io';
+import 'package:flutter/services.dart';
 
 Database _database;
 Future<Database> get database async {
@@ -7,19 +10,38 @@ Future<Database> get database async {
     return _database;
   }
 
-  // If the database doesn't exist yet, create it.
-  _database = await openDatabase(
-    join(await getDatabasesPath(), 'data.db'),
-  );
+  // Get a location using getDatabasesPath
+  var databasesPath = await getDatabasesPath();
+  var path = join(databasesPath, 'base.db');
 
-  // Perform any necessary migrations or other initialization here.
-  // ...
+  // Check if the database file exists
+  var exists = await databaseExists(path);
+
+  if (!exists) {
+    // If the database doesn't exist, create a new one
+    // Perform any necessary migrations or other initialization here.
+    // ...
+
+    _database = await openDatabase(
+      path,
+      version: 1,
+      onCreate: (db, version) {
+        // create your database tables here
+      },
+    );
+  } else {
+    // If the database exists, open it
+    _database = await openDatabase(path);
+  }
 
   return _database;
 }
 
 void ModifierNomTache(int idTache, String newName) async {
-  final db = await database;
+  var databasesPath = await getDatabasesPath();
+  var path = join(databasesPath, "base.db");
+  Database db = await openDatabase(path);
+  print("this is my db $db");
   await db.update(
     'taches',
     {'nom': newName},

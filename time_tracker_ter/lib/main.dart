@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_login_ui/screens/AddCategorie.dart';
 import 'package:flutter_login_ui/screens/Home.dart';
-import 'package:flutter_login_ui/screens/login_screen.dart';
-import 'package:flutter_login_ui/screens/signUp_screen.dart';
+import 'package:flutter_login_ui/model/InitDatabase.dart';
 
-void main() => runApp(MyApp());
+void main() async {
+  // await InitDatabase().database;
+  runApp(MyApp());
+}
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
@@ -13,7 +14,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Login UI',
       debugShowCheckedModeBanner: false,
-      home: SignUpScreen(),
+      home: MyHomePage(),
     );
   }
 }

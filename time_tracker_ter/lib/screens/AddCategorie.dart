@@ -1,92 +1,88 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:sqflite/sqflite.dart';
-
 import '../model/InitDatabase.dart';
 import '../utilities/constants.dart';
 
 class AddCatePage extends StatefulWidget {
+  final Function() onDataAdded;
+  final int colorIndex;
+
+  AddCatePage({this.onDataAdded, this.colorIndex});
+
   @override
   _AddCatePageState createState() => _AddCatePageState();
 }
 
 class _AddCatePageState extends State<AddCatePage> {
-  static const Color _color = Color(0xFF73AEF5);
-  static const Color _color1 = Color(0xFF61A4F1);
-  static const Color _color2 = Color(0xFF478DE0);
-  static const Color _color3 = Color(0xFF398AE5);
-
   TextEditingController nom = TextEditingController();
+  Color selectedColor = Colors.blue;
 
-  void addCategorie() async {
+  //créer une nouvelle catégorie
+  void ajouterCategorie() async {
     Database database = await InitDatabase().database;
-    //get id_user connected
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    int id_user = prefs.getInt('userId');
-    if (id_user != null) {
-      //insert new categorie
-      await database.insert('categories', {
-        'nom': nom.text,
-        'couleur': '0xFF73AEF5',
-        'id_categorie_sup': 1,
-        'id_user': id_user,
-      });
+
+    //vérifier si le nom de catégorie est vide
+    if (nom.text == '') {
+      //afficher un message d'erreur
+      showErrorMessage("Veuillez entrer un nom de catégorie");
+      return;
     }
 
+    database.insert('categories', {
+      'nom': nom.text,
+      'couleur': selectedColor.value.toRadixString(16),
+    });
+
+    //afficher un message de succès
+    showSuccessMessage("Catégorie ajoutée avec succès");
+    //notifier le widget parent que les données ont été ajoutées
+    widget.onDataAdded();
+
     //go back to home page
-    Navigator.of(context).pop({'categorie': nom.text, 'couleur': '0xFF73AEF5'});
+    Navigator.of(context).pop();
+  }
+
+  void changeColor(Color color) {
+    print(color.toString());
+    setState(() => selectedColor = color);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Nouvelle Catégorie"),
+        title: Text("new Catégorie"),
         centerTitle: true,
         flexibleSpace: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  _color,
-                  _color1,
-                  _color2,
-                  _color3,
-                ]),
+              colors: allColors[widget.colorIndex],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
           ),
         ),
-        leadingWidth: 100,
         leading: Container(
-            margin: const EdgeInsets.only(top: 15.0, bottom: 15.0, left: 18.0),
-            child: MaterialButton(
-              color: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(5.0),
-              ),
-              onPressed: () => Navigator.of(context).pop(true),
-              child: Text(
-                "Done",
-                style: TextStyle(color: _color),
-              ),
-            )),
+            child: IconButton(
+          color: Colors.white,
+          onPressed: () => Navigator.of(context).pop(true),
+          icon: Icon(Icons.backspace),
+        )),
         actions: [
           Container(
-              margin:
-                  const EdgeInsets.only(top: 15.0, bottom: 15.0, right: 18.0),
-              child: MaterialButton(
+            padding: EdgeInsets.only(right: 20.0),
+            child: GestureDetector(
+              onTap: () {
+                ajouterCategorie();
+              },
+              child: SvgPicture.asset(
+                'assets/icons/save.svg',
                 color: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(5.0),
-                ),
-                onPressed: () => addCategorie(),
-                child: Text(
-                  "save",
-                  style: TextStyle(color: _color),
-                ),
-              ))
+              ),
+            ),
+          ),
         ],
       ),
       body: Column(
@@ -95,7 +91,7 @@ class _AddCatePageState extends State<AddCatePage> {
           Container(
             alignment: Alignment.centerLeft,
             margin: EdgeInsets.only(left: 5.0, right: 5.0),
-            decoration: kBoxDecorationStyle,
+            decoration: makeBoxDecoration(allColors[widget.colorIndex][0]),
             height: 60.0,
             child: TextField(
               keyboardType: TextInputType.name,
@@ -123,6 +119,69 @@ class _AddCatePageState extends State<AddCatePage> {
                 hintText: 'Entrer le nom de la catégorie',
                 hintStyle: kHintTextStyle,
               ),
+            ),
+          ),
+          SizedBox(height: 10.0),
+          Container(
+            alignment: Alignment.center,
+            margin: EdgeInsets.only(left: 5.0, right: 5.0),
+            decoration: makeBoxDecoration(allColors[widget.colorIndex][0]),
+            height: 60.0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Container(
+                  width: 50.0,
+                  height: 50.0,
+                  decoration: BoxDecoration(
+                    color: selectedColor,
+                    borderRadius: BorderRadius.circular(50.0),
+                  ),
+                ),
+                SizedBox(width: 10.0),
+                TextButton(
+                  child: Text(
+                    'Selectionner une couleur',
+                    style: TextStyle(fontSize: 20.0, color: Colors.white),
+                  ),
+                  onPressed: () => showGeneralDialog(
+                    context: context,
+                    transitionBuilder:
+                        (context, animation, secondaryAnimation, child) {
+                      return SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0, 1),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: child,
+                      );
+                    },
+                    pageBuilder: (ctx, a1, a2) {
+                      return AlertDialog(
+                        title: const Text('Selectionner une couleur'),
+                        shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(16.0))),
+                        content: SingleChildScrollView(
+                          child: ColorPicker(
+                            pickerColor: selectedColor,
+                            onColorChanged: changeColor,
+                            colorPickerWidth: 300.0,
+                            pickerAreaHeightPercent: 0.7,
+                            enableAlpha: true,
+                            displayThumbColor: true,
+                            labelTypes: [],
+                            paletteType: PaletteType.hsv,
+                            pickerAreaBorderRadius: const BorderRadius.all(
+                              Radius.circular(16.0),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
         ],

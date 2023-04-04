@@ -14,21 +14,25 @@ description: A new Flutter project.
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.11.0 <3.0.0"
+  sdk: ">=2.3.0 <3.0.0"
 
 dependencies:
   cupertino_icons: ^0.1.2
+  drag_and_drop_lists: ^0.3.3
   eva_icons_flutter: ^3.1.0
   flutter:
     sdk: flutter
+  flutter_colorpicker: ^1.0.3
+  flutter_slidable: ^2.0.0
+  flutter_svg: ^1.1.6
   fluttertoast: ^8.2.1
   grouped_list: ^5.1.2
   http: ^0.13.4
+  intl: ^0.18.0
   page_transition: ^2.0.9
-  path: null
-  provider: ^6.0.5
-  shared_preferences: ^2.0.18
-  sqflite: null
+  path: ^1.8.2
+  shared_preferences: ^2.0.20
+  sqflite: ^2.2.6
 
 dev_dependencies:
   flutter_test:
@@ -43,8 +47,12 @@ flutter:
   assets:
     - assets/logos/facebook.jpg
     - assets/logos/google.jpg
+    - assets/icons/
 
   fonts:
     - family: OpenSans
       fonts:
         - asset: assets/fonts/OpenSans.ttf
+    - family: Montserrat
+      fonts:
+        - asset: assets/fonts/Montserrat-SemiBold.ttf
