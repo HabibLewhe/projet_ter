@@ -1,4 +1,4 @@
-name: flutter_login_ui
+name: time_tracker_ter
 description: A new Flutter project.
 
 # The following defines the version and build number for your application.
@@ -33,6 +33,9 @@ dependencies:
   intl: ^0.18.0
   grouped_list: ^5.1.2
   flutter_slidable: ^2.0.0
+  drag_and_drop_lists: ^0.3.3
+  eva_icons_flutter: ^3.1.0
+  shared_preferences: ^2.0.20
 
 
 dev_dependencies:
