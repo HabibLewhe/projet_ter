@@ -1,5 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:intl/intl.dart';
 
 class InitDatabase {
   static final InitDatabase _initDatabase_ = InitDatabase._internal();
@@ -138,12 +139,17 @@ class InitDatabase {
     ''');
 
     // déroulement tache
+    final now = DateTime.now();
+    final yesterday = now.subtract(Duration(days: 1));
+    final oneWeekAgo = now.subtract(Duration(days: 7));
+    final oneMonthAgo = now.subtract(Duration(days: 30));
+    final DateFormat formatter = DateFormat('yyyy-MM-ddTHH:mm:ss');
     await db.execute(
         "INSERT INTO deroulement_tache (id_tache, date_debut, date_fin, latitude, longitude) VALUES "
-        "(1, '2023-03-09T16:30:00Z', '2023-03-09T17:30:00Z', 48.8566, 2.3522),"
-        "(1, '2023-03-10T09:00:00Z', '2023-03-10T11:00:00Z', 48.8647, 2.3490),"
-        "(2, '2023-03-11T13:30:00Z', '2023-03-11T14:30:00Z', 48.8534, 2.3488),"
-        "(3, '2023-03-12T10:00:00Z', '2023-03-12T11:30:00Z', 48.8606, 2.3522),"
+        "(1, '${formatter.format(now.toUtc())}Z', '${formatter.format(now.toUtc().add(Duration(hours: 2)))}Z', 48.8566, 2.3522),"
+        "(1, '${formatter.format(yesterday.toUtc())}Z', '${formatter.format(yesterday.toUtc().add(Duration(minutes: 45)))}Z', 48.8647, 2.3490),"
+        "(2, '${formatter.format(oneWeekAgo.toUtc())}Z', '${formatter.format(oneWeekAgo.toUtc().add(Duration(hours: 1, minutes: 30)))}Z', 48.8534, 2.3488),"
+        "(3, '${formatter.format(oneMonthAgo.toUtc())}Z', '${formatter.format(oneMonthAgo.toUtc().add(Duration(hours: 2, minutes: 12)))}Z', 48.8606, 2.3522),"
         "(4, '2023-03-13T14:00:00Z', '2023-03-13T15:00:00Z', 48.8566, 2.3382),"
         "(4, '2023-03-14T11:00:00Z', '2023-03-14T12:00:00Z', 48.8599, 2.3414),"
         "(4, '2023-03-15T15:30:00Z', '2023-03-15T17:00:00Z', 48.8631, 2.3455),"

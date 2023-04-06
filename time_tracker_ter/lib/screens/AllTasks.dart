@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_login_ui/model/Categorie.dart';
+import 'package:flutter_login_ui/model/DeroulementTache.dart';
 import 'package:flutter_login_ui/screens/AddCategorie.dart';
 import 'package:flutter_login_ui/screens/SettingsTimeFilter.dart';
 import 'package:page_transition/page_transition.dart';
@@ -27,6 +28,8 @@ class _AllTasksPageState extends State<AllTasksPage> {
   List<Categorie> categories = [];
   String tempsEcouleTotal = "00:00:00";
   List<Tache> taches = [];
+  List<Tache> tachesFiltre = [];
+  List<DeroulementTache> deroulementTaches = [];
   bool _isTimeFilterVisible = false;
   int timeFilterPreference;
   String timeFilterText = '';
@@ -38,6 +41,7 @@ class _AllTasksPageState extends State<AllTasksPage> {
     super.initState();
     futureCategories = getCategories();
     getTaches();
+    getDeroulements();
     getTimeFilterPreference();
     localTimeFilterCounter = widget.timeFilterCounter;
   }
@@ -56,6 +60,19 @@ class _AllTasksPageState extends State<AllTasksPage> {
     var t = await database.query('taches');
     setState(() {
       taches = t.map((e) => Tache.fromMap(e)).toList();
+      // initialisation
+      tachesFiltre = taches;
+    });
+  }
+
+  void getTachesByFilter() {
+    List<DeroulementTache> deroulementFiltre = getDeroulementsByFilter();
+    List<Tache> l = [];
+    for (int i = 0; i < deroulementFiltre.length; i++) {
+      l.add(taches[deroulementFiltre[i].id_tache - 1]);
+    }
+    setState(() {
+      tachesFiltre = l;
     });
   }
 
@@ -66,6 +83,96 @@ class _AllTasksPageState extends State<AllTasksPage> {
     getTaches();
   }
 
+  void getDeroulements() async {
+    Database database = await InitDatabase().database;
+    var t = await database.query('deroulement_tache');
+    setState(() {
+      deroulementTaches = t.map((e) => DeroulementTache.fromMap(e)).toList();
+    });
+  }
+
+  List<DeroulementTache> getDeroulementsByFilter() {
+    List<DeroulementTache> deroulementsFiltre = [];
+    // jour
+    if (timeFilterPreference == 0) {
+      // convertir la date du time filter
+      DateTime jourFiltre =
+          DateTime.parse(timeFilterDate.split('/').reversed.join('-'));
+      // on cherche à comparer seulement l'année, le mois et le jour
+      jourFiltre = DateTime(jourFiltre.year, jourFiltre.month, jourFiltre.day);
+
+      deroulementsFiltre = deroulementTaches.where((deroulement) {
+        // convertir les dates de l'objet DeroulementTache
+        DateTime dateDebut = DateTime.parse(deroulement.date_debut);
+        DateTime dateFin = DateTime.parse(deroulement.date_fin);
+        // on cherche à comparer seulement l'année, le mois et le jour
+        dateDebut = DateTime(dateDebut.year, dateDebut.month, dateDebut.day);
+        dateFin = DateTime(dateFin.year, dateFin.month, dateFin.day);
+        return dateDebut.isAtSameMomentAs(jourFiltre) &&
+            dateFin.isAtSameMomentAs(jourFiltre);
+      }).toList();
+      return deroulementsFiltre;
+    }
+    // semaine
+    else if (timeFilterPreference == 1) {
+      // convertir les dates de début et de fin de semaine du time filter
+      DateFormat formatter = DateFormat('dd/MM/yyyy');
+      DateTime premierJourFiltre =
+          formatter.parse(timeFilterDate.split("-")[0]);
+      DateTime dernierJourFiltre =
+          formatter.parse(timeFilterDate.split("-")[1].replaceAll(' ', ''));
+      // on cherche à comparer seulement l'année, le mois et le jour
+      premierJourFiltre = DateTime(premierJourFiltre.year,
+          premierJourFiltre.month, premierJourFiltre.day);
+      dernierJourFiltre = DateTime(dernierJourFiltre.year,
+          dernierJourFiltre.month, dernierJourFiltre.day);
+
+      deroulementsFiltre = deroulementTaches.where((deroulement) {
+        // convertir les dates de l'objet DeroulementTache
+        DateTime dateDebut = DateTime.parse(deroulement.date_debut);
+        DateTime dateFin = DateTime.parse(deroulement.date_fin);
+        // on cherche à comparer seulement l'année, le mois et le jour
+        dateDebut = DateTime(dateDebut.year, dateDebut.month, dateDebut.day);
+        dateFin = DateTime(dateFin.year, dateFin.month, dateFin.day);
+        return ((dateDebut.isAfter(premierJourFiltre) ||
+                dateDebut == premierJourFiltre) &&
+            (dateFin.isBefore(dernierJourFiltre) ||
+                dateFin == dernierJourFiltre));
+      }).toList();
+      return deroulementsFiltre;
+    }
+    // mois
+    else if (timeFilterPreference == 2) {
+      // convertir les dates de début et de fin de mois du time filter
+      DateFormat formatter = DateFormat('dd/MM/yyyy');
+      DateTime premierJourFiltre =
+          formatter.parse(timeFilterDate.split("-")[0]);
+      DateTime dernierJourFiltre =
+          formatter.parse(timeFilterDate.split("-")[1].replaceAll(' ', ''));
+      // on cherche à comparer seulement l'année, le mois et le jour
+      premierJourFiltre = DateTime(premierJourFiltre.year,
+          premierJourFiltre.month, premierJourFiltre.day);
+      dernierJourFiltre = DateTime(dernierJourFiltre.year,
+          dernierJourFiltre.month, dernierJourFiltre.day);
+
+      deroulementsFiltre = deroulementTaches.where((deroulement) {
+        // convertir les dates de l'objet DeroulementTache
+        DateTime dateDebut = DateTime.parse(deroulement.date_debut);
+        DateTime dateFin = DateTime.parse(deroulement.date_fin);
+        // on cherche à comparer seulement l'année, le mois et le jour
+        dateDebut = DateTime(dateDebut.year, dateDebut.month, dateDebut.day);
+        dateFin = DateTime(dateFin.year, dateFin.month, dateFin.day);
+        return ((dateDebut.isAfter(premierJourFiltre) ||
+                dateDebut == premierJourFiltre) &&
+            (dateFin.isBefore(dernierJourFiltre) ||
+                dateFin == dernierJourFiltre));
+      }).toList();
+      return deroulementsFiltre;
+    } else {
+      return [];
+    }
+  }
+
   Future<List<Categorie>> getCategories() async {
     Database database = await InitDatabase().database;
     var cats = await database.query('categories');
@@ -73,6 +180,7 @@ class _AllTasksPageState extends State<AllTasksPage> {
     setState(() {
       categories = liste;
     });
+    // calcule le temps ecoule pour la categorie
     String tempsEcoule = "00:00:00";
     for (int i = 0; i < categories.length; i++) {
       Duration duration1 = Duration(
@@ -97,9 +205,9 @@ class _AllTasksPageState extends State<AllTasksPage> {
 
   List<Tache> getTachesCategorie(Categorie categorie) {
     List<Tache> t = [];
-    for (int i = 0; i < taches.length; i++) {
-      if (taches[i].id_categorie == categorie.id) {
-        t.add(taches[i]);
+    for (int i = 0; i < tachesFiltre.length; i++) {
+      if (tachesFiltre[i].id_categorie == categorie.id) {
+        if (!t.contains(tachesFiltre[i])) t.add(tachesFiltre[i]);
       }
     }
     return t;
@@ -116,6 +224,23 @@ class _AllTasksPageState extends State<AllTasksPage> {
     //clear all categories
     categories.clear();
     getCategories();
+  }
+
+  // calcule le temps écoulé pour une tache donnée avec le filtre du moment
+  String calculerTempsFiltre(Tache tache) {
+    List<DeroulementTache> deroulementsFiltre = getDeroulementsByFilter();
+    Duration tempsEcoule = Duration();
+    for (int i = 0; i < deroulementsFiltre.length; i++) {
+      if (deroulementsFiltre[i].id_tache == tache.id) {
+        DateTime dateDebut = DateTime.parse(deroulementsFiltre[i].date_debut);
+        DateTime dateFin = DateTime.parse(deroulementsFiltre[i].date_fin);
+        tempsEcoule = tempsEcoule + dateFin.difference(dateDebut);
+      }
+    }
+    String tempsEcouleTxt = '${tempsEcoule.inHours.toString().padLeft(2, '0')}:'
+        '${(tempsEcoule.inMinutes % 60).toString().padLeft(2, '0')}:'
+        '${(tempsEcoule.inSeconds % 60).toString().padLeft(2, '0')}';
+    return tempsEcouleTxt;
   }
 
   @override
@@ -164,7 +289,9 @@ class _AllTasksPageState extends State<AllTasksPage> {
             builder: (BuildContext context,
                 AsyncSnapshot<List<Categorie>> snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return CircularProgressIndicator();
+                return Center(
+                  child: CircularProgressIndicator(),
+                );
               } else if (snapshot.hasError) {
                 return BottomAppBar(
                   child: Text('Error loading categories'),
@@ -189,6 +316,7 @@ class _AllTasksPageState extends State<AllTasksPage> {
                               padding: EdgeInsets.only(left: 30.0),
                               child: GestureDetector(
                                 onTap: (() {
+                                  // appuie sur le bouton gauche du time filter
                                   String text = '';
                                   String date = '';
                                   DateTime now = DateTime.now();
@@ -210,12 +338,11 @@ class _AllTasksPageState extends State<AllTasksPage> {
                                   // semaine par semaine
                                   else if (timeFilterPreference == 1) {
                                     DateTime datePremierJour = now
-                                        .subtract(Duration(days: 7))
+                                        .subtract(
+                                            Duration(days: now.weekday - 1))
                                         .subtract(Duration(
                                             days: 7 *
-                                                    (localTimeFilterCounter +
-                                                        1) -
-                                                1));
+                                                (localTimeFilterCounter + 1)));
                                     DateTime dateDernierJour = now
                                         .subtract(
                                             Duration(days: now.weekday - 1))
@@ -259,6 +386,7 @@ class _AllTasksPageState extends State<AllTasksPage> {
                                     timeFilterDate = date;
                                     localTimeFilterCounter++;
                                   });
+                                  getTachesByFilter();
                                 }),
                                 child:
                                     SvgPicture.asset('assets/icons/left.svg'),
@@ -267,6 +395,7 @@ class _AllTasksPageState extends State<AllTasksPage> {
                             Expanded(
                               child: GestureDetector(
                                 onTap: () async {
+                                  // appuie sur le texte du time filter
                                   int t = await Navigator.push(
                                       context,
                                       PageTransition(
@@ -290,10 +419,13 @@ class _AllTasksPageState extends State<AllTasksPage> {
                                     await getTimeFilterPreference();
                                     // jour
                                     if (timeFilterPreference == 0) {
+                                      // today
                                       if (t == 0) {
                                         date = formatter.format(now);
                                         text = "Today";
-                                      } else if (t == 1) {
+                                      }
+                                      // yesterday
+                                      else if (t == 1) {
                                         date = formatter.format(
                                             now.subtract(Duration(days: 1)));
                                         text = "Yesterday";
@@ -301,6 +433,7 @@ class _AllTasksPageState extends State<AllTasksPage> {
                                     }
                                     // semaine
                                     else if (timeFilterPreference == 1) {
+                                      // this week
                                       if (t == 0) {
                                         DateTime datePremierJour = now.subtract(
                                             Duration(days: now.weekday - 1));
@@ -312,15 +445,17 @@ class _AllTasksPageState extends State<AllTasksPage> {
                                             " - " +
                                             formatter.format(dateDernierJour);
                                         text = "This Week";
-                                      } else if (t == 1) {
+                                      }
+                                      // last week
+                                      else if (t == 1) {
                                         DateTime datePremierJour = now
-                                            .subtract(Duration(days: 7))
                                             .subtract(
-                                                Duration(days: 7 * 2 - 1));
+                                                Duration(days: now.weekday - 1))
+                                            .subtract(Duration(days: 7));
                                         DateTime dateDernierJour = now
                                             .subtract(
                                                 Duration(days: now.weekday - 1))
-                                            .subtract(Duration(days: 7 + 1));
+                                            .subtract(Duration(days: 1));
                                         date = formatter
                                                 .format(datePremierJour) +
                                             " - " +
@@ -330,6 +465,7 @@ class _AllTasksPageState extends State<AllTasksPage> {
                                     }
                                     // mois
                                     else if (timeFilterPreference == 2) {
+                                      // this month
                                       if (t == 0) {
                                         DateTime datePremierJour =
                                             DateTime(now.year, now.month, 1);
@@ -340,7 +476,9 @@ class _AllTasksPageState extends State<AllTasksPage> {
                                             " - " +
                                             formatter.format(dateDernierJour);
                                         text = "This Month";
-                                      } else if (t == 1) {
+                                      }
+                                      // last month
+                                      else if (t == 1) {
                                         DateTime datePremierJour = DateTime(
                                             now.year, now.month - 1, 1);
                                         DateTime dateDernierJour =
@@ -384,6 +522,7 @@ class _AllTasksPageState extends State<AllTasksPage> {
                                 padding: EdgeInsets.only(right: 30.0),
                                 child: GestureDetector(
                                   onTap: (() {
+                                    // appuie sur le bouton droite du time filter
                                     String text = '';
                                     String date = '';
                                     DateFormat formatter =
@@ -472,6 +611,7 @@ class _AllTasksPageState extends State<AllTasksPage> {
                                       timeFilterDate = date;
                                       localTimeFilterCounter--;
                                     });
+                                    getTachesByFilter();
                                   }),
                                   child: SvgPicture.asset(
                                       'assets/icons/right.svg'),
@@ -484,8 +624,8 @@ class _AllTasksPageState extends State<AllTasksPage> {
                     ),
                     Padding(
                         padding: _isTimeFilterVisible
-                            ? EdgeInsets.only(top: 85.0)
-                            : EdgeInsets.only(top: 20.0),
+                            ? EdgeInsets.only(top: 75.0)
+                            : EdgeInsets.only(top: 10.0),
                         child:
                             //affiche la page dynamiquement
                             getPageContainer()),
@@ -493,143 +633,138 @@ class _AllTasksPageState extends State<AllTasksPage> {
                 );
               }
             }),
-        bottomNavigationBar: FutureBuilder<List<Categorie>>(
-          future: futureCategories,
-          builder:
-              (BuildContext context, AsyncSnapshot<List<Categorie>> snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return CircularProgressIndicator();
-            } else if (snapshot.hasError) {
-              return BottomAppBar(
-                child: Text('Error loading categories'),
-              );
-            } else {
-              return BottomNavigationBar(
-                  type: BottomNavigationBarType.fixed,
-                  onTap: (value) {
-                    // cas où appuie sur le bouton +
-                    if (value == 0) {
-                      // afficher la page pour ajouter une catégorie
-                      Navigator.push(
-                          context,
-                          PageTransition(
-                              type: PageTransitionType.bottomToTop,
-                              child: AddCatePage(
-                                onDataAdded: _addCategorieItem,
-                                colorIndex: widget.colorIndex,
-                              ),
-                              childCurrent: this.widget,
-                              duration: Duration(milliseconds: 500)));
-                    }
-                    // cas où appuie sur le bouton balai
-                    else if (value == 1) {
-                      // TODO : traitement appuie bouton balai
-                    }
-                    // cas où appuie sur le bouton export
-                    else if (value == 3) {
-                      // TODO : traitement appuie bouton export
-                    }
-                    // cas où appuie sur le bouton time filter
-                    else if (value == 4) {
-                      String text = '';
-                      String date = '';
-                      DateTime now = DateTime.now();
-                      DateFormat formatter = DateFormat('dd/MM/yyyy');
-                      // jour
-                      if (timeFilterPreference == 0) {
-                        date = formatter.format(now);
-                        text = "Today";
-                      }
-                      // semaine
-                      else if (timeFilterPreference == 1) {
-                        DateTime datePremierJour =
-                            now.subtract(Duration(days: now.weekday - 1));
-                        DateTime dateDernierJour =
-                            datePremierJour.add(Duration(days: 6));
-                        date = formatter.format(datePremierJour) +
-                            " - " +
-                            formatter.format(dateDernierJour);
-                        text = "This Week";
-                      }
-                      // mois
-                      else if (timeFilterPreference == 2) {
-                        DateTime datePremierJour =
-                            DateTime(now.year, now.month, 1);
-                        DateTime dateDernierJour =
-                            DateTime(now.year, now.month + 1, 0);
-                        date = formatter.format(datePremierJour) +
-                            " - " +
-                            formatter.format(dateDernierJour);
-                        text = "This Month";
-                      }
-                      setState(() {
-                        timeFilterDate = date;
-                        timeFilterText = text;
-                        // si le bandeau de filtre est affiché on le retire, sinon on l'affiche
-                        _isTimeFilterVisible = !_isTimeFilterVisible;
-                        localTimeFilterCounter = 0;
-                      });
-                    }
-                  },
-                  backgroundColor: backgroundColor2,
-                  selectedItemColor: allColors[widget.colorIndex][1],
-                  unselectedItemColor: allColors[widget.colorIndex][1],
-                  selectedFontSize: 15,
-                  unselectedFontSize: 15,
-                  showSelectedLabels: false,
-                  showUnselectedLabels: false,
-                  items: <BottomNavigationBarItem>[
-                    BottomNavigationBarItem(
-                      icon: Icon(Icons.add_circle),
-                      label: '',
+        bottomNavigationBar: BottomNavigationBar(
+            type: BottomNavigationBarType.fixed,
+            onTap: (value) {
+              // cas où appuie sur le bouton +
+              if (value == 0) {
+                // afficher la page pour ajouter une catégorie
+                Navigator.push(
+                    context,
+                    PageTransition(
+                        type: PageTransitionType.bottomToTop,
+                        child: AddCatePage(
+                          onDataAdded: _addCategorieItem,
+                          colorIndex: widget.colorIndex,
+                        ),
+                        childCurrent: this.widget,
+                        duration: Duration(milliseconds: 500)));
+              }
+              // cas où appuie sur le bouton balai
+              else if (value == 1) {
+                // TODO : traitement appuie bouton balai
+              }
+              // cas où appuie sur le bouton export
+              else if (value == 3) {
+                // TODO : traitement appuie bouton export
+              }
+              // cas où appuie sur le bouton time filter
+              else if (value == 4) {
+                // appuie quand le filtre n'est pas visible
+                if (_isTimeFilterVisible == false) {
+                  String text = '';
+                  String date = '';
+                  DateTime now = DateTime.now();
+                  DateFormat formatter = DateFormat('dd/MM/yyyy');
+                  // jour
+                  if (timeFilterPreference == 0) {
+                    date = formatter.format(now);
+                    text = "Today";
+                  }
+                  // semaine
+                  else if (timeFilterPreference == 1) {
+                    DateTime datePremierJour =
+                        now.subtract(Duration(days: now.weekday - 1));
+                    DateTime dateDernierJour =
+                        datePremierJour.add(Duration(days: 6));
+                    date = formatter.format(datePremierJour) +
+                        " - " +
+                        formatter.format(dateDernierJour);
+                    text = "This Week";
+                  }
+                  // mois
+                  else if (timeFilterPreference == 2) {
+                    DateTime datePremierJour = DateTime(now.year, now.month, 1);
+                    DateTime dateDernierJour =
+                        DateTime(now.year, now.month + 1, 0);
+                    date = formatter.format(datePremierJour) +
+                        " - " +
+                        formatter.format(dateDernierJour);
+                    text = "This Month";
+                  }
+                  setState(() {
+                    timeFilterDate = date;
+                    timeFilterText = text;
+                    _isTimeFilterVisible = true;
+                    localTimeFilterCounter = 0;
+                  });
+                  getTachesByFilter();
+                }
+                // appuie quand le filtre est visible
+                else {
+                  setState(() {
+                    tachesFiltre = taches;
+                    _isTimeFilterVisible = false;
+                  });
+                }
+              }
+            },
+            backgroundColor: backgroundColor2,
+            selectedItemColor: allColors[widget.colorIndex][1],
+            unselectedItemColor: allColors[widget.colorIndex][1],
+            selectedFontSize: 15,
+            unselectedFontSize: 15,
+            showSelectedLabels: false,
+            showUnselectedLabels: false,
+            items: <BottomNavigationBarItem>[
+              BottomNavigationBarItem(
+                icon: Icon(Icons.add_circle),
+                label: '',
+              ),
+              BottomNavigationBarItem(
+                icon: SvgPicture.asset(
+                  'assets/icons/broom.svg',
+                  color: allColors[widget.colorIndex][1],
+                ),
+                label: '',
+              ),
+              BottomNavigationBarItem(
+                icon: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Total ",
+                      overflow: TextOverflow.visible,
+                      style: TextStyle(
+                          fontSize: 19, color: allColors[widget.colorIndex][1]),
                     ),
-                    BottomNavigationBarItem(
-                      icon: SvgPicture.asset(
-                        'assets/icons/broom.svg',
-                        color: allColors[widget.colorIndex][1],
-                      ),
-                      label: '',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            "Total ",
-                            overflow: TextOverflow.visible,
-                            style: TextStyle(
-                                fontSize: 19, color: allColors[widget.colorIndex][1]),
-                          ),
-                          Text(
-                            tempsEcouleTotal,
-                            overflow: TextOverflow.visible,
-                            style: TextStyle(
-                                fontSize: 19, color: allColors[widget.colorIndex][1]),
-                          ),
-                        ],
-                      ),
-                      label: '',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: SvgPicture.asset(
-                        'assets/icons/mail.svg',
-                        color: allColors[widget.colorIndex][1],
-                      ),
-                      label: '',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: SvgPicture.asset(
-                        'assets/icons/calendar.svg',
-                        color: allColors[widget.colorIndex][1],
-                      ),
-                      label: '',
+                    Text(
+                      tempsEcouleTotal,
+                      overflow: TextOverflow.visible,
+                      style: TextStyle(
+                          fontSize: 19, color: allColors[widget.colorIndex][1]),
                     ),
                   ],
-                  iconSize: 40,
-                  elevation: 5);
-            }
-          },
-        ));
+                ),
+                label: '',
+              ),
+              BottomNavigationBarItem(
+                icon: SvgPicture.asset(
+                  'assets/icons/mail.svg',
+                  color: allColors[widget.colorIndex][1],
+                ),
+                label: '',
+              ),
+              BottomNavigationBarItem(
+                icon: SvgPicture.asset(
+                  'assets/icons/calendar.svg',
+                  color: allColors[widget.colorIndex][1],
+                ),
+                label: '',
+              ),
+            ],
+            iconSize: 40,
+            elevation: 5));
   }
 
   Widget getPageContainer() {
@@ -648,6 +783,7 @@ class _AllTasksPageState extends State<AllTasksPage> {
 
   Container buildRowCategorie(
       String titre, int id, List<Tache> listeTachesCat) {
+    if (listeTachesCat.isEmpty) return Container();
     return Container(
         width: double.infinity,
         alignment: Alignment.centerLeft,
@@ -688,6 +824,13 @@ class _AllTasksPageState extends State<AllTasksPage> {
   }
 
   Container buildRowTache(String titre, int id) {
+    Tache tache = null;
+    for (int i = 0; i < tachesFiltre.length; i++) {
+      if (tachesFiltre[i].id == id) {
+        tache = tachesFiltre[i];
+      }
+    }
+    if (tache == null) return Container();
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: borderColor, width: 1),
@@ -738,7 +881,9 @@ class _AllTasksPageState extends State<AllTasksPage> {
                   width: 80,
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    taches[id - 1].temps_ecoule,
+                    (_isTimeFilterVisible == true)
+                        ? calculerTempsFiltre(tache)
+                        : tache.temps_ecoule,
                     style: TextStyle(fontSize: 20.0, color: Colors.black),
                   ),
                 ),

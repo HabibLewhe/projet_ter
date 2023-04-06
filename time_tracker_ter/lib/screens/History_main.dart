@@ -44,7 +44,6 @@ class _HistoryPageState extends State<HistoryPage> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     getCreneau();
     currentStartingDate = DateTime.now();
@@ -147,8 +146,8 @@ class _HistoryPageState extends State<HistoryPage> {
   void deleteAllCreneau() async {
     Database database = await InitDatabase().database;
     //supprimer un créneau
-    await database
-        .delete('deroulement_tache', where: 'id_tache = ?', whereArgs: [widget.id]);
+    await database.delete('deroulement_tache',
+        where: 'id_tache = ?', whereArgs: [widget.id]);
 
     //afficher un message de succès
     showSuccessMessage("Historique vidé");

@@ -53,7 +53,7 @@ class _MyHomePageState extends State<MyHomePage> {
       );
       Duration sum = duration1 + duration2;
       tempsEcoule =
-      "${sum.inHours}:${sum.inMinutes.remainder(60).toString().padLeft(2, '0')}:${sum.inSeconds.remainder(60).toString().padLeft(2, '0')}";
+          "${sum.inHours}:${sum.inMinutes.remainder(60).toString().padLeft(2, '0')}:${sum.inSeconds.remainder(60).toString().padLeft(2, '0')}";
     }
     setState(() {
       tempsEcouleTotal = tempsEcoule;
@@ -95,154 +95,58 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: backgroundColor1,
-      appBar: AppBar(
-        title: Text("Overview"),
-        centerTitle: true,
-        flexibleSpace: GestureDetector(
-          onLongPress: () {
-            // TODO : faire en sorte que le choix se fasse plus explicitement (bouton paramètres)
-            // sur un appuie long sur la barre du haut
-            // on affiche le popup pour choisir le theme de l'app
-            showColorPickerDialog(context);
-          },
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: allColors[colorIndex],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+        backgroundColor: backgroundColor1,
+        appBar: AppBar(
+          title: Text("Overview"),
+          centerTitle: true,
+          flexibleSpace: GestureDetector(
+            onLongPress: () {
+              // TODO : faire en sorte que le choix se fasse plus explicitement (bouton paramètres)
+              // sur un appuie long sur la barre du haut
+              // on affiche le popup pour choisir le theme de l'app
+              showColorPickerDialog(context);
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: allColors[colorIndex],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
               ),
             ),
           ),
-        ),
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 25.0),
-          child: GestureDetector(
-            onTap: () {
-              // TODO : traiter appuie sur bouton info
-            },
-            child: SvgPicture.asset(
-              'assets/icons/info.svg',
-            ),
-          ),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 25.0),
+          leading: Padding(
+            padding: const EdgeInsets.only(left: 25.0),
             child: GestureDetector(
               onTap: () {
-                // TODO : traiter appuie sur bouton edit
+                // TODO : traiter appuie sur bouton info
               },
               child: SvgPicture.asset(
-                'assets/icons/edit.svg',
+                'assets/icons/info.svg',
               ),
             ),
           ),
-        ],
-      ),
-      body: FutureBuilder<List<Categorie>>(
-        future: futureCategories,
-        builder:
-            (BuildContext context, AsyncSnapshot<List<Categorie>> snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return CircularProgressIndicator();
-          } else if (snapshot.hasError) {
-            return BottomAppBar(
-              child: Text('Error loading categories'),
-            );
-          } else {
-            return SingleChildScrollView(
-              child: Column(
-                children: [
-                  Container(
-                    width: double.infinity,
-                    color: allColors[colorIndex][1],
-                    alignment: Alignment.center,
-                    height: 93,
-                    margin: const EdgeInsets.only(bottom: 35.0),
-                    child: Container(
-                        width: double.infinity,
-                        margin: const EdgeInsets.only(left: 20.0, right: 20.0),
-                        height: 50,
-                        child: MaterialButton(
-                          color: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(50.0),
-                          ),
-                          onPressed: () {
-                            // TODO : traiter appuie sur le bouton Quick Start
-                          },
-                          child: Text(
-                            "Quick Start",
-                            style: TextStyle(
-                                fontSize: 20.0,
-                                color: allColors[colorIndex][1]),
-                          ),
-                        )),
-                  ),
-                  Container(
-                    width: double.infinity,
-                    alignment: Alignment.center,
-                    margin: const EdgeInsets.only(bottom: 20.0),
-                    child: Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                            color: allColors[colorIndex][0], width: 1),
-                        color: allColors[colorIndex][1],
-                      ),
-                      margin: const EdgeInsets.only(left: 20.0, right: 20.0),
-                      child: Column(
-                        children: [
-                          GestureDetector(
-                            onTap: () {
-                              // sur un appuie sur la ligne "All Tasks"
-                              // Naviguer vers la page All Tasks
-                              Navigator.push(
-                                  context,
-                                  PageTransition(
-                                      type: PageTransitionType
-                                          .rightToLeftWithFade,
-                                      child: AllTasksPage(
-                                          timeFilterCounter: 0,
-                                          colorIndex: colorIndex),
-                                      childCurrent: this.widget,
-                                      duration: Duration(milliseconds: 500)));
-                            },
-                            child: buildRow("papers", "All Tasks"),
-                          ),
-                          Divider(
-                            color: backgroundColor2,
-                            thickness: 0.6,
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              // sur un appuie sur la ligne "Single Tasks"
-                              // Naviguer vers la page Single Tasks
-                              // TODO : créer la page Single Tasks et compléter ici
-                            },
-                            child: buildRow("paper", "Single Tasks"),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  //container of my categories
-                  getCategoriesContainer()
-                ],
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 25.0),
+              child: GestureDetector(
+                onTap: () {
+                  // TODO : traiter appuie sur bouton edit
+                },
+                child: SvgPicture.asset(
+                  'assets/icons/edit.svg',
+                ),
               ),
-            );
-          }
-        },
-      ),
-      bottomNavigationBar: FutureBuilder<List<Categorie>>(
+            ),
+          ],
+        ),
+        body: FutureBuilder<List<Categorie>>(
           future: futureCategories,
           builder:
               (BuildContext context, AsyncSnapshot<List<Categorie>> snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return BottomAppBar(
+              return Center(
                 child: CircularProgressIndicator(),
               );
             } else if (snapshot.hasError) {
@@ -250,72 +154,162 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: Text('Error loading categories'),
               );
             } else {
-              return BottomNavigationBar(
-                  onTap: (value) {
-                    // cas où on appuie sur le bouton "+"
-                    if (value == 0) {
-                      // on affiche la page pour créer une catégorie
-                      Navigator.push(
-                          context,
-                          PageTransition(
-                              type: PageTransitionType.bottomToTop,
-                              child: AddCatePage(
-                                onDataAdded: _addCategorieItem,
-                                colorIndex: colorIndex,
-                              ),
-                              childCurrent: this.widget,
-                              duration: Duration(milliseconds: 500)));
-                    }
-                    // cas où on appuie sur le bouton export
-                    else if (value == 2) {
-                      // TODO : traitement appuie bouton export
-                    }
-                  },
-                  backgroundColor: Colors.white,
-                  selectedItemColor: allColors[colorIndex][1],
-                  unselectedItemColor: allColors[colorIndex][1],
-                  selectedFontSize: 15,
-                  unselectedFontSize: 15,
-                  showSelectedLabels: false,
-                  showUnselectedLabels: false,
-                  items: <BottomNavigationBarItem>[
-                    BottomNavigationBarItem(
-                      icon: Icon(Icons.add_circle),
-                      label: '',
+              return SingleChildScrollView(
+                child: Column(
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      color: allColors[colorIndex][1],
+                      alignment: Alignment.center,
+                      height: 93,
+                      margin: const EdgeInsets.only(bottom: 35.0),
+                      child: Container(
+                          width: double.infinity,
+                          margin:
+                              const EdgeInsets.only(left: 20.0, right: 20.0),
+                          height: 50,
+                          child: MaterialButton(
+                            color: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(50.0),
+                            ),
+                            onPressed: () {
+                              // TODO : traiter appuie sur le bouton Quick Start
+                            },
+                            child: Text(
+                              "Quick Start",
+                              style: TextStyle(
+                                  fontSize: 20.0,
+                                  color: allColors[colorIndex][1]),
+                            ),
+                          )),
                     ),
-                    BottomNavigationBarItem(
-                      icon: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            "Total ",
-                            overflow: TextOverflow.visible,
-                            style: TextStyle(
-                                fontSize: 19, color: allColors[colorIndex][1]),
-                          ),
-                          Text(
-                            tempsEcouleTotal,
-                            overflow: TextOverflow.visible,
-                            style: TextStyle(
-                                fontSize: 19, color: allColors[colorIndex][1]),
-                          ),
-                        ],
+                    Container(
+                      width: double.infinity,
+                      alignment: Alignment.center,
+                      margin: const EdgeInsets.only(bottom: 20.0),
+                      child: Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                              color: allColors[colorIndex][0], width: 1),
+                          color: allColors[colorIndex][1],
+                        ),
+                        margin: const EdgeInsets.only(left: 20.0, right: 20.0),
+                        child: Column(
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                // sur un appuie sur la ligne "All Tasks"
+                                // Naviguer vers la page All Tasks
+                                Navigator.push(
+                                    context,
+                                    PageTransition(
+                                        type: PageTransitionType
+                                            .rightToLeftWithFade,
+                                        child: AllTasksPage(
+                                            timeFilterCounter: 0,
+                                            colorIndex: colorIndex),
+                                        childCurrent: this.widget,
+                                        duration: Duration(milliseconds: 500)));
+                              },
+                              child: buildRow("papers", "All Tasks"),
+                            ),
+                            Divider(
+                              color: backgroundColor2,
+                              thickness: 0.6,
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                // sur un appuie sur la ligne "Single Tasks"
+                                // Naviguer vers la page Single Tasks
+                                Navigator.push(
+                                    context,
+                                    PageTransition(
+                                        type: PageTransitionType.rightToLeftWithFade,
+                                        child: CategorieDetail(
+                                          categorie: categories[0], colorIndex: colorIndex, timeFilterCounter: 0,),
+                                        childCurrent: this.widget,
+                                        duration: Duration(milliseconds: 500)));
+                              },
+                              child: buildRow("paper", "Single Tasks"),
+                            ),
+                          ],
+                        ),
                       ),
-                      label: '',
                     ),
-                    BottomNavigationBarItem(
-                      icon: SvgPicture.asset(
-                        'assets/icons/mail.svg',
-                        color: allColors[colorIndex][1],
-                      ),
-                      label: '',
+                    //container of my categories
+                    getCategoriesContainer()
+                  ],
+                ),
+              );
+            }
+          },
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+            onTap: (value) {
+              // cas où on appuie sur le bouton "+"
+              if (value == 0) {
+                // on affiche la page pour créer une catégorie
+                Navigator.push(
+                    context,
+                    PageTransition(
+                        type: PageTransitionType.bottomToTop,
+                        child: AddCatePage(
+                          onDataAdded: _addCategorieItem,
+                          colorIndex: colorIndex,
+                        ),
+                        childCurrent: this.widget,
+                        duration: Duration(milliseconds: 500)));
+              }
+              // cas où on appuie sur le bouton export
+              else if (value == 2) {
+                // TODO : traitement appuie bouton export
+              }
+            },
+            backgroundColor: Colors.white,
+            selectedItemColor: allColors[colorIndex][1],
+            unselectedItemColor: allColors[colorIndex][1],
+            selectedFontSize: 15,
+            unselectedFontSize: 15,
+            showSelectedLabels: false,
+            showUnselectedLabels: false,
+            items: <BottomNavigationBarItem>[
+              BottomNavigationBarItem(
+                icon: Icon(Icons.add_circle),
+                label: '',
+              ),
+              BottomNavigationBarItem(
+                icon: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Total ",
+                      overflow: TextOverflow.visible,
+                      style: TextStyle(
+                          fontSize: 19, color: allColors[colorIndex][1]),
+                    ),
+                    Text(
+                      tempsEcouleTotal,
+                      overflow: TextOverflow.visible,
+                      style: TextStyle(
+                          fontSize: 19, color: allColors[colorIndex][1]),
                     ),
                   ],
-                  iconSize: 40,
-                  elevation: 5);
-            }
-          }),
-    );
+                ),
+                label: '',
+              ),
+              BottomNavigationBarItem(
+                icon: SvgPicture.asset(
+                  'assets/icons/mail.svg',
+                  color: allColors[colorIndex][1],
+                ),
+                label: '',
+              ),
+            ],
+            iconSize: 40,
+            elevation: 5));
   }
 
   Row buildRow(String icon, String titre) {
@@ -402,7 +396,7 @@ class _MyHomePageState extends State<MyHomePage> {
               PageTransition(
                   type: PageTransitionType.rightToLeftWithFade,
                   child: CategorieDetail(
-                      categorie: categorie, colorIndex: colorIndex),
+                      categorie: categorie, colorIndex: colorIndex, timeFilterCounter: 0,),
                   childCurrent: this.widget,
                   duration: Duration(milliseconds: 500)));
         },
