@@ -250,7 +250,9 @@ class _AllTasksPageState extends State<AllTasksPage> {
 
   // calcule le temps écoulé pour une tache donnée avec le filtre du moment
   String calculerTempsFiltre(Tache tache) {
+    print("Calculer Temps Filtre de la tache " + tache.id.toString());
     List<DeroulementTache> deroulementsFiltre = getDeroulementsByFilter();
+    print("Déroulements : " + deroulementsFiltre.toString());
     Duration tempsEcoule = Duration();
     for (int i = 0; i < deroulementsFiltre.length; i++) {
       if (deroulementsFiltre[i].id_tache == tache.id) {
@@ -777,12 +779,19 @@ class _AllTasksPageState extends State<AllTasksPage> {
 
   Container buildRowTache(String titre, int id) {
     Tache tache = null;
+    String tempsTache = "";
     for (int i = 0; i < tachesFiltre.length; i++) {
       if (tachesFiltre[i].id == id) {
         tache = tachesFiltre[i];
       }
     }
     if (tache == null) return Container();
+    if(_isTimeFilterVisible){
+      tempsTache = calculerTempsFiltre(tache);
+    }
+    else{
+      tempsTache = tache.temps_ecoule;
+    }
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: borderColor, width: 1),
@@ -832,9 +841,7 @@ class _AllTasksPageState extends State<AllTasksPage> {
                   width: 80,
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    (_isTimeFilterVisible == true)
-                        ? calculerTempsFiltre(tache)
-                        : tache.temps_ecoule,
+                    tempsTache,
                     style: TextStyle(fontSize: 20.0, color: Colors.black),
                   ),
                 ),
@@ -842,9 +849,8 @@ class _AllTasksPageState extends State<AllTasksPage> {
                   height: 30,
                   width: 30,
                   child: GestureDetector(
-                    onTap: () {
-                      // TODO : naviguer vers l'historique de la tache
-                      Navigator.push(
+                    onTap: () async {
+                      await Navigator.push(
                           context,
                           PageTransition(
                               type: PageTransitionType.rightToLeftWithFade,
@@ -855,6 +861,9 @@ class _AllTasksPageState extends State<AllTasksPage> {
                               ),
                               childCurrent: this.widget,
                               duration: Duration(milliseconds: 500)));
+                      setState(() {
+                        refreshData();
+                      });
                     },
                     child: Stack(
                       children: [

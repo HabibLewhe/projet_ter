@@ -138,6 +138,31 @@ class InitDatabase {
     END;
     ''');
 
+    // procédure pour mettre à jour automatiquement les champs temp_ecoule
+    // dans la table taches et dans la table categories à chaque fois que
+    // l'on supprime une ligne dans la table deroulement_tache
+    await db.execute('''
+    CREATE TRIGGER update_temps_ecoule_delete AFTER DELETE ON deroulement_tache
+    BEGIN
+      UPDATE taches SET temps_ecoule = COALESCE(
+        (SELECT time(SUM(strftime('%s', datetime(date_fin)) - strftime('%s', datetime(date_debut))), 'unixepoch')
+        FROM deroulement_tache
+        WHERE deroulement_tache.id_tache = taches.id), '00:00:00')
+      WHERE id = OLD.id_tache;
+    
+      UPDATE categories SET temps_ecoule = COALESCE(
+        (SELECT time(SUM(strftime('%s', datetime(date_fin)) - strftime('%s', datetime(date_debut))), 'unixepoch')
+        FROM deroulement_tache
+        INNER JOIN taches ON deroulement_tache.id_tache = taches.id
+        WHERE taches.id_categorie = categories.id), '00:00:00')
+      WHERE id = (
+        SELECT id_categorie
+        FROM taches
+        WHERE id = OLD.id_tache
+      );
+    END;
+    ''');
+
     // déroulement tache
     final now = DateTime.now();
     final yesterday = now.subtract(Duration(days: 1));
