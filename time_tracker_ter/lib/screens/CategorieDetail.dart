@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_login_ui/model/Categorie.dart';
-import 'package:flutter_login_ui/screens/AddTache.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:sqflite/sqflite.dart';
+import '../model/Categorie.dart';
 import '../model/DeroulementTache.dart';
 import '../model/InitDatabase.dart';
 import '../model/Tache.dart';
 import '../utilities/constants.dart';
+import 'AddTache.dart';
 import 'History_main.dart';
 import 'package:intl/intl.dart';
 

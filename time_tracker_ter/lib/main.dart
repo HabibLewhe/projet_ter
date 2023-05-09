@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_login_ui/screens/Home.dart';
+import 'package:time_tracker_ter/screens/Home.dart';
 
 void main() => runApp(MyApp());
 

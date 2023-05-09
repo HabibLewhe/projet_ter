@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_login_ui/model/Categorie.dart';
-import 'package:flutter_login_ui/screens/AddCategorie.dart';
-import 'package:flutter_login_ui/screens/CategorieDetail.dart';
-import 'package:flutter_login_ui/screens/AllTasks.dart';
+
 import 'package:flutter_svg/svg.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:sqflite/sqflite.dart';
+import '../model/Categorie.dart';
 import '../model/InitDatabase.dart';
 import '../utilities/constants.dart';
+import 'AddCategorie.dart';
+import 'AllTasks.dart';
+import 'CategorieDetail.dart';
 
 class MyHomePage extends StatefulWidget {
   @override
@@ -151,7 +152,9 @@ class _MyHomePageState extends State<MyHomePage> {
               );
             } else if (snapshot.hasError) {
               return BottomAppBar(
-                child: Text('Error loading categories'),
+                child: Center(
+                  child: Text('Error loading categories'),
+                ),
               );
             } else {
               return SingleChildScrollView(

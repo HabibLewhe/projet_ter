@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_login_ui/model/DeroulementTache.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:grouped_list/grouped_list.dart';
 import 'package:intl/intl.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:sqflite/sqflite.dart';
+import '../model/DeroulementTache.dart';
 import '../model/InitDatabase.dart';
 import '../utilities/constants.dart';
 import 'AddCreneau.dart';

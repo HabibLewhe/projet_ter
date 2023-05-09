@@ -1,24 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_login_ui/model/Categorie.dart';
-import 'package:flutter_login_ui/screens/AddCategorie.dart';
-import 'package:flutter_login_ui/screens/SettingsTimeFilter.dart';
+
 import 'package:page_transition/page_transition.dart';
-import 'package:flutter_login_ui/model/DeroulementTache.dart';
 
 import 'package:sqflite/sqflite.dart';
+import '../model/Categorie.dart';
+import '../model/DeroulementTache.dart';
 import '../model/InitDatabase.dart';
 import '../model/Tache.dart';
 import '../utilities/constants.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
-import 'package:drag_and_drop_lists/drag_and_drop_lists.dart';
 
-import 'package:flutter_login_ui/screens/AllTasksEdit.dart';
+import 'AddCategorie.dart';
 import 'EditTask.dart';
 import 'History_main.dart';
 import '../services/DatabaseService.dart';
-
-import 'History_main.dart';
+import 'SettingsTimeFilter.dart';
 
 class AllTasksPage extends StatefulWidget {
   final int colorIndex;
@@ -228,13 +225,6 @@ class _AllTasksPageState extends State<AllTasksPage> {
     return liste;
   }
 
-  void deleteTache(int id) async {
-    Database database = await InitDatabase().database;
-    await database.delete('taches', where: 'id = ?', whereArgs: [id]);
-    taches.clear();
-    getTaches();
-  }
-
   List<Tache> getTachesCategorie(Categorie categorie) {
     List<Tache> t = [];
     for (int i = 0; i < tachesFiltre.length; i++) {
@@ -278,191 +268,195 @@ class _AllTasksPageState extends State<AllTasksPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: backgroundColor1,
-        appBar: AppBar(
-          title: Text("All Tasks"),
-          centerTitle: true,
-          flexibleSpace: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: allColors[widget.colorIndex],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
+      backgroundColor: backgroundColor1,
+      appBar: AppBar(
+        title: Text("All Tasks"),
+        centerTitle: true,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: allColors[widget.colorIndex],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
             ),
           ),
-          leading: Padding(
-            padding: const EdgeInsets.only(left: 25.0),
+        ),
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 25.0),
+          child: GestureDetector(
+            onTap: () {
+              // TODO : traiter appuie sur bouton info
+            },
+            child: SvgPicture.asset(
+              'assets/icons/info.svg',
+            ),
+          ),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 25.0),
             child: GestureDetector(
               onTap: () {
-                // TODO : traiter appuie sur bouton info
-              },
-              child: SvgPicture.asset(
-                'assets/icons/info.svg',
-              ),
-            ),
-          ),
-          actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: 25.0),
-              child: GestureDetector(
-                onTap: () {
+                // on permet l'edit que si le time filter n'est pas activé
+                if (_isTimeFilterVisible == false) {
                   _toggleEditMode();
-                },
-                child: _isEditMode
-                    ? Icon(
-                        Icons.done,
-                        size: 30,
-                      )
-                    : SvgPicture.asset(
+                }
+              },
+              child: _isEditMode
+                  ? Icon(
+                      Icons.done,
+                      size: 30,
+                    )
+                  : Opacity(
+                      opacity: _isTimeFilterVisible ? 0.25 : 1,
+                      child: SvgPicture.asset(
                         'assets/icons/edit.svg',
                       ),
-              ),
+                    ),
             ),
-          ],
-        ),
-        body: _isEditMode ? _buildEditMode() : _buildViewMode(),
-        bottomNavigationBar: FutureBuilder<List<Categorie>>(
-          future: futureCategories,
-          builder:
-              (BuildContext context, AsyncSnapshot<List<Categorie>> snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(
-                child: CircularProgressIndicator(),
-              );
-            } else if (snapshot.hasError) {
-              return BottomAppBar(
-                child: Text('Error loading categories'),
-              );
-            } else {
-              return BottomNavigationBar(
-                  type: BottomNavigationBarType.fixed,
-                  onTap: (value) {
-                    // cas où appuie sur le bouton +
-                    if (value == 0) {
-                      // afficher la page pour ajouter une catégorie
-                      Navigator.push(
-                          context,
-                          PageTransition(
-                              type: PageTransitionType.bottomToTop,
-                              child: AddCatePage(
-                                onDataAdded: _addCategorieItem,
-                                colorIndex: widget.colorIndex,
-                              ),
-                              childCurrent: this.widget,
-                              duration: Duration(milliseconds: 500)));
-                    }
-                    // cas où appuie sur le bouton balai
-                    else if (value == 1) {
-                      // TODO : traitement appuie bouton balai
-                    }
-                    // cas où appuie sur le bouton export
-                    else if (value == 3) {
-                      // TODO : traitement appuie bouton export
-                    }
-                    // cas où appuie sur le bouton time filter
-                    else if (value == 4) {
-                      String text = '';
-                      String date = '';
-                      DateTime now = DateTime.now();
-                      DateFormat formatter = DateFormat('dd/MM/yyyy');
-                      // jour
-                      if (timeFilterPreference == 0) {
-                        date = formatter.format(now);
-                        text = "Today";
-                      }
-                      // semaine
-                      else if (timeFilterPreference == 1) {
-                        DateTime datePremierJour =
-                            now.subtract(Duration(days: now.weekday - 1));
-                        DateTime dateDernierJour =
-                            datePremierJour.add(Duration(days: 6));
-                        date = formatter.format(datePremierJour) +
-                            " - " +
-                            formatter.format(dateDernierJour);
-                        text = "This Week";
-                      }
-                      // mois
-                      else if (timeFilterPreference == 2) {
-                        DateTime datePremierJour =
-                            DateTime(now.year, now.month, 1);
-                        DateTime dateDernierJour =
-                            DateTime(now.year, now.month + 1, 0);
-                        date = formatter.format(datePremierJour) +
-                            " - " +
-                            formatter.format(dateDernierJour);
-                        text = "This Month";
-                      }
-                      setState(() {
-                        timeFilterDate = date;
-                        timeFilterText = text;
-                        // si le bandeau de filtre est affiché on le retire, sinon on l'affiche
-                        _isTimeFilterVisible = !_isTimeFilterVisible;
-                        localTimeFilterCounter = 0;
-                      });
-                    }
-                  },
-                  backgroundColor: backgroundColor2,
-                  selectedItemColor: allColors[widget.colorIndex][1],
-                  unselectedItemColor: allColors[widget.colorIndex][1],
-                  selectedFontSize: 15,
-                  unselectedFontSize: 15,
-                  showSelectedLabels: false,
-                  showUnselectedLabels: false,
-                  items: <BottomNavigationBarItem>[
-                    BottomNavigationBarItem(
-                      icon: Icon(Icons.add_circle),
-                      label: '',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: SvgPicture.asset(
-                        'assets/icons/broom.svg',
-                        color: allColors[widget.colorIndex][1],
+          ),
+        ],
+      ),
+      body: _isEditMode ? _buildEditMode() : _buildViewMode(),
+      bottomNavigationBar: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          onTap: (value) {
+            // cas où appuie sur le bouton +
+            if (value == 0) {
+              // afficher la page pour ajouter une catégorie
+              Navigator.push(
+                  context,
+                  PageTransition(
+                      type: PageTransitionType.bottomToTop,
+                      child: AddCatePage(
+                        onDataAdded: _addCategorieItem,
+                        colorIndex: widget.colorIndex,
                       ),
-                      label: '',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            "Total ",
-                            overflow: TextOverflow.visible,
-                            style: TextStyle(
-                                fontSize: 19,
-                                color: allColors[widget.colorIndex][1]),
-                          ),
-                          Text(
-                            tempsEcouleTotal,
-                            overflow: TextOverflow.visible,
-                            style: TextStyle(
-                                fontSize: 19,
-                                color: allColors[widget.colorIndex][1]),
-                          ),
-                        ],
-                      ),
-                      label: '',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: SvgPicture.asset(
-                        'assets/icons/mail.svg',
-                        color: allColors[widget.colorIndex][1],
-                      ),
-                      label: '',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: SvgPicture.asset(
-                        'assets/icons/calendar.svg',
-                        color: allColors[widget.colorIndex][1],
-                      ),
-                      label: '',
-                    ),
-                  ],
-                  iconSize: 40,
-                  elevation: 5);
+                      childCurrent: this.widget,
+                      duration: Duration(milliseconds: 500)));
+            }
+            // cas où appuie sur le bouton balai
+            else if (value == 1) {
+              // TODO : traitement appuie bouton balai
+            }
+            // cas où appuie sur le bouton export
+            else if (value == 3) {
+              // TODO : traitement appuie bouton export
+            }
+            // cas où appuie sur le bouton time filter
+            else if (value == 4) {
+              // le bouton est actif seulement si la page n'est pas en mode Edit
+              if (_isEditMode == false) {
+                // appuie quand le filtre n'est pas visible
+                if (_isTimeFilterVisible == false) {
+                  String text = '';
+                  String date = '';
+                  DateTime now = DateTime.now();
+                  DateFormat formatter = DateFormat('dd/MM/yyyy');
+                  // jour
+                  if (timeFilterPreference == 0) {
+                    date = formatter.format(now);
+                    text = "Today";
+                  }
+                  // semaine
+                  else if (timeFilterPreference == 1) {
+                    DateTime datePremierJour =
+                        now.subtract(Duration(days: now.weekday - 1));
+                    DateTime dateDernierJour =
+                        datePremierJour.add(Duration(days: 6));
+                    date = formatter.format(datePremierJour) +
+                        " - " +
+                        formatter.format(dateDernierJour);
+                    text = "This Week";
+                  }
+                  // mois
+                  else if (timeFilterPreference == 2) {
+                    DateTime datePremierJour = DateTime(now.year, now.month, 1);
+                    DateTime dateDernierJour =
+                        DateTime(now.year, now.month + 1, 0);
+                    date = formatter.format(datePremierJour) +
+                        " - " +
+                        formatter.format(dateDernierJour);
+                    text = "This Month";
+                  }
+                  setState(() {
+                    timeFilterDate = date;
+                    timeFilterText = text;
+                    _isTimeFilterVisible = true;
+                    localTimeFilterCounter = 0;
+                  });
+                  getTachesByFilter();
+                }
+                // appuie quand le filtre est visible
+                else {
+                  setState(() {
+                    tachesFiltre = taches;
+                    _isTimeFilterVisible = false;
+                  });
+                }
+              }
             }
           },
-        ));
+          backgroundColor: backgroundColor2,
+          selectedItemColor: allColors[widget.colorIndex][1],
+          unselectedItemColor: allColors[widget.colorIndex][1],
+          selectedFontSize: 15,
+          unselectedFontSize: 15,
+          showSelectedLabels: false,
+          showUnselectedLabels: false,
+          items: <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(Icons.add_circle),
+              label: '',
+            ),
+            BottomNavigationBarItem(
+              icon: SvgPicture.asset(
+                'assets/icons/broom.svg',
+                color: allColors[widget.colorIndex][1],
+              ),
+              label: '',
+            ),
+            BottomNavigationBarItem(
+              icon: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "Total ",
+                    overflow: TextOverflow.visible,
+                    style: TextStyle(
+                        fontSize: 19, color: allColors[widget.colorIndex][1]),
+                  ),
+                  Text(
+                    tempsEcouleTotal,
+                    overflow: TextOverflow.visible,
+                    style: TextStyle(
+                        fontSize: 19, color: allColors[widget.colorIndex][1]),
+                  ),
+                ],
+              ),
+              label: '',
+            ),
+            BottomNavigationBarItem(
+              icon: SvgPicture.asset(
+                'assets/icons/mail.svg',
+                color: allColors[widget.colorIndex][1],
+              ),
+              label: '',
+            ),
+            BottomNavigationBarItem(
+              icon: Opacity(
+                opacity: _isEditMode ? 0.25 : 1,
+                child: SvgPicture.asset(
+                  'assets/icons/calendar.svg',
+                  color: allColors[widget.colorIndex][1],
+                ),
+              ),
+              label: '',
+            ),
+          ],
+          iconSize: 40,
+          elevation: 5),
+    );
   }
 
   Widget getPageContainer() {
@@ -478,9 +472,39 @@ class _AllTasksPageState extends State<AllTasksPage> {
     );
   }
 
+  Container buildFeedBackDraggable(Tache tache, int id) {
+    return Container(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: Color(0x1A000000), width: 5),
+              color: Colors.transparent,
+            ),
+            height: 50,
+            width: 450,
+            alignment: Alignment.center,
+            child: Material(
+              color: Colors.transparent,
+              child: Text(
+                tache.nom,
+                style: TextStyle(
+                  fontSize: 20.0,
+                  color: Colors.black,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Container buildRowCategorie(
       Categorie categorie, int id, List<Tache> listeTachesCat) {
-    if (listeTachesCat.isEmpty) return Container();
+    if (listeTachesCat.isEmpty && _isTimeFilterVisible) return Container();
     return Container(
         width: double.infinity,
         alignment: Alignment.centerLeft,
@@ -602,7 +626,6 @@ class _AllTasksPageState extends State<AllTasksPage> {
                             ),
                           ],
                         );
-                        ;
                       });
                   // TODO : lancer chronomètre pour la tache
                 },
@@ -698,9 +721,7 @@ class _AllTasksPageState extends State<AllTasksPage> {
                           ),
                         ],
                       );
-                      ;
                     });
-                // TODO : lancer chronomètre pour la tache
               },
               child: SvgPicture.asset(
                 'assets/icons/delete3.svg',
@@ -716,25 +737,6 @@ class _AllTasksPageState extends State<AllTasksPage> {
                 tache.nom,
                 style: TextStyle(fontSize: 20.0, color: Colors.black),
               ),
-            ),
-          ),
-          Container(
-            height: 30,
-            width: 30,
-            child: GestureDetector(
-              onTap: () {
-                // TODO : naviguer vers l'historique de la tache
-                Navigator.push(
-                    context,
-                    PageTransition(
-                        type: PageTransitionType.rightToLeftWithFade,
-                        child: HistoryPage(
-                          title: tache.nom,
-                          id: id,
-                        ),
-                        childCurrent: this.widget,
-                        duration: Duration(milliseconds: 500)));
-              },
             ),
           ),
           Container(
@@ -807,7 +809,6 @@ class _AllTasksPageState extends State<AllTasksPage> {
             // afficher le popup pour supprimer ou éditer la tache
             onLongPress: () {
               showDelModDialog(context, id);
-              print(titre);
             },
             child: Container(
               height: 50,
@@ -963,11 +964,13 @@ class _AllTasksPageState extends State<AllTasksPage> {
             (BuildContext context, AsyncSnapshot<List<Categorie>> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(
-                child: CircularProgressIndicator(),
+              child: CircularProgressIndicator(),
             );
           } else if (snapshot.hasError) {
             return BottomAppBar(
-              child: Text('Error loading categories'),
+              child: Center(
+                child: Text('Error loading categories'),
+              ),
             );
           } else {
             return Stack(
@@ -1011,7 +1014,8 @@ class _AllTasksPageState extends State<AllTasksPage> {
                                 DateTime datePremierJour = now
                                     .subtract(Duration(days: now.weekday - 1))
                                     .subtract(Duration(
-                                        days: 7 * (localTimeFilterCounter + 1)));
+                                        days:
+                                            7 * (localTimeFilterCounter + 1)));
                                 DateTime dateDernierJour = now
                                     .subtract(Duration(days: now.weekday - 1))
                                     .subtract(Duration(
@@ -1106,11 +1110,11 @@ class _AllTasksPageState extends State<AllTasksPage> {
                                   else if (t == 1) {
                                     DateTime datePremierJour = now
                                         .subtract(
-                                        Duration(days: now.weekday - 1))
+                                            Duration(days: now.weekday - 1))
                                         .subtract(Duration(days: 7));
                                     DateTime dateDernierJour = now
                                         .subtract(
-                                        Duration(days: now.weekday - 1))
+                                            Duration(days: now.weekday - 1))
                                         .subtract(Duration(days: 1));
                                     date = formatter.format(datePremierJour) +
                                         " - " +
@@ -1286,22 +1290,19 @@ class _AllTasksPageState extends State<AllTasksPage> {
             (BuildContext context, AsyncSnapshot<List<Categorie>> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(
-              child : CircularProgressIndicator(),
+              child: CircularProgressIndicator(),
             );
           } else if (snapshot.hasError) {
             return BottomAppBar(
-              child: Text('Error loading categories'),
+              child: Center(
+                child: Text('Error loading categories'),
+              ),
             );
           } else {
             return Container(
-              child: Padding(
-                  padding: _isTimeFilterVisible
-                      ? EdgeInsets.only(top: 75.0)
-                      : EdgeInsets.only(top: 10.0),
-                  child:
-                      //affiche la page dynamiquement
-                      getPageContainer()),
-            );
+                child:
+                    //affiche la page dynamiquement
+                    getPageContainer());
           }
         });
   }
