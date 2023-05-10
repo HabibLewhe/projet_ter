@@ -10,6 +10,7 @@ import 'package:time_tracker_ter/services/DatabaseService.dart';
 import '../model/Categorie.dart';
 import '../model/InitDatabase.dart';
 import '../model/Tache.dart';
+import '../services/exportService.dart';
 import '../utilities/constants.dart';
 import 'AddCategorie.dart';
 import 'AllTasks.dart';
@@ -448,7 +449,7 @@ class _MyHomePageState extends State<MyHomePage> {
             }
             // cas où on appuie sur le bouton export
             else if (value == 2) {
-              // TODO : traitement appuie bouton export
+              _export(context);
             }
           },
           backgroundColor: Colors.white,
@@ -1027,5 +1028,10 @@ class _MyHomePageState extends State<MyHomePage> {
         );
       },
     );
+  }
+
+  _export(BuildContext context) async {
+    ExportService service = ExportService();
+    await service.promptEmail(context);
   }
 }

@@ -6,6 +6,7 @@ import '../model/Categorie.dart';
 import '../model/DeroulementTache.dart';
 import '../model/InitDatabase.dart';
 import '../model/Tache.dart';
+import '../services/exportService.dart';
 import '../utilities/constants.dart';
 import 'AddTache.dart';
 import 'History_main.dart';
@@ -549,7 +550,7 @@ class CategorieDetail_ extends State<CategorieDetail> {
             }
             // cas où appuie sur le bouton export
             else if (value == 2) {
-              // TODO : traitement appuie sur le bouton export
+               _export(context);
             }
             // cas où appuie sur le bouton time filter
             else if (value == 3) {
@@ -773,5 +774,10 @@ class CategorieDetail_ extends State<CategorieDetail> {
         ),
       ),
     );
+  }
+
+  _export(BuildContext context) async {
+    ExportService service = ExportService();
+    await service.promptEmail(context);
   }
 }
