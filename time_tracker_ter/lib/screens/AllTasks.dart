@@ -281,16 +281,14 @@ class _AllTasksPageState extends State<AllTasksPage> {
             ),
           ),
         ),
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 25.0),
-          child: GestureDetector(
-            onTap: () {
-              // TODO : traiter appuie sur bouton info
-            },
-            child: SvgPicture.asset(
-              'assets/icons/info.svg',
-            ),
-          ),
+        leading: IconButton(
+          color: Colors.white,
+          onPressed: () {
+            _isEditMode
+                ? {_toggleEditMode(), _buildViewMode()}
+                : Navigator.of(context).pop(true);
+          },
+          icon: Icon(Icons.backspace),
         ),
         actions: [
           Padding(
@@ -502,8 +500,7 @@ class _AllTasksPageState extends State<AllTasksPage> {
     );
   }
 
-  Container buildRowCategorie(
-      Categorie categorie, int id, List<Tache> listeTachesCat) {
+  Container buildRowCategorie(Categorie categorie, int id, List<Tache> listeTachesCat) {
     if (listeTachesCat.isEmpty && _isTimeFilterVisible) return Container();
     return Container(
         width: double.infinity,
@@ -679,102 +676,6 @@ class _AllTasksPageState extends State<AllTasksPage> {
     );
   }
 
-  //        ------------- back up buildRowTacheEdit------------------
-  Container buildRowTacheEdit1(Tache tache, int id) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: borderColor, width: 1),
-        color: backgroundColor2,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Container(
-            height: 20,
-            width: 20,
-            child: GestureDetector(
-              onTap: () {
-                showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return AlertDialog(
-                        title: Text('Delete Confirmation'),
-                        content: Text(
-                            'Are you sure you want to delete task: ${tache.nom} ?'),
-                        actions: [
-                          TextButton(
-                            child: const Text('Cancel'),
-                            onPressed: () {
-                              Navigator.of(context).pop(); //Dismiss Dialog
-                            },
-                          ),
-                          ElevatedButton(
-                            onPressed: () async {
-                              Navigator.of(context).pop(); //Dismiss Dialog
-                              setState(() {
-                                DeleteTache(id);
-                                refreshData();
-                              });
-                            },
-                            child: const Text('Delete'),
-                          ),
-                        ],
-                      );
-                    });
-              },
-              child: SvgPicture.asset(
-                'assets/icons/delete3.svg',
-              ),
-            ),
-          ),
-          GestureDetector(
-            child: Container(
-              height: 50,
-              width: 150,
-              alignment: Alignment.centerLeft,
-              child: Text(
-                tache.nom,
-                style: TextStyle(fontSize: 20.0, color: Colors.black),
-              ),
-            ),
-          ),
-          Container(
-              height: 50,
-              width: 58,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              EditTask(tache, categories, refreshData),
-                        ),
-                      );
-                    },
-                    child: Icon(Icons.keyboard_arrow_right_rounded,
-                        color: allColors[widget.colorIndex][1], size: 29.0),
-                  ),
-                  GestureDetector(
-                      onTap: () {
-                        //TODO
-                        //bouton 3 slash (move group)
-                      },
-                      child: Icon(
-                        Icons.menu_rounded,
-                        color: allColors[widget.colorIndex][1],
-                        size: 29.0,
-                      ))
-                ],
-              )),
-        ],
-      ),
-    );
-  }
-
   Container buildRowTache(String titre, int id) {
     Tache tache = null;
     String tempsTache = "";
@@ -784,10 +685,9 @@ class _AllTasksPageState extends State<AllTasksPage> {
       }
     }
     if (tache == null) return Container();
-    if(_isTimeFilterVisible){
+    if (_isTimeFilterVisible) {
       tempsTache = calculerTempsFiltre(tache);
-    }
-    else{
+    } else {
       tempsTache = tache.temps_ecoule;
     }
     return Container(

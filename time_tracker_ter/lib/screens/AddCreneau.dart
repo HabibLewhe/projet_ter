@@ -15,16 +15,15 @@ class AddCreneauPage extends StatefulWidget {
   final double longitude;
   final int id_tache;
 
-  const AddCreneauPage({
-    this.id_tache,
-    this.title,
-    this.start,
-    this.end,
-    this.duration,
-    this.latitude,
-    this.longitude,
-    this.onDataAdded
-  });
+  const AddCreneauPage(
+      {this.id_tache,
+      this.title,
+      this.start,
+      this.end,
+      this.duration,
+      this.latitude,
+      this.longitude,
+      this.onDataAdded});
 
   @override
   State<AddCreneauPage> createState() => _AddCreneauPageState();
@@ -42,6 +41,7 @@ class _AddCreneauPageState extends State<AddCreneauPage> {
   bool startDateChanged = false;
   bool endDateChanged = false;
   bool durationChanged = false;
+  bool fromTimerPicker = false;
 
   DateTime newStartDate;
   DateTime newEndDate;
@@ -55,8 +55,12 @@ class _AddCreneauPageState extends State<AddCreneauPage> {
     //inserer un nouveau créneau
     await database.insert('deroulement_tache', {
       'id_tache': widget.id_tache,
-      'date_debut': newStartDate.toUtc().toIso8601String(),
-      'date_fin': newEndDate.toUtc().toIso8601String(),
+      'date_debut': newStartDate == null
+          ? widget.start.toUtc().toIso8601String()
+          : newStartDate.toUtc().toIso8601String(),
+      'date_fin': newEndDate == null
+          ? widget.end.toUtc().toIso8601String()
+          : newEndDate.toUtc().toIso8601String(),
       'latitude': newLatitude,
       'longitude': newLongitude
     });
@@ -67,6 +71,21 @@ class _AddCreneauPageState extends State<AddCreneauPage> {
     widget.onDataAdded();
     //go back to history page
     Navigator.of(context).pop();
+  }
+
+  Duration showDuration(var datedebut, var datefin) {
+    Duration intervalDuration = const Duration();
+
+    if (datefin != null) {
+      intervalDuration = datefin.difference(datedebut);
+    }
+    return intervalDuration;
+  }
+
+  DateTime updateEndDateTime(DateTime datedebut, Duration duree) {
+    DateTime datefin = DateTime.now();
+    datefin = datedebut.add(duree);
+    return datefin;
   }
 
   @override
@@ -84,11 +103,15 @@ class _AddCreneauPageState extends State<AddCreneauPage> {
                 colors: [_mainColor, _sndColor]),
           ),
         ),
-        actions: [IconButton(icon: const Icon(Icons.save), onPressed: () {
-          setState(() {
-            addNewCreneau();
-          });
-        })],
+        actions: [
+          IconButton(
+              icon: const Icon(Icons.check),
+              onPressed: () {
+                setState(() {
+                  addNewCreneau();
+                });
+              })
+        ],
       ),
       body: Padding(
           padding: const EdgeInsets.all(50.0),
@@ -113,13 +136,13 @@ class _AddCreneauPageState extends State<AddCreneauPage> {
                   trailing: Text(
                     (startDateChanged == true)
                         ? "${DateFormat('yMMMEd').format(newStartDate)} "
-                        "${DateFormat('Hm').format(newStartDate)}"
+                            "${DateFormat('Hm').format(newStartDate)}"
                         : "${DateFormat('yMMMEd').format(widget.start)} "
-                        "${DateFormat('Hm').format(widget.start)}",
+                            "${DateFormat('Hm').format(widget.start)}",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color:
-                      (clickStart == true) ? Colors.white : Colors.black38,
+                          (clickStart == true) ? Colors.white : Colors.black38,
                     ),
                     textAlign: TextAlign.end,
                   ),
@@ -133,18 +156,24 @@ class _AddCreneauPageState extends State<AddCreneauPage> {
                       showCupertinoModalPopup(
                           context: context,
                           builder: (BuildContext context) => SizedBox(
-                            height: 250,
-                            child: CupertinoDatePicker(
-                              backgroundColor: Colors.white,
-                              initialDateTime: widget.start,
-                              onDateTimeChanged: (DateTime newTime) {
-                                setState(() {
-                                  startDateChanged = true;
-                                  newStartDate = newTime;
-                                });
-                              },
-                            ),
-                          ));
+                                height: 250,
+                                child: CupertinoDatePicker(
+                                  backgroundColor: Colors.white,
+                                  maximumDate: endDateChanged == true
+                                      ? newEndDate
+                                      : widget.end,
+                                  initialDateTime: startDateChanged == true
+                                      ? newStartDate
+                                      : widget.start,
+                                  onDateTimeChanged: (DateTime newTime) {
+                                    setState(() {
+                                      startDateChanged = true;
+                                      durationChanged = true;
+                                      newStartDate = newTime;
+                                    });
+                                  },
+                                ),
+                              ));
                     });
                   },
                 ),
@@ -163,16 +192,22 @@ class _AddCreneauPageState extends State<AddCreneauPage> {
                     style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color:
-                        (clickEnd == true) ? Colors.white : Colors.black),
+                            (clickEnd == true) ? Colors.white : Colors.black),
                   ),
                   trailing: Text(
                       (endDateChanged == true)
                           ? DateFormat('Hm').format(newEndDate)
-                          : DateFormat('Hm').format(widget.end),
+                          : (fromTimerPicker == true)
+                              ? (newStartDate == null)
+                                  ? DateFormat('Hm').format(updateEndDateTime(
+                                      widget.start, newDuration))
+                                  : DateFormat('Hm').format(updateEndDateTime(
+                                      newStartDate, newDuration))
+                              : DateFormat('Hm').format(widget.end),
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color:
-                          (clickEnd == true) ? Colors.white : Colors.grey)),
+                              (clickEnd == true) ? Colors.white : Colors.grey)),
                   onTap: () {
                     setState(() {
                       clickStart = false;
@@ -183,18 +218,24 @@ class _AddCreneauPageState extends State<AddCreneauPage> {
                       showCupertinoModalPopup(
                           context: context,
                           builder: (BuildContext context) => SizedBox(
-                            height: 250,
-                            child: CupertinoDatePicker(
-                              backgroundColor: Colors.white,
-                              initialDateTime: widget.end,
-                              onDateTimeChanged: (DateTime newTime) {
-                                setState(() {
-                                  endDateChanged = true;
-                                  newEndDate = newTime;
-                                });
-                              },
-                            ),
-                          ));
+                                height: 250,
+                                child: CupertinoDatePicker(
+                                  backgroundColor: Colors.white,
+                                  minimumDate: startDateChanged == true
+                                      ? newStartDate
+                                      : widget.start,
+                                  initialDateTime: endDateChanged == true
+                                      ? newEndDate
+                                      : widget.end,
+                                  onDateTimeChanged: (DateTime newTime) {
+                                    setState(() {
+                                      endDateChanged = true;
+                                      durationChanged = true;
+                                      newEndDate = newTime;
+                                    });
+                                  },
+                                ),
+                              ));
                     });
                   },
                 ),
@@ -214,12 +255,24 @@ class _AddCreneauPageState extends State<AddCreneauPage> {
                   ),
                   trailing: Text(
                       (durationChanged == true)
-                          ? "${newDuration.inHours}:"
-                          "${(newDuration.inMinutes % 60).toString().padLeft(2, '0')}:"
-                          "${(newDuration.inSeconds % 60).toString().padLeft(2, '0')}"
+                          ? (fromTimerPicker == true)
+                              ? "${newDuration.inHours}:"
+                                  "${(newDuration.inMinutes % 60).toString().padLeft(2, '0')}:"
+                                  "${(newDuration.inSeconds % 60).toString().padLeft(2, '0')}"
+                              : newStartDate == null
+                                  ? "${showDuration(widget.start, newEndDate).inHours}:"
+                                      "${(showDuration(widget.start, newEndDate).inMinutes % 60).toString().padLeft(2, '0')}:"
+                                      "${(showDuration(widget.start, newEndDate).inSeconds % 60).toString().padLeft(2, '0')}"
+                                  : newEndDate == null
+                                      ? "${showDuration(newStartDate, widget.end).inHours}:"
+                                          "${(showDuration(newStartDate, widget.end).inMinutes % 60).toString().padLeft(2, '0')}:"
+                                          "${(showDuration(newStartDate, widget.end).inSeconds % 60).toString().padLeft(2, '0')}"
+                                      : "${showDuration(newStartDate, newEndDate).inHours}:"
+                                          "${(showDuration(newStartDate, newEndDate).inMinutes % 60).toString().padLeft(2, '0')}:"
+                                          "${(showDuration(newStartDate, newEndDate).inSeconds % 60).toString().padLeft(2, '0')}"
                           : "${widget.duration.inHours}:"
-                          "${(widget.duration.inMinutes % 60).toString().padLeft(2, '0')}:"
-                          "${(widget.duration.inSeconds % 60).toString().padLeft(2, '0')}",
+                              "${(widget.duration.inMinutes % 60).toString().padLeft(2, '0')}:"
+                              "${(widget.duration.inSeconds % 60).toString().padLeft(2, '0')}",
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: (clickDuration == true)
@@ -238,10 +291,13 @@ class _AddCreneauPageState extends State<AddCreneauPage> {
                               height: 250,
                               child: CupertinoTimerPicker(
                                   backgroundColor: Colors.white,
-                                  initialTimerDuration: widget.duration,
+                                  initialTimerDuration: newDuration == null
+                                      ? widget.duration
+                                      : newDuration,
                                   mode: CupertinoTimerPickerMode.hms,
                                   onTimerDurationChanged: (Duration duration) =>
                                       setState(() {
+                                        fromTimerPicker = true;
                                         durationChanged = true;
                                         newDuration = duration;
                                       }))));

@@ -15,7 +15,6 @@ import 'AddCategorie.dart';
 import 'AllTasks.dart';
 import 'CategorieDetail.dart';
 
-
 class MyHomePage extends StatefulWidget {
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -39,16 +38,17 @@ class _MyHomePageState extends State<MyHomePage> {
     futureCategories = getCategories();
     futureTaches = get_quick_taches();
     fetchQuickTache();
-
   }
-  void fetchQuickTache()  async{
-    List<Tache> nouvellesTaches= await get_quick_taches();
+
+  void fetchQuickTache() async {
+    List<Tache> nouvellesTaches = await get_quick_taches();
     setState(() {
-      for(int i = 0; i < nouvellesTaches.length; i++ ){
+      for (int i = 0; i < nouvellesTaches.length; i++) {
         _mapQuickStart[taches[i]] = {'secValue': 0, 'isActive': false};
       }
     });
-}
+  }
+
   int durationStringToSeconds(String durationString) {
     List<String> parts = durationString.split(':');
     int hours = int.parse(parts[0]);
@@ -79,7 +79,7 @@ class _MyHomePageState extends State<MyHomePage> {
       );
       Duration sum = duration1 + duration2;
       tempsEcoule =
-      "${sum.inHours}:${sum.inMinutes.remainder(60).toString().padLeft(2, '0')}:${sum.inSeconds.remainder(60).toString().padLeft(2, '0')}";
+          "${sum.inHours}:${sum.inMinutes.remainder(60).toString().padLeft(2, '0')}:${sum.inSeconds.remainder(60).toString().padLeft(2, '0')}";
     }
     setState(() {
       tempsEcouleTotal = tempsEcoule;
@@ -139,11 +139,10 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void toggleStartStop(Tache tache){
+  void toggleStartStop(Tache tache) {
     setState(() {
-      bool b= ! _mapQuickStart[tache]['isActive'];
+      bool b = !_mapQuickStart[tache]['isActive'];
       _mapQuickStart[tache]['isActive'] = b;
-
     });
   }
 
@@ -160,7 +159,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<List<Tache>> get_quick_taches() async {
     Database database = await InitDatabase().database;
-    var t = await database.query('taches', where: "nom LIKE '%Quick task%'", orderBy: "id DESC");
+    var t = await database.query('taches',
+        where: "nom LIKE '%Quick task%'", orderBy: "id DESC");
     List<Tache> liste = t.map((e) => Tache.fromMap(e)).toList();
     setState(() {
       taches = liste;
@@ -190,10 +190,12 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Color selectedColor = Colors.blue;
 
-  void add_quick_tache() async{
+  void add_quick_tache() async {
     Database database = await InitDatabase().database;
     // compter le nombre de tâches "Quick task"
-    int quickTaskCount = Sqflite.firstIntValue(await database.rawQuery("SELECT COUNT(*) FROM taches WHERE nom LIKE 'Quick task %'")) ?? 0;
+    int quickTaskCount = Sqflite.firstIntValue(await database.rawQuery(
+            "SELECT COUNT(*) FROM taches WHERE nom LIKE 'Quick task %'")) ??
+        0;
 
     final now = DateTime.now().add(Duration(hours: 2));
     final DateFormat formatter = DateFormat('yyyy-MM-ddTHH:mm:ss');
@@ -201,26 +203,27 @@ class _MyHomePageState extends State<MyHomePage> {
 //inserer une nouvelle tache
     int id = await database.insert('taches', {
       'nom': "Quick task ${quickTaskCount + 1}",
-      'couleur':selectedColor.value.toRadixString(16),
+      'couleur': selectedColor.value.toRadixString(16),
       'temps_ecoule': '00:00:00',
       'id_categorie': 1,
     });
 //inserer une nouvelle deroulement de tache
     await database.insert('deroulement_tache', {
       'id_tache': id,
-      'date_debut':'${formatter.format(now.toUtc())}Z',
+      'date_debut': '${formatter.format(now.toUtc())}Z',
       'date_fin': '',
       'latitude': 48.8566,
       'longitude': 2.3382,
     });
 
     // Récupérer la dernière tâche insérée
-    List<Map<String, dynamic>> maps = await database.rawQuery('SELECT * FROM taches ORDER BY id DESC LIMIT 1');
+    List<Map<String, dynamic>> maps = await database
+        .rawQuery('SELECT * FROM taches ORDER BY id DESC LIMIT 1');
     lastQuickStart = Tache.fromMap(maps.first);
     //print('lastQuickStart after adding new task: $lastQuickStart');
 
     // Récupérer les nouvelles tâches depuis la base de données
-    List<Tache> nouvellesTaches =  await get_quick_taches();
+    List<Tache> nouvellesTaches = await get_quick_taches();
     //print("nouvelleTaches ${nouvellesTaches.toString()}");
     print('nouvellesTache ${nouvellesTaches.toString()}');
     // Actualiser la liste de tâches dans l'état et redessiner l'interface utilisateur
@@ -293,7 +296,8 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         body: FutureBuilder<List<Categorie>>(
           future: futureCategories,
-          builder: (BuildContext context, AsyncSnapshot<List<Categorie>> snapshot1) {
+          builder:
+              (BuildContext context, AsyncSnapshot<List<Categorie>> snapshot1) {
             if (snapshot1.connectionState == ConnectionState.waiting) {
               return CircularProgressIndicator();
             } else if (snapshot1.hasError) {
@@ -303,7 +307,8 @@ class _MyHomePageState extends State<MyHomePage> {
             } else {
               return FutureBuilder<List<Tache>>(
                 future: futureTaches,
-                builder: (BuildContext context, AsyncSnapshot<List<Tache>> snapshot2) {
+                builder: (BuildContext context,
+                    AsyncSnapshot<List<Tache>> snapshot2) {
                   if (snapshot2.connectionState == ConnectionState.waiting) {
                     return CircularProgressIndicator();
                   } else if (snapshot2.hasError) {
@@ -322,7 +327,8 @@ class _MyHomePageState extends State<MyHomePage> {
                             margin: const EdgeInsets.only(bottom: 35.0),
                             child: Container(
                                 width: double.infinity,
-                                margin: const EdgeInsets.only(left: 20.0, right: 20.0),
+                                margin: const EdgeInsets.only(
+                                    left: 20.0, right: 20.0),
                                 height: 50,
                                 child: MaterialButton(
                                   color: Colors.white,
@@ -341,8 +347,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                         fontSize: 20.0,
                                         color: allColors[colorIndex][1]),
                                   ),
-                                )
-                            ),
+                                )),
                           ),
                           // Container of my task create with button Quick Start
                           getTachesContainer(),
@@ -358,7 +363,8 @@ class _MyHomePageState extends State<MyHomePage> {
                                     color: allColors[colorIndex][0], width: 1),
                                 color: allColors[colorIndex][1],
                               ),
-                              margin: const EdgeInsets.only(left: 20.0, right: 20.0),
+                              margin: const EdgeInsets.only(
+                                  left: 20.0, right: 20.0),
                               child: Column(
                                 children: [
                                   GestureDetector(
@@ -368,17 +374,19 @@ class _MyHomePageState extends State<MyHomePage> {
                                       Navigator.push(
                                           context,
                                           PageTransition(
-                                              type: PageTransitionType.rightToLeftWithFade,
+                                              type: PageTransitionType
+                                                  .rightToLeftWithFade,
                                               child: AllTasksPage(
                                                   timeFilterCounter: 0,
-                                                  colorIndex: colorIndex
-                                              ),
+                                                  colorIndex: colorIndex),
                                               childCurrent: this.widget,
-                                              duration: Duration(milliseconds: 500)
-                                          )
-                                      );
+                                              duration:
+                                                  Duration(milliseconds: 500)));
                                     },
-                                    child: buildRow("papers", "All Tasks"),
+                                    child: Container(
+                                        color: Colors.transparent,
+                                        width: double.infinity,
+                                        child: buildRow(papers, alltasks)),
                                   ),
                                   Divider(
                                     color: backgroundColor2,
@@ -391,15 +399,21 @@ class _MyHomePageState extends State<MyHomePage> {
                                       Navigator.push(
                                           context,
                                           PageTransition(
-                                              type: PageTransitionType.rightToLeftWithFade,
+                                              type: PageTransitionType
+                                                  .rightToLeftWithFade,
                                               child: CategorieDetail(
-                                                categorie: categories[0], colorIndex: colorIndex, timeFilterCounter: 0,),
+                                                categorie: categories[0],
+                                                colorIndex: colorIndex,
+                                                timeFilterCounter: 0,
+                                              ),
                                               childCurrent: this.widget,
-                                              duration: Duration(milliseconds: 500)
-                                          )
-                                      );
+                                              duration:
+                                                  Duration(milliseconds: 500)));
                                     },
-                                    child: buildRow("paper", "Single Tasks"),
+                                    child: Container(
+                                        color: Colors.transparent,
+                                        width: double.infinity,
+                                        child: buildRow(paper, singleTask)),
                                   ),
                                 ],
                               ),
@@ -430,9 +444,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         colorIndex: colorIndex,
                       ),
                       childCurrent: this.widget,
-                      duration: Duration(milliseconds: 500)
-                  )
-              );
+                      duration: Duration(milliseconds: 500)));
             }
             // cas où on appuie sur le bouton export
             else if (value == 2) {
@@ -456,7 +468,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    "Total ",
+                    total,
                     overflow: TextOverflow.visible,
                     style: TextStyle(
                         fontSize: 19, color: allColors[colorIndex][1]),
@@ -481,13 +493,12 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
           iconSize: 40,
           elevation: 5,
-        )
-    );
+        ));
   }
 
   Row buildRow(String icon, String titre) {
     String tempsEcoule = "00:00:00";
-    if (titre == "All Tasks") {
+    if (titre == alltasks) {
       tempsEcoule = tempsEcouleTotal;
     } else if (titre == "Single Tasks") {
       tempsEcoule = categories[0].temps_ecoule;
@@ -499,15 +510,15 @@ class _MyHomePageState extends State<MyHomePage> {
         Container(
           height: 50,
           width: 50,
-          child: (icon == "paper")
+          child: (icon == paper)
               ? Image.asset(
-            'assets/icons/paper.png',
-          )
-              : ((icon == "papers")
-              ? Image.asset(
-            'assets/icons/papers.png',
-          )
-              : Container()),
+                  'assets/icons/paper.png',
+                )
+              : ((icon == papers)
+                  ? Image.asset(
+                      'assets/icons/papers.png',
+                    )
+                  : Container()),
         ),
         Container(
           height: 50,
@@ -552,7 +563,7 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget buildRowTaches( Tache tache) {
+  Widget buildRowTaches(Tache tache) {
     return GestureDetector(
       onLongPress: () {
         // Afficher le popup pour supprimer ou éditer la tache
@@ -579,18 +590,21 @@ class _MyHomePageState extends State<MyHomePage> {
             height: 50,
             width: 50,
             child: IconButton(
-              icon: _mapQuickStart[tache]['isActive'] ?
-              Icon(Icons.pause_circle):Icon(Icons.play_circle),
+              icon: _mapQuickStart[tache]['isActive']
+                  ? Icon(Icons.pause_circle)
+                  : Icon(Icons.play_circle),
               onPressed: () async {
                 toggleStartStop(tache);
                 _startTimer(tache);
-                if(!_mapQuickStart[tache]['isActive']){
+                if (!_mapQuickStart[tache]['isActive']) {
                   final now = DateTime.now().add(Duration(hours: 2));
                   final formatter = DateFormat('yyyy-MM-ddTHH:mm:ss');
-                  String formattedDateFin = formatter.format(DateTime.now().toUtc()) + 'Z';
+                  String formattedDateFin =
+                      formatter.format(DateTime.now().toUtc()) + 'Z';
                   if (_idTacheEnCours != null) {
                     // Mettre à jour la colonne date_fin dans la base de données
-                    await updateDeroulementTache(_idTacheEnCours, formattedDateFin);
+                    await updateDeroulementTache(
+                        _idTacheEnCours, formattedDateFin);
                   }
                   // Ajouter une nouvelle ligne dans la table deroulement_tache
                   //_idTacheEnCours = await insertDeroulementTache(tache.id, formattedDateFin);
@@ -604,7 +618,8 @@ class _MyHomePageState extends State<MyHomePage> {
             width: 150,
             alignment: Alignment.centerLeft,
             child: Text(
-              tache.nom, // Utilisation de l'opérateur null-aware pour fournir une chaîne vide si tache.nom est nul,
+              tache.nom,
+              // Utilisation de l'opérateur null-aware pour fournir une chaîne vide si tache.nom est nul,
               style: TextStyle(fontSize: 20.0, color: Colors.black87),
             ),
           ),
@@ -620,7 +635,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   width: 80,
                   alignment: Alignment.center,
                   child: Text(
-                      timerText(_mapQuickStart[tache]['secValue']),
+                    timerText(_mapQuickStart[tache]['secValue']),
                     style: TextStyle(fontSize: 20.0, color: colorTime1),
                   ),
                 ),
@@ -659,7 +674,10 @@ class _MyHomePageState extends State<MyHomePage> {
               PageTransition(
                   type: PageTransitionType.rightToLeftWithFade,
                   child: CategorieDetail(
-                    categorie: categorie, colorIndex: colorIndex, timeFilterCounter: 0,),
+                    categorie: categorie,
+                    colorIndex: colorIndex,
+                    timeFilterCounter: 0,
+                  ),
                   childCurrent: this.widget,
                   duration: Duration(milliseconds: 500)));
         },
@@ -720,7 +738,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Container getTachesContainer() {
-    if (_mapQuickStart.length==0) {
+    if (_mapQuickStart.length == 0) {
       return Container();
     }
     var quickTaches = taches;
@@ -740,12 +758,13 @@ class _MyHomePageState extends State<MyHomePage> {
             physics: NeverScrollableScrollPhysics(),
             itemCount: _mapQuickStart.length,
             itemBuilder: (context, index) {
-              List<Tache> keysList=_mapQuickStart.keys.toList();
+              List<Tache> keysList = _mapQuickStart.keys.toList();
               IconData iconButton;
-              bool b =_mapQuickStart[keysList[index]]['isActive'];
-              b? iconButton= Icons.pause_circle:iconButton= Icons.play_circle;
-              return buildRowTaches(
-                   keysList[index]);
+              bool b = _mapQuickStart[keysList[index]]['isActive'];
+              b
+                  ? iconButton = Icons.pause_circle
+                  : iconButton = Icons.play_circle;
+              return buildRowTaches(keysList[index]);
             }),
       ),
     );

@@ -46,8 +46,6 @@ class _HistoryPageState extends State<HistoryPage> {
   void initState() {
     super.initState();
     getCreneau();
-    currentStartingDate = DateTime.now();
-    currentEndingDate = currentStartingDate.add(const Duration(hours: 6));
     currentLatitude = 47.8430441;
     currentLongitude = 1.9365067;
   }
@@ -210,118 +208,87 @@ class _HistoryPageState extends State<HistoryPage> {
             ),
           ),
         ),
-        body: GroupedListView<DeroulementTache, String>(
-          elements: deroulement_taches,
-          groupBy: (element) =>
-              DateFormat('yMd').format(DateTime.parse(element.date_debut)),
-          groupSeparatorBuilder: (String groupByValue) => Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(7),
-            color: _trdColor,
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    groupByValue,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
+        body: Padding(
+          padding: const EdgeInsets.only(top: 10.0),
+          child: SlidableAutoCloseBehavior(
+            closeWhenOpened: true,
+            child: GroupedListView<DeroulementTache, String>(
+              elements: deroulement_taches,
+              groupBy: (element) =>
+                  DateFormat('yMd').format(DateTime.parse(element.date_debut)),
+              groupSeparatorBuilder: (String groupByValue) => Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(7),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        groupByValue,
+                        style: const TextStyle(
+                          color: _mainColor,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        textAlign: TextAlign.start,
+                      ),
                     ),
-                    textAlign: TextAlign.start,
-                  ),
-                ),
-                Expanded(
-                  child: Text(
-                    "${(sumDuration(groupByValue).inHours).toString()}:"
-                    "${(sumDuration(groupByValue).inMinutes % 60).toString().padLeft(2, '0')}:"
-                    "${(sumDuration(groupByValue).inSeconds % 60).toString().padLeft(2, '0')}",
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
+                    Expanded(
+                      child: Text(
+                        "${(sumDuration(groupByValue).inHours).toString()}:"
+                        "${(sumDuration(groupByValue).inMinutes % 60).toString().padLeft(2, '0')}:"
+                        "${(sumDuration(groupByValue).inSeconds % 60).toString().padLeft(2, '0')}",
+                        style: const TextStyle(
+                          color: _mainColor,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        textAlign: TextAlign.end,
+                      ),
                     ),
-                    textAlign: TextAlign.end,
-                  ),
+                  ],
                 ),
-              ],
+              ),
+              itemBuilder: (context, DeroulementTache element) {
+                return Slidable(
+                    endActionPane: ActionPane(
+                      motion:  BehindMotion(),
+                      children: [
+                        SlidableAction(
+                          // An action can be bigger than the others.
+                          flex: 2,
+                          onPressed: (context) {
+                            showConfirmDialog(context, element.id);
+                          },
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                          icon: Icons.archive,
+                          label: delete,
+                        ),
+                      ],
+                    ),
+                    child: buildRowTache(context, element));
+              },
+              itemComparator: (item1, item2) {
+                return (DateTime.parse(item1.date_fin))
+                    .compareTo(DateTime.parse(item2.date_debut));
+              },
+              // optional
+              useStickyGroupSeparators: true,
+              // optional
+              floatingHeader: true,
+              // optional
+              order: GroupedListOrder.DESC, // optional
             ),
           ),
-          itemBuilder: (context, DeroulementTache element) {
-            return Slidable(
-              endActionPane: ActionPane(
-                motion: ScrollMotion(),
-                children: [
-                  SlidableAction(
-                    // An action can be bigger than the others.
-                    flex: 2,
-                    onPressed: (context) {
-                      showConfirmDialog(context, element.id);
-                    },
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                    icon: Icons.archive,
-                    label: delete,
-                  ),
-                ],
-              ),
-              child: Card(
-                elevation: 2,
-                child: ListTile(
-                  contentPadding: const EdgeInsets.fromLTRB(10, 5, 10, 5),
-                  title: Text(
-                    dateFinChecker(element.date_fin)
-                        ? "${DateFormat('Hm').format(DateTime.parse(element.date_debut))} - ${now}"
-                        : "${DateFormat('Hm').format(DateTime.parse(element.date_debut))} - "
-                            "${DateFormat('Hm').format(DateTime.parse(element.date_fin))}",
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  trailing: Text(
-                    "${showDuration(element.date_debut, element.date_fin).inHours}:"
-                    "${(showDuration(element.date_debut, element.date_fin).inMinutes % 60).toString().padLeft(2, '0')}:"
-                    "${(showDuration(element.date_debut, element.date_fin).inSeconds % 60).toString().padLeft(2, '0')}",
-                    style: const TextStyle(
-                        color: Colors.grey, fontWeight: FontWeight.bold),
-                  ),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      PageTransition(
-                          type: PageTransitionType.bottomToTop,
-                          child: TimeDetailsPage(
-                            onDataAdded: _addCreneauItem,
-                            deroulementTache: element,
-                            title: widget.title,
-                            start: DateTime.parse(element.date_debut),
-                            end: DateTime.parse(element.date_fin),
-                            duration: showDuration(
-                                element.date_debut, element.date_fin),
-                            latitude: element.latitude,
-                            longitude: element.longitude,
-                          ),
-                          childCurrent: this.widget,
-                          duration: Duration(milliseconds: 300)),
-                    );
-                  },
-                ),
-              ),
-            );
-          },
-          itemComparator: (item1, item2) {
-            return (DateTime.parse(item1.date_fin))
-                .compareTo(DateTime.parse(item2.date_debut));
-          },
-          // optional
-          useStickyGroupSeparators: true,
-          // optional
-          floatingHeader: true,
-          // optional
-          order: GroupedListOrder.DESC, // optional
         ),
         bottomNavigationBar: BottomNavigationBar(
             type: BottomNavigationBarType.fixed,
             onTap: (value) {
               // cas où appuie sur le bouton +
+
+              setState(() {
+                currentStartingDate = DateTime.now();
+                currentEndingDate = currentStartingDate.add(const Duration(hours: 6));
+              });
+
               if (value == 0) {
                 // afficher la page pour ajouter un créneau
                 Navigator.push(
@@ -441,5 +408,67 @@ class _HistoryPageState extends State<HistoryPage> {
             ],
             iconSize: 40,
             elevation: 5));
+  }
+
+  StatelessWidget buildRowTache(
+      BuildContext context, DeroulementTache element) {
+    if (element == null) return Container();
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          PageTransition(
+              type: PageTransitionType.bottomToTop,
+              child: TimeDetailsPage(
+                onDataAdded: _addCreneauItem,
+                deroulementTache: element,
+                title: widget.title,
+                start: DateTime.parse(element.date_debut),
+                end: DateTime.parse(element.date_fin),
+                duration: showDuration(element.date_debut, element.date_fin),
+                latitude: element.latitude,
+                longitude: element.longitude,
+              ),
+              childCurrent: this.widget,
+              duration: Duration(milliseconds: 300)),
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: borderColor, width: 1),
+          color: backgroundColor2,
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
+        height: 50,
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                dateFinChecker(element.date_fin)
+                    ? "${DateFormat('Hm').format(DateTime.parse(element.date_debut).add(Duration(hours: 2)))} - ${now}"
+                    : "${DateFormat('Hm').format(DateTime.parse(element.date_debut).add(Duration(hours: 2)))} - "
+                        "${DateFormat('Hm').format(DateTime.parse(element.date_fin).add(Duration(hours: 2)))}",
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.start,
+              ),
+            ),
+            Expanded(
+              child: Text(
+                dateFinChecker(element.date_fin)
+                    ? now
+                    : "${showDuration(element.date_debut, element.date_fin).inHours}:"
+                        "${(showDuration(element.date_debut, element.date_fin).inMinutes % 60).toString().padLeft(2, '0')}:"
+                        "${(showDuration(element.date_debut, element.date_fin).inSeconds % 60).toString().padLeft(2, '0')}",
+                style: const TextStyle(
+                    color: Colors.grey, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.end,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

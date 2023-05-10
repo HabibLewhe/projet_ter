@@ -16,16 +16,15 @@ class TimeDetailsPage extends StatefulWidget {
   final double longitude;
   final DeroulementTache deroulementTache;
 
-  const TimeDetailsPage({
-    this.deroulementTache,
-    this.title,
-    this.start,
-    this.end,
-    this.duration,
-    this.latitude,
-    this.longitude,
-    this.onDataAdded
-  });
+  const TimeDetailsPage(
+      {this.deroulementTache,
+      this.title,
+      this.start,
+      this.end,
+      this.duration,
+      this.latitude,
+      this.longitude,
+      this.onDataAdded});
 
   @override
   State<TimeDetailsPage> createState() => _TimeDetailsPageState();
@@ -43,6 +42,7 @@ class _TimeDetailsPageState extends State<TimeDetailsPage> {
   bool startDateChanged = false;
   bool endDateChanged = false;
   bool durationChanged = false;
+  bool fromTimerPicker = false;
 
   DateTime newStartDate;
   DateTime newEndDate;
@@ -55,13 +55,21 @@ class _TimeDetailsPageState extends State<TimeDetailsPage> {
 
     print("widget.deroulementTache : ${widget.deroulementTache}");
     //mettre à jour un créneau
-    await database.update('deroulement_tache', {
-      'id_tache' : widget.deroulementTache.id_tache,
-      'date_debut': newStartDate.toUtc().toIso8601String(),
-      'date_fin': newEndDate.toUtc().toIso8601String(),
-      'latitude': newLatitude,
-      'longitude': newLongitude
-    }, where: 'id = ?', whereArgs: [widget.deroulementTache.id]);
+    await database.update(
+        'deroulement_tache',
+        {
+          'id_tache': widget.deroulementTache.id_tache,
+          'date_debut': newStartDate == null
+              ? widget.start.toUtc().toIso8601String()
+              : newStartDate.toUtc().toIso8601String(),
+          'date_fin': newEndDate == null
+              ? widget.end.toUtc().toIso8601String()
+              : newEndDate.toUtc().toIso8601String(),
+          'latitude': newLatitude == null ? widget.latitude : newLatitude,
+          'longitude': newLongitude == null ? widget.duration : newLongitude
+        },
+        where: 'id = ?',
+        whereArgs: [widget.deroulementTache.id]);
 
     //afficher un message de succès
     showSuccessMessage("Créneau mis à jour");
@@ -69,6 +77,21 @@ class _TimeDetailsPageState extends State<TimeDetailsPage> {
     widget.onDataAdded();
     //go back to history page
     Navigator.of(context).pop();
+  }
+
+  Duration showDuration(var datedebut, var datefin) {
+    Duration intervalDuration = const Duration();
+
+    if (datefin != null) {
+      intervalDuration = datefin.difference(datedebut);
+    }
+    return intervalDuration;
+  }
+
+  DateTime updateEndDateTime(DateTime datedebut, Duration duree) {
+    DateTime datefin = DateTime.now();
+    datefin = datedebut.add(duree);
+    return datefin;
   }
 
   @override
@@ -86,11 +109,15 @@ class _TimeDetailsPageState extends State<TimeDetailsPage> {
                 colors: [_mainColor, _sndColor]),
           ),
         ),
-        actions: [IconButton(icon: const Icon(Icons.save), onPressed: () {
-          setState(() {
-            updateCreneau();
-          });
-        })],
+        actions: [
+          IconButton(
+              icon: const Icon(Icons.check),
+              onPressed: () {
+                setState(() {
+                  updateCreneau();
+                });
+              })
+        ],
       ),
       body: Padding(
           padding: const EdgeInsets.all(50.0),
@@ -138,10 +165,16 @@ class _TimeDetailsPageState extends State<TimeDetailsPage> {
                                 height: 250,
                                 child: CupertinoDatePicker(
                                   backgroundColor: Colors.white,
-                                  initialDateTime: widget.start,
+                                  maximumDate: endDateChanged == true
+                                      ? newEndDate
+                                      : widget.end,
+                                  initialDateTime: startDateChanged == true
+                                      ? newStartDate
+                                      : widget.start,
                                   onDateTimeChanged: (DateTime newTime) {
                                     setState(() {
                                       startDateChanged = true;
+                                      durationChanged = true;
                                       newStartDate = newTime;
                                     });
                                   },
@@ -170,7 +203,13 @@ class _TimeDetailsPageState extends State<TimeDetailsPage> {
                   trailing: Text(
                       (endDateChanged == true)
                           ? DateFormat('Hm').format(newEndDate)
-                          : DateFormat('Hm').format(widget.end),
+                          : (fromTimerPicker == true)
+                              ? (newStartDate == null)
+                                  ? DateFormat('Hm').format(updateEndDateTime(
+                                      widget.start, newDuration))
+                                  : DateFormat('Hm').format(updateEndDateTime(
+                                      newStartDate, newDuration))
+                              : DateFormat('Hm').format(widget.end),
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color:
@@ -188,10 +227,16 @@ class _TimeDetailsPageState extends State<TimeDetailsPage> {
                                 height: 250,
                                 child: CupertinoDatePicker(
                                   backgroundColor: Colors.white,
-                                  initialDateTime: widget.end,
+                                  minimumDate: startDateChanged == true
+                                      ? newStartDate
+                                      : widget.start,
+                                  initialDateTime: endDateChanged == true
+                                      ? newEndDate
+                                      : widget.end,
                                   onDateTimeChanged: (DateTime newTime) {
                                     setState(() {
                                       endDateChanged = true;
+                                      durationChanged = true;
                                       newEndDate = newTime;
                                     });
                                   },
@@ -216,9 +261,21 @@ class _TimeDetailsPageState extends State<TimeDetailsPage> {
                   ),
                   trailing: Text(
                       (durationChanged == true)
-                          ? "${newDuration.inHours}:"
-                              "${(newDuration.inMinutes % 60).toString().padLeft(2, '0')}:"
-                              "${(newDuration.inSeconds % 60).toString().padLeft(2, '0')}"
+                          ? (fromTimerPicker == true)
+                              ? "${newDuration.inHours}:"
+                                  "${(newDuration.inMinutes % 60).toString().padLeft(2, '0')}:"
+                                  "${(newDuration.inSeconds % 60).toString().padLeft(2, '0')}"
+                              : newStartDate == null
+                                  ? "${showDuration(widget.start, newEndDate).inHours}:"
+                                      "${(showDuration(widget.start, newEndDate).inMinutes % 60).toString().padLeft(2, '0')}:"
+                                      "${(showDuration(widget.start, newEndDate).inSeconds % 60).toString().padLeft(2, '0')}"
+                                  : newEndDate == null
+                                      ? "${showDuration(newStartDate, widget.end).inHours}:"
+                                          "${(showDuration(newStartDate, widget.end).inMinutes % 60).toString().padLeft(2, '0')}:"
+                                          "${(showDuration(newStartDate, widget.end).inSeconds % 60).toString().padLeft(2, '0')}"
+                                      : "${showDuration(newStartDate, newEndDate).inHours}:"
+                                          "${(showDuration(newStartDate, newEndDate).inMinutes % 60).toString().padLeft(2, '0')}:"
+                                          "${(showDuration(newStartDate, newEndDate).inSeconds % 60).toString().padLeft(2, '0')}"
                           : "${widget.duration.inHours}:"
                               "${(widget.duration.inMinutes % 60).toString().padLeft(2, '0')}:"
                               "${(widget.duration.inSeconds % 60).toString().padLeft(2, '0')}",
@@ -240,13 +297,17 @@ class _TimeDetailsPageState extends State<TimeDetailsPage> {
                               height: 250,
                               child: CupertinoTimerPicker(
                                   backgroundColor: Colors.white,
-                                  initialTimerDuration: widget.duration,
+                                  initialTimerDuration: newDuration == null
+                                      ? widget.duration
+                                      : newDuration,
                                   mode: CupertinoTimerPickerMode.hms,
-                                  onTimerDurationChanged: (Duration duration) =>
-                                      setState(() {
-                                        durationChanged = true;
-                                        newDuration = duration;
-                                      }))));
+                                  onTimerDurationChanged: (Duration duration) {
+                                    setState(() {
+                                      fromTimerPicker = true;
+                                      durationChanged = true;
+                                      newDuration = duration;
+                                    });
+                                  })));
                     });
                   },
                 ),

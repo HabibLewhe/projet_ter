@@ -2,6 +2,8 @@
 # This is a generated file; do not edit or check into version control.
 export "FLUTTER_ROOT=/home/fatima/snap/flutter/common/flutter"
 export "FLUTTER_APPLICATION_PATH=/home/fatima/OneDrive/TER/projet_ter/time_tracker_ter"
+export "FLUTTER_ROOT=/home/habib/snap/flutter/common/flutter"
+export "FLUTTER_APPLICATION_PATH=/home/habib/Documents/Cours/DevMultiPlatforme/projet_ter_final/time_tracker_ter"
 export "COCOAPODS_PARALLEL_CODE_SIGN=true"
 export "FLUTTER_TARGET=lib/main.dart"
 export "FLUTTER_BUILD_DIR=build"
