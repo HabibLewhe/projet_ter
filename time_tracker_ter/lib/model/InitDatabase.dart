@@ -118,14 +118,20 @@ class InitDatabase {
     CREATE TRIGGER update_temps_ecoule AFTER INSERT ON deroulement_tache
     BEGIN
       UPDATE taches SET temps_ecoule = (
-        SELECT time(SUM(strftime('%s', datetime(date_fin)) - strftime('%s', datetime(date_debut))), 'unixepoch')
+        SELECT COALESCE(
+          time(SUM(CASE WHEN date_fin != '' THEN strftime('%s', datetime(date_fin)) - strftime('%s', datetime(date_debut)) ELSE 0 END), 'unixepoch'),
+          '00:00:00'
+        )
         FROM deroulement_tache
         WHERE deroulement_tache.id_tache = taches.id
       )
       WHERE id = NEW.id_tache;
-    
+
       UPDATE categories SET temps_ecoule = (
-        SELECT time(SUM(strftime('%s', datetime(date_fin)) - strftime('%s', datetime(date_debut))), 'unixepoch')
+        SELECT COALESCE(
+          time(SUM(CASE WHEN deroulement_tache.date_fin != '' THEN strftime('%s', datetime(deroulement_tache.date_fin)) - strftime('%s', datetime(deroulement_tache.date_debut)) ELSE 0 END), 'unixepoch'),
+          '00:00:00'
+        )
         FROM deroulement_tache
         INNER JOIN taches ON deroulement_tache.id_tache = taches.id
         WHERE taches.id_categorie = categories.id
