@@ -65,7 +65,9 @@ class CategorieDetail_ extends State<CategorieDetail> {
     for (int i = 0; i < deroulementFiltre.length; i++) {
       for(int j = 0; j < taches.length; j++){
         if(taches[j].id == deroulementFiltre[i].id_tache){
-          l.add(taches[j]);
+          if(!l.contains(taches[j])){
+            l.add(taches[j]);
+          }
         }
       }
     }
@@ -407,6 +409,7 @@ class CategorieDetail_ extends State<CategorieDetail> {
                             timeFilterDate = date;
                             timeFilterText = text;
                             localTimeFilterCounter = t;
+                            getTachesByFilter();
                           });
                         }
                       },

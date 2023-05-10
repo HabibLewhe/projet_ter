@@ -250,9 +250,7 @@ class _AllTasksPageState extends State<AllTasksPage> {
 
   // calcule le temps écoulé pour une tache donnée avec le filtre du moment
   String calculerTempsFiltre(Tache tache) {
-    print("Calculer Temps Filtre de la tache " + tache.id.toString());
     List<DeroulementTache> deroulementsFiltre = getDeroulementsByFilter();
-    print("Déroulements : " + deroulementsFiltre.toString());
     Duration tempsEcoule = Duration();
     for (int i = 0; i < deroulementsFiltre.length; i++) {
       if (deroulementsFiltre[i].id_tache == tache.id) {
@@ -1160,6 +1158,7 @@ class _AllTasksPageState extends State<AllTasksPage> {
                                   timeFilterDate = date;
                                   timeFilterText = text;
                                   localTimeFilterCounter = t;
+                                  getTachesByFilter();
                                 });
                               }
                             },
@@ -1270,6 +1269,7 @@ class _AllTasksPageState extends State<AllTasksPage> {
                                   timeFilterDate = date;
                                   localTimeFilterCounter--;
                                 });
+                                getTachesByFilter();
                               }),
                               child: SvgPicture.asset('assets/icons/right.svg'),
                             ),
