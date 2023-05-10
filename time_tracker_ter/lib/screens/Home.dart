@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
-
+import 'package:time_tracker_ter/model/Categorie.dart';
+import 'package:time_tracker_ter/screens/AddCategorie.dart';
+import 'package:time_tracker_ter/screens/CategorieDetail.dart';
+import 'package:time_tracker_ter/screens/AllTasks.dart';
+import 'package:time_tracker_ter/services/exportService.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:sqflite/sqflite.dart';
@@ -268,7 +272,7 @@ class _MyHomePageState extends State<MyHomePage> {
               }
               // cas où on appuie sur le bouton export
               else if (value == 2) {
-                // TODO : traitement appuie bouton export
+                _export(context);
               }
             },
             backgroundColor: Colors.white,
@@ -716,5 +720,12 @@ class _MyHomePageState extends State<MyHomePage> {
         );
       },
     );
+  }
+  _export(BuildContext context) async {
+    String email = await ExportService.promptEmail(context);
+
+    if (email == null) return;
+
+    ExportService.export(email);
   }
 }

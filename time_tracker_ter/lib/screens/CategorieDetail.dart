@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:time_tracker_ter/model/Categorie.dart';
+import 'package:time_tracker_ter/screens/AddTache.dart';
+import 'package:time_tracker_ter/services/exportService.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:sqflite/sqflite.dart';
@@ -770,5 +773,13 @@ class CategorieDetail_ extends State<CategorieDetail> {
         ),
       ),
     );
+  }
+
+  void _export(int categoryId) async {
+    String email = await ExportService.promptEmail(context);
+
+    if (email == null) return;
+
+    ExportService.export(email, categoryId: categoryId);
   }
 }

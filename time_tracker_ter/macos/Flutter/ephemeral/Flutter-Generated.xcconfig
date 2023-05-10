@@ -1,6 +1,6 @@
 // This is a generated file; do not edit or check into version control.
-FLUTTER_ROOT=/home/tmt38/snap/flutter/common/flutter
-FLUTTER_APPLICATION_PATH=/home/tmt38/vision/Vision_study/M1/S2/TER/projet_ter/time_tracker_ter
+FLUTTER_ROOT=C:\flutter
+FLUTTER_APPLICATION_PATH=C:\Exploration des données avec R\projet_ter\time_tracker_ter
 COCOAPODS_PARALLEL_CODE_SIGN=true
 FLUTTER_BUILD_DIR=build
 FLUTTER_BUILD_NAME=1.0.0

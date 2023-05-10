@@ -1,7 +1,7 @@
 #!/bin/sh
 # This is a generated file; do not edit or check into version control.
-export "FLUTTER_ROOT=C:\Users\nassi\Documents\Workspace\flutter"
-export "FLUTTER_APPLICATION_PATH=C:\Users\nassi\AndroidStudioProjects\projet_ter\time_tracker_ter"
+export "FLUTTER_ROOT=C:\flutter"
+export "FLUTTER_APPLICATION_PATH=C:\Exploration des données avec R\projet_ter\time_tracker_ter"
 export "COCOAPODS_PARALLEL_CODE_SIGN=true"
 export "FLUTTER_TARGET=lib\main.dart"
 export "FLUTTER_BUILD_DIR=build"

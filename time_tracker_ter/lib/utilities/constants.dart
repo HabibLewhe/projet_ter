@@ -24,6 +24,10 @@ const viderHistorique  = "Vider l'historique de cette tâche ?";
 const annuler = "Annuler";
 const supprimer = "Supprimer";
 
+const String smtpUsername = 'example@gmail.com';
+const String smtpPassword = '12345678';
+const String smtpSenderName = 'My Name';
+
 final kHintTextStyle = TextStyle(
   color: Colors.white54,
   fontFamily: 'OpenSans',

@@ -1,7 +1,7 @@
 #!/bin/sh
 # This is a generated file; do not edit or check into version control.
-export "FLUTTER_ROOT=/home/tmt38/snap/flutter/common/flutter"
-export "FLUTTER_APPLICATION_PATH=/home/tmt38/vision/Vision_study/M1/S2/TER/projet_ter/time_tracker_ter"
+export "FLUTTER_ROOT=C:\flutter"
+export "FLUTTER_APPLICATION_PATH=C:\Exploration des données avec R\projet_ter\time_tracker_ter"
 export "COCOAPODS_PARALLEL_CODE_SIGN=true"
 export "FLUTTER_BUILD_DIR=build"
 export "FLUTTER_BUILD_NAME=1.0.0"
