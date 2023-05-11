@@ -253,20 +253,12 @@ class _MyHomePageState extends State<MyHomePage> {
         appBar: AppBar(
           title: Text("Overview"),
           centerTitle: true,
-          flexibleSpace: GestureDetector(
-            onLongPress: () {
-              // TODO : faire en sorte que le choix se fasse plus explicitement (bouton paramètres)
-              // sur un appuie long sur la barre du haut
-              // on affiche le popup pour choisir le theme de l'app
-              showColorPickerDialog(context);
-            },
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: allColors[colorIndex],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
+          flexibleSpace: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: allColors[colorIndex],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
               ),
             ),
           ),
@@ -274,26 +266,19 @@ class _MyHomePageState extends State<MyHomePage> {
             padding: const EdgeInsets.only(left: 25.0),
             child: GestureDetector(
               onTap: () {
-                // TODO : traiter appuie sur bouton info
+                // sur un appuie long sur la barre du haut
+                // on affiche le popup pour choisir le theme de l'app
+                showColorPickerDialog(context);
               },
-              child: SvgPicture.asset(
+              child: IconButton(
+                icon: Icon(Icons.color_lens_rounded, color: Colors.white,),
+                iconSize: 36,
+              )
+              /*SvgPicture.asset(
                 'assets/icons/info.svg',
-              ),
+              ),*/
             ),
           ),
-          actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: 25.0),
-              child: GestureDetector(
-                onTap: () {
-                  // TODO : traiter appuie sur bouton edit
-                },
-                child: SvgPicture.asset(
-                  'assets/icons/edit.svg',
-                ),
-              ),
-            ),
-          ],
         ),
         body: FutureBuilder<List<Categorie>>(
           future: futureCategories,
