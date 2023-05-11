@@ -12,6 +12,7 @@ import 'AddTache.dart';
 import 'History_main.dart';
 import 'package:intl/intl.dart';
 
+import 'PieChart.dart';
 import 'SettingsTimeFilter.dart';
 
 class CategorieDetail extends StatefulWidget {
@@ -533,126 +534,173 @@ class CategorieDetail_ extends State<CategorieDetail> {
                   getCategorieContainer()),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-          onTap: (value) {
-            // cas où appuie sur le bouton +
-            if (value == 0) {
-              Navigator.push(
-                  context,
-                  PageTransition(
+        bottomNavigationBar: BottomAppBar(
+          shape: const CircularNotchedRectangle(),
+          color: Colors.white,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            // Ajustement horizontal des éléments
+            children: [
+              IconButton(
+                icon: Icon(
+                  Icons.add_circle,
+                  color: allColors[widget.colorIndex][1],
+                  size: 36,
+                ),
+                onPressed: () {
+                  // appuie sur le bouton +
+                  Navigator.push(
+                    context,
+                    PageTransition(
                       type: PageTransitionType.bottomToTop,
                       child: AddTache(
-                          onDataAdded: _addTacheItem,
-                          colorIndex: widget.colorIndex,
-                          categorie: widget.categorie),
+                        onDataAdded: _addTacheItem,
+                        colorIndex: widget.colorIndex,
+                        categorie: widget.categorie,
+                      ),
                       childCurrent: this.widget,
-                      duration: Duration(milliseconds: 500)));
-            }
-            // cas où appuie sur le bouton export
-            else if (value == 2) {
-               _export(context);
-            }
-            // cas où appuie sur le bouton time filter
-            else if (value == 3) {
-              // appuie quand le filtre n'est pas visible
-              if (_isTimeFilterVisible == false) {
-                String text = '';
-                String date = '';
-                DateTime now = DateTime.now();
-                DateFormat formatter = DateFormat('dd/MM/yyyy');
-                // jour
-                if (timeFilterPreference == 0) {
-                  date = formatter.format(now);
-                  text = "Today";
-                }
-                // semaine
-                else if (timeFilterPreference == 1) {
-                  DateTime datePremierJour =
-                  now.subtract(Duration(days: now.weekday - 1));
-                  DateTime dateDernierJour =
-                  datePremierJour.add(Duration(days: 6));
-                  date = formatter.format(datePremierJour) +
-                      " - " +
-                      formatter.format(dateDernierJour);
-                  text = "This Week";
-                }
-                // mois
-                else if (timeFilterPreference == 2) {
-                  DateTime datePremierJour = DateTime(now.year, now.month, 1);
-                  DateTime dateDernierJour =
-                  DateTime(now.year, now.month + 1, 0);
-                  date = formatter.format(datePremierJour) +
-                      " - " +
-                      formatter.format(dateDernierJour);
-                  text = "This Month";
-                }
-                setState(() {
-                  timeFilterDate = date;
-                  timeFilterText = text;
-                  _isTimeFilterVisible = true;
-                  localTimeFilterCounter = 0;
-                });
-                getTachesByFilter();
-              }
-              // appuie quand le filtre est visible
-              else {
-                setState(() {
-                  tachesFiltre = taches;
-                  _isTimeFilterVisible = false;
-                });
-              }
-            }
-          },
-          backgroundColor: Colors.white,
-          selectedItemColor: allColors[widget.colorIndex][1],
-          unselectedItemColor: allColors[widget.colorIndex][1],
-          selectedFontSize: 15,
-          unselectedFontSize: 15,
-          showSelectedLabels: false,
-          showUnselectedLabels: false,
-          items: <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-              icon: Icon(Icons.add_circle),
-              label: '',
-            ),
-            BottomNavigationBarItem(
-              icon: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    "Total ",
-                    overflow: TextOverflow.visible,
-                    style: TextStyle(
-                        fontSize: 19, color: allColors[widget.colorIndex][1]),
+                      duration: Duration(milliseconds: 500),
+                    ),
+                  );
+                },
+              ),
+              IconButton(
+                icon: SvgPicture.asset(
+                  'assets/icons/pie_chart.svg',
+                  color: allColors[widget.colorIndex][1],
+                ),
+                onPressed: () {
+                  // appuie sur le bouton pie chart
+
+                  // créer la data map qui associe à chaque catégorie son temps en secondes
+                  Map<String, double> dataMap = {};
+                  List<Color> colorList = [];
+                  for (int i = 0; i < tachesFiltre.length; i++) {
+                    List<String> parts =
+                    tachesFiltre[i].temps_ecoule.split(':');
+                    int hours = int.parse(parts[0]);
+                    int minutes = int.parse(parts[1]);
+                    int seconds = int.parse(parts[2]);
+                    Duration duration = Duration(
+                        hours: hours, minutes: minutes, seconds: seconds);
+                    double tempsEcouleEnSec = duration.inSeconds.toDouble();
+                    dataMap[tachesFiltre[i].nom] = tempsEcouleEnSec;
+                    colorList.add(
+                      Color(int.parse(tachesFiltre[i].couleur, radix: 16)),
+                    );
+                  }
+                  // l'envoyer à PieChartPage pour l'afficher
+                  Navigator.push(
+                    context,
+                    PageTransition(
+                      type: PageTransitionType.bottomToTop,
+                      child: PieChartPage(
+                        dataMap: dataMap,
+                        colorList: colorList,
+                        colorIndex: widget.colorIndex,
+                      ),
+                      childCurrent: this.widget,
+                      duration: Duration(milliseconds: 500),
+                    ),
+                  );
+                },
+              ),
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 15),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Total ",
+                      overflow: TextOverflow.visible,
+                      style: TextStyle(
+                        fontSize: 19,
+                        color: allColors[widget.colorIndex][1],
+                      ),
+                    ),
+                    Text(
+                      widget.categorie.temps_ecoule,
+                      overflow: TextOverflow.visible,
+                      style: TextStyle(
+                        fontSize: 19,
+                        color: allColors[widget.colorIndex][1],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: SvgPicture.asset(
+                  'assets/icons/mail.svg',
+                  color: allColors[widget.colorIndex][1],
+                ),
+                onPressed: () {
+                  // appuie sur le bouton export
+                  _export(context);
+                },
+              ),
+              IconButton(
+                  icon: SvgPicture.asset(
+                    'assets/icons/calendar.svg',
+                    color: allColors[widget.colorIndex][1],
                   ),
-                  Text(
-                    widget.categorie.temps_ecoule,
-                    overflow: TextOverflow.visible,
-                    style: TextStyle(
-                        fontSize: 19, color: allColors[widget.colorIndex][1]),
-                  ),
-                ],
-              ),
-              label: '',
-            ),
-            BottomNavigationBarItem(
-              icon: SvgPicture.asset(
-                'assets/icons/mail.svg',
-                color: allColors[widget.colorIndex][1],
-              ),
-              label: '',
-            ),
-            BottomNavigationBarItem(
-              icon: SvgPicture.asset(
-                'assets/icons/calendar.svg',
-                color: allColors[widget.colorIndex][1],
-              ),
-              label: '',
-            ),
-          ],
-          iconSize: 40,
-          elevation: 5),
-    );
+                  onPressed: () {
+                    // appuie sur le bouton time filter
+
+                    // appuie quand le filtre n'est pas visible
+                    if (_isTimeFilterVisible == false) {
+                      String text = '';
+                      String date = '';
+                      DateTime now = DateTime.now();
+                      DateFormat formatter = DateFormat('dd/MM/yyyy');
+                      // jour
+                      if (timeFilterPreference == 0) {
+                        date = formatter.format(now);
+                        text = "Today";
+                      }
+                      // semaine
+                      else if (timeFilterPreference == 1) {
+                        DateTime datePremierJour =
+                        now.subtract(Duration(days: now.weekday - 1));
+                        DateTime dateDernierJour =
+                        datePremierJour.add(Duration(days: 6));
+                        date = formatter.format(datePremierJour) +
+                            " - " +
+                            formatter.format(dateDernierJour);
+                        text = "This Week";
+                      }
+                      // mois
+                      else if (timeFilterPreference == 2) {
+                        DateTime datePremierJour =
+                        DateTime(now.year, now.month, 1);
+                        DateTime dateDernierJour =
+                        DateTime(now.year, now.month + 1, 0);
+                        date = formatter.format(datePremierJour) +
+                            " - " +
+                            formatter.format(dateDernierJour);
+                        text = "This Month";
+                      }
+
+                      setState(() {
+                        timeFilterDate = date;
+                        timeFilterText = text;
+                        _isTimeFilterVisible = true;
+                        localTimeFilterCounter = 0;
+                      });
+                      getTachesByFilter();
+                    }
+                    // appuie quand le filtre est visible
+                    else {
+                      setState(() {
+                        tachesFiltre = taches;
+                        _isTimeFilterVisible = false;
+                      });
+                    }
+                  }),
+            ],
+          ),
+        ));
   }
 
   Container buildRowTache(Tache tache) {

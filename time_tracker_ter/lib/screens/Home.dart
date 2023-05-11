@@ -5,7 +5,6 @@ import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:time_tracker_ter/model/DeroulementTache.dart';
 import 'package:time_tracker_ter/services/DatabaseService.dart';
 import '../model/Categorie.dart';
 import '../model/InitDatabase.dart';
@@ -15,6 +14,7 @@ import '../utilities/constants.dart';
 import 'AddCategorie.dart';
 import 'AllTasks.dart';
 import 'CategorieDetail.dart';
+import 'PieChart.dart';
 
 class MyHomePage extends StatefulWidget {
   @override
@@ -201,14 +201,14 @@ class _MyHomePageState extends State<MyHomePage> {
     final now = DateTime.now().add(Duration(hours: 2));
     final DateFormat formatter = DateFormat('yyyy-MM-ddTHH:mm:ss');
 
-//inserer une nouvelle tache
+    //inserer une nouvelle tache
     int id = await database.insert('taches', {
       'nom': "Quick task ${quickTaskCount + 1}",
       'couleur': selectedColor.value.toRadixString(16),
       'temps_ecoule': '00:00:00',
       'id_categorie': 1,
     });
-//inserer une nouvelle deroulement de tache
+    //inserer une nouvelle deroulement de tache
     await database.insert('deroulement_tache', {
       'id_tache': id,
       'date_debut': '${formatter.format(now.toUtc())}Z',
@@ -300,10 +300,14 @@ class _MyHomePageState extends State<MyHomePage> {
           builder:
               (BuildContext context, AsyncSnapshot<List<Categorie>> snapshot1) {
             if (snapshot1.connectionState == ConnectionState.waiting) {
-              return CircularProgressIndicator();
+              return Center(
+                child: CircularProgressIndicator(),
+              );
             } else if (snapshot1.hasError) {
               return BottomAppBar(
-                child: Text('Error loading categories'),
+                child: Center(
+                  child: Text('Error loading categories'),
+                ),
               );
             } else {
               return FutureBuilder<List<Tache>>(
@@ -311,10 +315,14 @@ class _MyHomePageState extends State<MyHomePage> {
                 builder: (BuildContext context,
                     AsyncSnapshot<List<Tache>> snapshot2) {
                   if (snapshot2.connectionState == ConnectionState.waiting) {
-                    return CircularProgressIndicator();
+                    return Center(
+                      child: CircularProgressIndicator(),
+                    );
                   } else if (snapshot2.hasError) {
                     return BottomAppBar(
-                      child: Text('Error loading tasks'),
+                      child: Center(
+                        child: Text('Error loading categories'),
+                      ),
                     );
                   } else {
                     return SingleChildScrollView(
@@ -447,8 +455,36 @@ class _MyHomePageState extends State<MyHomePage> {
                       childCurrent: this.widget,
                       duration: Duration(milliseconds: 500)));
             }
-            // cas où on appuie sur le bouton export
+            // cas où on appuie sur le bouton pie chart
             else if (value == 2) {
+              // créer la data map qui associe à chaque catégorie son temps en secondes
+              Map<String, double> dataMap = {};
+              List<Color> colorList = [];
+              for(int i=0; i<categories.length; i++){
+                List<String> parts = categories[i].temps_ecoule.split(':');
+                int hours = int.parse(parts[0]);
+                int minutes = int.parse(parts[1]);
+                int seconds = int.parse(parts[2]);
+                Duration duration = Duration(hours: hours, minutes: minutes, seconds: seconds);
+                double tempsEcouleEnSec = duration.inSeconds.toDouble();
+                dataMap[categories[i].nom] = tempsEcouleEnSec;
+                colorList.add(Color(int.parse(categories[i].couleur, radix: 16)));
+              }
+              // l'envoyer à PieChartPage pour l'afficher
+              Navigator.push(
+                  context,
+                  PageTransition(
+                      type: PageTransitionType.bottomToTop,
+                      child: PieChartPage(
+                        dataMap: dataMap,
+                        colorList: colorList,
+                        colorIndex: colorIndex,
+                      ),
+                      childCurrent: this.widget,
+                      duration: Duration(milliseconds: 500)));
+            }
+            // cas où on appuie sur le bouton export
+            else if (value == 3) {
               _export(context);
             }
           },
@@ -459,6 +495,8 @@ class _MyHomePageState extends State<MyHomePage> {
           unselectedFontSize: 15,
           showSelectedLabels: false,
           showUnselectedLabels: false,
+          iconSize: 40,
+          elevation: 5,
           items: <BottomNavigationBarItem>[
             BottomNavigationBarItem(
               icon: Icon(Icons.add_circle),
@@ -469,7 +507,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    total,
+                    "Total ",
                     overflow: TextOverflow.visible,
                     style: TextStyle(
                         fontSize: 19, color: allColors[colorIndex][1]),
@@ -486,14 +524,19 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             BottomNavigationBarItem(
               icon: SvgPicture.asset(
+                'assets/icons/pie_chart.svg',
+                color: allColors[colorIndex][1],
+              ),
+              label: '',
+            ),
+            BottomNavigationBarItem(
+              icon: SvgPicture.asset(
                 'assets/icons/mail.svg',
                 color: allColors[colorIndex][1],
               ),
               label: '',
             ),
           ],
-          iconSize: 40,
-          elevation: 5,
         ));
   }
 

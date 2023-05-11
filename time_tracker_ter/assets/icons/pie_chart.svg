@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   version="1.1"
+   width="36"
+   height="36"
+   viewBox="0 0 36 36"
+   xml:space="preserve"
+   id="svg12"
+   sodipodi:docname="pie_chart.svg"
+   inkscape:version="1.2.2 (732a01da63, 2022-12-09)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"><sodipodi:namedview
+   id="namedview14"
+   pagecolor="#ffffff"
+   bordercolor="#000000"
+   borderopacity="0.25"
+   inkscape:showpageshadow="2"
+   inkscape:pageopacity="0.0"
+   inkscape:pagecheckerboard="0"
+   inkscape:deskcolor="#d1d1d1"
+   showgrid="false"
+   inkscape:zoom="12.5625"
+   inkscape:cx="9.5522388"
+   inkscape:cy="13.572139"
+   inkscape:window-width="1920"
+   inkscape:window-height="991"
+   inkscape:window-x="-9"
+   inkscape:window-y="-9"
+   inkscape:window-maximized="1"
+   inkscape:current-layer="svg12" />
+
+<defs
+   id="defs2">
+</defs>
+<g
+   style="opacity:1;fill:none;fill-rule:nonzero;stroke:none;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none"
+   transform="scale(0.4)"
+   id="g10">
+	<path
+   d="M 41.808,45.075 56.531,1.497 C 52.85,0.524 48.987,0 45,0 20.147,0 0,20.147 0,45 c 0,24.853 20.147,45 45,45 4.727,0 9.283,-0.733 13.563,-2.085 z"
+   style="opacity:1;fill:#d2555a;fill-rule:nonzero;stroke:none;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none"
+   stroke-linecap="round"
+   id="path4" />
+	<path
+   d="M 86.934,28.656 C 82.482,17.246 73.509,8.098 62.214,3.417 L 49.59,40.788 Z"
+   style="opacity:1;fill:#ffc36e;fill-rule:nonzero;stroke:none;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none"
+   stroke-linecap="round"
+   id="path6" />
+	<path
+   d="M 49.104,47.255 64.15,85.725 C 79.424,78.53 90,63.003 90,45 90,41.341 89.558,37.786 88.733,34.38 Z"
+   style="opacity:1;fill:#a5d76e;fill-rule:nonzero;stroke:none;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:10;stroke-dasharray:none"
+   stroke-linecap="round"
+   id="path8" />
+</g>
+</svg>

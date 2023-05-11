@@ -82,33 +82,33 @@ class InitDatabase {
 
     // categories
     await db.execute('''
-    INSERT INTO categories (nom, couleur) VALUES 
-      ('Single Tasks', 'ff000000'),
-      ('Axari Graphics', 'ff2b8713'), 
-      ('Website Ions Inc.', 'ff6c1387'), 
-      ('Categorie3', 'ff453bec'), 
-      ('Categorie4', 'ffec9e3b'), 
-      ('Categorie5', 'ff3b4eec'), 
-      ('Categorie6', 'ffdc3bec')
+      INSERT INTO categories (nom, couleur) VALUES 
+        ('Single Tasks', 'ff000000'),
+        ('Axari Graphics', 'ff2b8713'),
+        ('Website Ions Inc.', 'ff6c1387'), 
+        ('Categorie3', 'ff453bec'), 
+        ('Categorie4', 'ffec9e3b'), 
+        ('Categorie5', 'ff3b4eec'), 
+        ('Categorie6', 'ffdc3bec')
     ''');
 
     // taches
     await db.execute('''
       INSERT INTO taches (nom, couleur, id_categorie) VALUES 
-      ("Communication", "ff000000", 1),
-      ("Invoicing", "ff000000", 1),
-      ("Logo design", "ff000000", 2),
-      ("Brochure", "ff000000", 2),
-      ("Webdesign", "ff000000", 2),
-      ("Concept", "ff000000", 3),
-      ("Screendesign", "ff000000", 3),
-      ("Tache 8", "ff000000", 4),
-      ("Tache 9", "ff000000", 4),
-      ("Tache 10", "ff000000", 5),
-      ("Tache 11", "ff000000", 6),
-      ("Tache 12", "ff000000", 6),
-      ("Tache 13", "ff000000", 7),
-      ("Tache 14", "ff000000", 7)
+        ("Communication", 'ffff0000', 1),
+        ("Invoicing", 'ff00ff00', 1),
+        ("Logo design", 'ff0000ff', 2),
+        ("Brochure", 'ffff7000', 2),
+        ("Webdesign", 'ffff00ff', 2),
+        ("Concept", 'ff00ffff', 3),
+        ("Screendesign", 'ff000000', 3),
+        ("Tache 8", 'ff800000', 4),
+        ("Tache 9", 'ff008000', 4),
+        ("Tache 10", 'ff000080', 5),
+        ("Tache 11", 'ff808080', 6),
+        ("Tache 12", 'ffff0000', 6),
+        ("Tache 13", 'ff00ff00', 7),
+        ("Tache 14", 'ff0000ff', 7)
     ''');
 
     // procédure pour mettre à jour automatiquement les champs temp_ecoule
