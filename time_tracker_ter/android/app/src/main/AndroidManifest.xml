@@ -8,7 +8,7 @@
          FlutterApplication and put your custom class here. -->
     <application
         android:name="${applicationName}"
-        android:label="flutter_login_ui"
+        android:label="Time Tracker"
         android:usesCleartextTraffic="true"
         android:icon="@mipmap/ic_launcher">
         <activity

@@ -772,7 +772,11 @@ class _MyHomePageState extends State<MyHomePage> {
             Container(
               height: 50,
               width: 50,
-              child: Image.asset('assets/icons/dossier.png'),
+              child: Icon(
+                Icons.folder,
+                size: 30,
+                color: Color(int.parse(categorie.couleur, radix: 16)),
+              )
             ),
             Container(
               height: 50,
