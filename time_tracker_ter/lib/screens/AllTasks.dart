@@ -126,12 +126,19 @@ class _AllTasksPageState extends State<AllTasksPage> {
       deroulementsFiltre = deroulementTaches.where((deroulement) {
         // convertir les dates de l'objet DeroulementTache
         DateTime dateDebut = DateTime.parse(deroulement.date_debut);
-        DateTime dateFin = DateTime.parse(deroulement.date_fin);
         // on cherche à comparer seulement l'année, le mois et le jour
         dateDebut = DateTime(dateDebut.year, dateDebut.month, dateDebut.day);
-        dateFin = DateTime(dateFin.year, dateFin.month, dateFin.day);
-        return dateDebut.isAtSameMomentAs(jourFiltre) &&
-            dateFin.isAtSameMomentAs(jourFiltre);
+        if(deroulement.date_fin != ""){
+          DateTime dateFin = DateTime.parse(deroulement.date_fin);
+          dateFin = DateTime(dateFin.year, dateFin.month, dateFin.day);
+          return dateDebut.isAtSameMomentAs(jourFiltre) &&
+              dateFin.isAtSameMomentAs(jourFiltre);
+        }
+        else {
+          // cas où la date de fin du deroulement est vide
+          return false;
+        }
+
       }).toList();
       return deroulementsFiltre;
     }
@@ -152,14 +159,21 @@ class _AllTasksPageState extends State<AllTasksPage> {
       deroulementsFiltre = deroulementTaches.where((deroulement) {
         // convertir les dates de l'objet DeroulementTache
         DateTime dateDebut = DateTime.parse(deroulement.date_debut);
-        DateTime dateFin = DateTime.parse(deroulement.date_fin);
         // on cherche à comparer seulement l'année, le mois et le jour
         dateDebut = DateTime(dateDebut.year, dateDebut.month, dateDebut.day);
-        dateFin = DateTime(dateFin.year, dateFin.month, dateFin.day);
-        return ((dateDebut.isAfter(premierJourFiltre) ||
-                dateDebut == premierJourFiltre) &&
-            (dateFin.isBefore(dernierJourFiltre) ||
-                dateFin == dernierJourFiltre));
+        if(deroulement.date_fin != ""){
+          DateTime dateFin = DateTime.parse(deroulement.date_fin);
+          dateFin = DateTime(dateFin.year, dateFin.month, dateFin.day);
+          return ((dateDebut.isAfter(premierJourFiltre) ||
+              dateDebut == premierJourFiltre) &&
+              (dateFin.isBefore(dernierJourFiltre) ||
+                  dateFin == dernierJourFiltre));
+        }
+        else {
+          // cas où la date de fin du deroulement est vide
+          return false;
+        }
+
       }).toList();
       return deroulementsFiltre;
     }
@@ -180,14 +194,20 @@ class _AllTasksPageState extends State<AllTasksPage> {
       deroulementsFiltre = deroulementTaches.where((deroulement) {
         // convertir les dates de l'objet DeroulementTache
         DateTime dateDebut = DateTime.parse(deroulement.date_debut);
-        DateTime dateFin = DateTime.parse(deroulement.date_fin);
         // on cherche à comparer seulement l'année, le mois et le jour
         dateDebut = DateTime(dateDebut.year, dateDebut.month, dateDebut.day);
-        dateFin = DateTime(dateFin.year, dateFin.month, dateFin.day);
-        return ((dateDebut.isAfter(premierJourFiltre) ||
-                dateDebut == premierJourFiltre) &&
-            (dateFin.isBefore(dernierJourFiltre) ||
-                dateFin == dernierJourFiltre));
+        if(deroulement.date_fin != ""){
+          DateTime dateFin = DateTime.parse(deroulement.date_fin);
+          dateFin = DateTime(dateFin.year, dateFin.month, dateFin.day);
+          return ((dateDebut.isAfter(premierJourFiltre) ||
+              dateDebut == premierJourFiltre) &&
+              (dateFin.isBefore(dernierJourFiltre) ||
+                  dateFin == dernierJourFiltre));
+        }
+        else {
+          // cas où la date de fin du deroulement est vide
+          return false;
+        }
       }).toList();
       return deroulementsFiltre;
     } else {
@@ -254,9 +274,11 @@ class _AllTasksPageState extends State<AllTasksPage> {
     Duration tempsEcoule = Duration();
     for (int i = 0; i < deroulementsFiltre.length; i++) {
       if (deroulementsFiltre[i].id_tache == tache.id) {
-        DateTime dateDebut = DateTime.parse(deroulementsFiltre[i].date_debut);
-        DateTime dateFin = DateTime.parse(deroulementsFiltre[i].date_fin);
-        tempsEcoule = tempsEcoule + dateFin.difference(dateDebut);
+        if(deroulementsFiltre[i].date_fin != ""){
+          DateTime dateDebut = DateTime.parse(deroulementsFiltre[i].date_debut);
+          DateTime dateFin = DateTime.parse(deroulementsFiltre[i].date_fin);
+          tempsEcoule = tempsEcoule + dateFin.difference(dateDebut);
+        }
       }
     }
     String tempsEcouleTxt = '${tempsEcoule.inHours.toString().padLeft(2, '0')}:'
