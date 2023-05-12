@@ -188,7 +188,7 @@ class _MyHomePageState extends State<MyHomePage> {
         if(date_debut != null){
           // on calcule le temps écoulé à partir de la date_debut et de DateTime.now()
           DateTime debut = DateTime.parse(date_debut);
-          DateTime now = DateTime.now();
+          final now = DateTime.now().add(Duration(hours: 2)).toUtc();
           Duration tempsEcoule = now.difference(debut);
           int tempsEcouleSec = tempsEcoule.inSeconds;
           newMapQuickStart[liste[i]] = {'secValue': tempsEcouleSec, 'isActive': true};
