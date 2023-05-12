@@ -146,6 +146,39 @@ class InitDatabase {
 
     // procédure pour mettre à jour automatiquement les champs temp_ecoule
     // dans la table taches et dans la table categories à chaque fois que
+    // l'on update une ligne dans la table deroulement_tache
+    await db.execute('''
+    CREATE TRIGGER update_temps_ecoule_update AFTER UPDATE ON deroulement_tache
+    BEGIN
+      UPDATE taches SET temps_ecoule = (
+        SELECT COALESCE(
+          time(SUM(CASE WHEN date_fin != '' THEN strftime('%s', datetime(date_fin)) - strftime('%s', datetime(date_debut)) ELSE 0 END), 'unixepoch'),
+          '00:00:00'
+        )
+        FROM deroulement_tache
+        WHERE deroulement_tache.id_tache = taches.id
+      )
+      WHERE id = NEW.id_tache;
+    
+      UPDATE categories SET temps_ecoule = (
+        SELECT COALESCE(
+          time(SUM(CASE WHEN deroulement_tache.date_fin != '' THEN strftime('%s', datetime(deroulement_tache.date_fin)) - strftime('%s', datetime(deroulement_tache.date_debut)) ELSE 0 END), 'unixepoch'),
+          '00:00:00'
+        )
+        FROM deroulement_tache
+        INNER JOIN taches ON deroulement_tache.id_tache = taches.id
+        WHERE taches.id_categorie = categories.id
+      )
+      WHERE id IN (
+        SELECT id_categorie
+        FROM taches
+        WHERE id = NEW.id_tache
+      );
+    END;
+    ''');
+
+    // procédure pour mettre à jour automatiquement les champs temp_ecoule
+    // dans la table taches et dans la table categories à chaque fois que
     // l'on supprime une ligne dans la table deroulement_tache
     await db.execute('''
     CREATE TRIGGER update_temps_ecoule_delete AFTER DELETE ON deroulement_tache

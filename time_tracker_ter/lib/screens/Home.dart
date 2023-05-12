@@ -1,11 +1,11 @@
 import 'dart:async';
+import 'dart:collection';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:time_tracker_ter/model/DeroulementTache.dart';
 import 'package:time_tracker_ter/services/DatabaseService.dart';
 import '../model/Categorie.dart';
 import '../model/InitDatabase.dart';
@@ -15,7 +15,6 @@ import '../utilities/constants.dart';
 import 'AddCategorie.dart';
 import 'AllTasks.dart';
 import 'CategorieDetail.dart';
-import 'EditTask.dart';
 import 'History_main.dart';
 import 'PieChart.dart';
 
@@ -42,17 +41,9 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
     futureCategories = getCategories();
     futureTaches = get_quick_taches();
-    fetchQuickTache();
     _idTacheEnCours = null;
   }
-  void fetchQuickTache()  async{
-    List<Tache> nouvellesTaches= await get_quick_taches();
-    setState(() {
-      for(int i = 0; i < nouvellesTaches.length; i++ ){
-        _mapQuickStart[taches[i]] = {'secValue': 0, 'isActive': false};
-      }
-    });
-}
+
   int durationStringToSeconds(String durationString) {
     List<String> parts = durationString.split(':');
     int hours = int.parse(parts[0]);
@@ -145,18 +136,31 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void toggleStartStop(Tache tache) {
     setState(() {
-      bool b = !_mapQuickStart[tache]['isActive'];
-      _mapQuickStart[tache]['isActive'] = b;
-      if (_idTacheEnCours != null) { // Ajouter une condition pour vérifier si _idTacheEnCours est nul
-        print('toggleStartStop: _idTacheEnCours est null'); // ajouter cette ligne pour afficher un message si _idTacheEnCours est null
-        return; // Sortir de la méthode si _idTacheEnCours est nul
-      } else if (!b) {
-        updateLastDeroulementTache(tache.id);
+      // cas où la tâche est en cours
+      if(_mapQuickStart[tache]['isActive']){
+        // on arrête la tâche
+        _mapQuickStart[tache]['isActive'] = false;
+        // on update le champ date_fin en base de donnée
+        // de "" à DateTime.now()
+        final now = DateTime.now().add(Duration(hours: 2));
+        final DateFormat formatter = DateFormat('yyyy-MM-ddTHH:mm:ss');
+        String formattedDate = formatter.format(now.toUtc());
+        updateLastDeroulementTache(tache.id, formattedDate);
+
         _idTacheEnCours = null;
-      } else {
+      }
+      // cas où la tâche n'est pas en cours
+      else{
+        // on lance le chrono de la tâche
+        _mapQuickStart[tache]['isActive'] = true;
+        _startTimer(tache);
+        // Ajouter une nouvelle ligne dans la table deroulement_tache
+        final now = DateTime.now().add(Duration(hours: 2));
+        final DateFormat formatter = DateFormat('yyyy-MM-ddTHH:mm:ss');
+        String formattedDate = formatter.format(now.toUtc());
+        insertDeroulementTache(tache.id, formattedDate);
         _idTacheEnCours = tache.id;
       }
-      print('toggleStartStop: id de la tâche: ${tache.id}, isActive: ${_mapQuickStart[tache]['isActive']}, _idTacheEnCours: $_idTacheEnCours'); // ajouter cette ligne pour afficher l'ID de la tâche, la valeur de isActive et la valeur de _idTacheEnCours
     });
   }
 
@@ -176,21 +180,101 @@ class _MyHomePageState extends State<MyHomePage> {
     Database database = await InitDatabase().database;
     var t = await database.query('taches', where: "nom LIKE '%Quick task%'", orderBy: "id DESC");
     List<Tache> liste = t.map((e) => Tache.fromMap(e)).toList();
+    Map<Tache, Map<String, dynamic>> newMapQuickStart = {};
+    if(liste.isNotEmpty){
+      for(int i = 0; i < liste.length; i++){
+        String date_debut = await repriseTimerQuickTask(liste[i]);
+        // cas où le timer de la tâche tourne
+        if(date_debut != null){
+          // on calcule le temps écoulé à partir de la date_debut et de DateTime.now()
+          DateTime debut = DateTime.parse(date_debut);
+          DateTime now = DateTime.now();
+          Duration tempsEcoule = now.difference(debut);
+          int tempsEcouleSec = tempsEcoule.inSeconds;
+          newMapQuickStart[liste[i]] = {'secValue': tempsEcouleSec, 'isActive': true};
+        }
+        // cas où le timer de la tâche ne tourne pas
+        else{
+          newMapQuickStart[liste[i]] = {'secValue': durationStringToSeconds(liste[i].temps_ecoule), 'isActive': false};
+        }
+      }
+
+    }
     setState(() {
       taches = liste;
+      if(_mapQuickStart.isEmpty){
+        // si la map est vide, on ajoute toutes les nouvelles
+        // valeurs depuis la base de donnée
+        _mapQuickStart = newMapQuickStart;
+        for(final entry in _mapQuickStart.entries){
+          final tache = entry.key;
+          final value = entry.value;
+          if(value['isActive'] == true){
+            // on relance le timer des taches en cours
+            _startTimer(tache);
+          }
+        }
+      }
+      else{
+        // sinon, on parcours les valeurs de la base de donnée
+        // pour mettre à jour le temps écoulé des tâches
+        // déjà instanciées et ajouter les nouvelles
+        for(final entry2 in newMapQuickStart.entries){
+          final tache2 = entry2.key;
+          final value = entry2.value;
+          bool hasMatchingId = false;
+          for(final entry1 in _mapQuickStart.entries){
+            final tache1 = entry1.key;
+            if(tache1.id == tache2.id){
+              // met à jour le temps écoulé des tâches déjà instanciées
+              tache1.temps_ecoule = tache2.temps_ecoule;
+              _mapQuickStart[tache1] = value;
+              hasMatchingId = true;
+              break;
+            }
+          }
+          if(!hasMatchingId){
+            // ajoute les nouvelles tâches
+            _mapQuickStart[tache2] = value;
+          }
+        }
+      }
+      // pour trier par ordre décroissant
+      final sortedEntries = _mapQuickStart.entries.toList()
+        ..sort((a, b) => b.key.id.compareTo(a.key.id));
+      _mapQuickStart = LinkedHashMap.fromEntries(sortedEntries);
     });
+
     return taches;
   }
 
-  Future<void> updateLastDeroulementTache(int id) async {
+  Future<String> repriseTimerQuickTask(Tache tache) async {
+    Database database = await InitDatabase().database;
+    // on cherche si cette tâche a un champ dans deroulement_tache qui a
+    // une date_fin vide
+    var t = await database.query(
+      'deroulement_tache',
+      where: 'id_tache = ? AND date_fin = ?',
+      whereArgs: [tache.id, ''],
+      orderBy: 'id DESC',
+      limit: 1,
+    );
+    // si il n'y a pas de résultat, on retourne null, le timer de cette
+    // tâche ne tourne pas, sinon on retourne le String date_debut
+    if (t.isNotEmpty) {
+      final String dateDebut = t[0]['date_debut'];
+      return dateDebut;
+    } else {
+      return null;
+    }
+  }
+
+  Future<void> updateLastDeroulementTache(int id, String formattedDate) async {
     print('updateLastDeroulementTache: $id'); // ajouter cette ligne pour afficher l'ID de la tâche
     final db = await database;
-    final now = DateTime.now().add(Duration(hours: 2));
-    final DateFormat formatter = DateFormat('yyyy-MM-ddTHH:mm:ss');
-    String formattedDate = formatter.format(now.toUtc()) + 'Z';
     print('formattedDate: $formattedDate'); // ajouter cette ligne pour afficher la date formatée
     int result = await db.update('deroulement_tache', {'date_fin': formattedDate},
-        where: 'id_tache = ?', whereArgs: [id]);
+        where: 'id_tache = ? AND date_fin = ?', whereArgs: [id, '']);
     print('update result: $result'); // ajouter cette ligne pour afficher le résultat de l'opération de mise à jour
   }
 
@@ -217,17 +301,17 @@ class _MyHomePageState extends State<MyHomePage> {
     final now = DateTime.now().add(Duration(hours: 2));
     final DateFormat formatter = DateFormat('yyyy-MM-ddTHH:mm:ss');
 
-    //inserer une nouvelle tache
     int id = await database.insert('taches', {
       'nom': "Quick task ${quickTaskCount + 1}",
       'couleur':selectedColor.value.toRadixString(16),
       'temps_ecoule': "00:00:00",
       'id_categorie': 1,
     });
+
     //inserer une nouvelle deroulement de tache
     await database.insert('deroulement_tache', {
       'id_tache': id,
-      'date_debut':'${formatter.format(now.toUtc())}Z',
+      'date_debut':'${formatter.format(now.toUtc())}',
       'date_fin': '',
       'latitude': 48.8566,
       'longitude': 2.3382,
@@ -244,16 +328,8 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       taches = nouvellesTaches;
       _isPressed = true;
-      _mapQuickStart[taches[0]] = {'secValue': 0, 'isActive': true};
+      _startTimer(taches[0]);
     });
-  }
-
-  void delete_quick_start() async {
-    Database database = await InitDatabase().database;
-    await database.delete(
-      'taches',
-      where: 'id_categorie = 1',
-    );
   }
 
   @override
@@ -274,20 +350,15 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           leading: Padding(
             padding: const EdgeInsets.only(left: 25.0),
-            child: GestureDetector(
-              onTap: () {
-                // sur un appuie long sur la barre du haut
-                // on affiche le popup pour choisir le theme de l'app
-                showColorPickerDialog(context);
-              },
-              child: IconButton(
+            child: IconButton(
                 icon: Icon(Icons.color_lens_rounded, color: Colors.white,),
                 iconSize: 36,
+                onPressed: () {
+                  // appuie sur le bouton palette de couleur
+                  // on affiche le popup pour choisir le theme de l'app
+                  showColorPickerDialog(context);
+                },
               )
-              /*SvgPicture.asset(
-                'assets/icons/info.svg',
-              ),*/
-            ),
           ),
         ),
         body: FutureBuilder<List<Categorie>>(
@@ -339,10 +410,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                     borderRadius: BorderRadius.circular(50.0),
                                   ),
                                   onPressed: () async {
-                                    // TODO : traiter appuie sur le bouton Quick Start
                                     await add_quick_tache();
-                                    //print("size map : ${_mapQuickStart.length}");
-                                    _startTimer(_mapQuickStart.keys.last);
                                   },
                                   child: Text(
                                     "Quick Start",
@@ -623,19 +691,8 @@ class _MyHomePageState extends State<MyHomePage> {
             child: IconButton(
               icon: _mapQuickStart[tache]['isActive'] ?
               Icon(Icons.pause_circle) : Icon(Icons.play_circle),
-              onPressed: () async {
+              onPressed: () {
                 toggleStartStop(tache);
-                if (_idTacheEnCours != null) {
-                  await updateLastDeroulementTache(_idTacheEnCours); // mettre à jour la tâche en cours lorsqu'elle est arrêtée
-                } else {
-                  _startTimer(tache);
-                  // Ajouter une nouvelle ligne dans la table deroulement_tache
-                  final now = DateTime.now().add(Duration(hours: 2));
-                  final DateFormat formatter = DateFormat('yyyy-MM-ddTHH:mm:ss');
-                  String formattedDate = formatter.format(now.toUtc()) + 'Z';
-                  await insertDeroulementTache(tache.id, formattedDate);
-                  print('qsdfyguhijopmkjfd');
-                }
               },
               color: Colors.blue,
             ),
@@ -646,7 +703,6 @@ class _MyHomePageState extends State<MyHomePage> {
             alignment: Alignment.centerLeft,
             child: Text(
               tache.nom,
-              // Utilisation de l'opérateur null-aware pour fournir une chaîne vide si tache.nom est nul,
               style: TextStyle(fontSize: 20.0, color: Colors.black87),
             ),
           ),
@@ -769,7 +825,6 @@ class _MyHomePageState extends State<MyHomePage> {
     if (_mapQuickStart.length==0) {
       return Container();
     }
-    var quickTaches = taches;
     return Container(
       width: double.infinity,
       alignment: Alignment.center,
