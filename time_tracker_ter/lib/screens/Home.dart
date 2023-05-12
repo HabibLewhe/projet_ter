@@ -455,7 +455,11 @@ class _MyHomePageState extends State<MyHomePage> {
                                           )
                                       );
                                     },
-                                    child: buildRow("papers", "All Tasks"),
+                                    child: Container(
+                                      color: Colors.transparent,
+                                      width: double.infinity,
+                                      child: buildRow("papers", "All Tasks"),
+                                    ),
                                   ),
                                   Divider(
                                     color: backgroundColor2,
@@ -476,7 +480,11 @@ class _MyHomePageState extends State<MyHomePage> {
                                           )
                                       );
                                     },
-                                    child: buildRow("paper", "Single Tasks"),
+                                    child: Container(
+                                      color: Colors.transparent,
+                                      width: double.infinity,
+                                      child: buildRow("paper", "Single Tasks"),
+                                    ),
                                   ),
                                 ],
                               ),
