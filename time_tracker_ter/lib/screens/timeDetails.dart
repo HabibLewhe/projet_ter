@@ -142,10 +142,10 @@ class _TimeDetailsPageState extends State<TimeDetailsPage> {
                   ),
                   trailing: Text(
                     (startDateChanged == true)
-                        ? "${DateFormat('yMMMEd').format(newStartDate)} "
-                            "${DateFormat('Hm').format(newStartDate)}"
-                        : "${DateFormat('yMMMEd').format(widget.start)} "
-                            "${DateFormat('Hm').format(widget.start)}",
+                        ? "${DateFormat('yMMMEd').format(newStartDate.toLocal())} "
+                            "${DateFormat('Hm').format(newStartDate.toLocal())}"
+                        : "${DateFormat('yMMMEd').format(widget.start.toLocal())} "
+                            "${DateFormat('Hm').format(widget.start.toLocal())}",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color:
@@ -167,11 +167,11 @@ class _TimeDetailsPageState extends State<TimeDetailsPage> {
                                 child: CupertinoDatePicker(
                                   backgroundColor: Colors.white,
                                   maximumDate: endDateChanged == true
-                                      ? newEndDate
-                                      : widget.end,
+                                      ? newEndDate.toLocal()
+                                      : widget.end.toLocal(),
                                   initialDateTime: startDateChanged == true
-                                      ? newStartDate
-                                      : widget.start,
+                                      ? newStartDate.toLocal()
+                                      : widget.start.toLocal(),
                                   onDateTimeChanged: (DateTime newTime) {
                                     setState(() {
                                       startDateChanged = true;
@@ -207,10 +207,10 @@ class _TimeDetailsPageState extends State<TimeDetailsPage> {
                           : (fromTimerPicker == true)
                               ? (newStartDate == null)
                                   ? DateFormat('Hm').format(updateEndDateTime(
-                                      widget.start, newDuration))
+                                      widget.start.toLocal(), newDuration))
                                   : DateFormat('Hm').format(updateEndDateTime(
-                                      newStartDate, newDuration))
-                              : DateFormat('Hm').format(widget.end),
+                                      newStartDate.toLocal(), newDuration))
+                              : DateFormat('Hm').format(widget.end.toLocal()),
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color:
@@ -229,11 +229,11 @@ class _TimeDetailsPageState extends State<TimeDetailsPage> {
                                 child: CupertinoDatePicker(
                                   backgroundColor: Colors.white,
                                   minimumDate: startDateChanged == true
-                                      ? newStartDate
-                                      : widget.start,
+                                      ? newStartDate.toLocal()
+                                      : widget.start.toLocal(),
                                   initialDateTime: endDateChanged == true
-                                      ? newEndDate
-                                      : widget.end,
+                                      ? newEndDate.toLocal()
+                                      : widget.end.toLocal(),
                                   onDateTimeChanged: (DateTime newTime) {
                                     setState(() {
                                       endDateChanged = true;

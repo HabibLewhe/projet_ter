@@ -51,16 +51,17 @@ class _AddCreneauPageState extends State<AddCreneauPage> {
 
   void addNewCreneau() async {
     Database database = await InitDatabase().database;
+    final DateFormat formatter = DateFormat('yyyy-MM-ddTHH:mm:ss');
 
     //inserer un nouveau créneau
     await database.insert('deroulement_tache', {
       'id_tache': widget.id_tache,
       'date_debut': newStartDate == null
-          ? widget.start.toUtc().toIso8601String()
-          : newStartDate.toUtc().toIso8601String(),
+          ? formatter.format(widget.start)+'Z'
+          : formatter.format(newStartDate)+'Z',
       'date_fin': newEndDate == null
-          ? widget.end.toUtc().toIso8601String()
-          : newEndDate.toUtc().toIso8601String(),
+          ? formatter.format(widget.end)+'Z'
+          : formatter.format(newEndDate)+'Z',
       'latitude': newLatitude,
       'longitude': newLongitude
     });
@@ -83,7 +84,7 @@ class _AddCreneauPageState extends State<AddCreneauPage> {
   }
 
   DateTime updateEndDateTime(DateTime datedebut, Duration duree) {
-    DateTime datefin = DateTime.now();
+    DateTime datefin = DateTime.now().toUtc();
     datefin = datedebut.add(duree);
     return datefin;
   }
@@ -135,10 +136,10 @@ class _AddCreneauPageState extends State<AddCreneauPage> {
                   ),
                   trailing: Text(
                     (startDateChanged == true)
-                        ? "${DateFormat('yMMMEd').format(newStartDate)} "
-                            "${DateFormat('Hm').format(newStartDate)}"
-                        : "${DateFormat('yMMMEd').format(widget.start)} "
-                            "${DateFormat('Hm').format(widget.start)}",
+                        ? "${DateFormat('yMMMEd').format(newStartDate.toLocal())} "
+                            "${DateFormat('Hm').format(newStartDate.toLocal())}"
+                        : "${DateFormat('yMMMEd').format(widget.start.toLocal())} "
+                            "${DateFormat('Hm').format(widget.start.toLocal())}",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color:
@@ -160,11 +161,11 @@ class _AddCreneauPageState extends State<AddCreneauPage> {
                                 child: CupertinoDatePicker(
                                   backgroundColor: Colors.white,
                                   maximumDate: endDateChanged == true
-                                      ? newEndDate
-                                      : widget.end,
+                                      ? newEndDate.toLocal()
+                                      : widget.end.toLocal(),
                                   initialDateTime: startDateChanged == true
-                                      ? newStartDate
-                                      : widget.start,
+                                      ? newStartDate.toLocal()
+                                      : widget.start.toLocal(),
                                   onDateTimeChanged: (DateTime newTime) {
                                     setState(() {
                                       startDateChanged = true;
@@ -200,10 +201,10 @@ class _AddCreneauPageState extends State<AddCreneauPage> {
                           : (fromTimerPicker == true)
                               ? (newStartDate == null)
                                   ? DateFormat('Hm').format(updateEndDateTime(
-                                      widget.start, newDuration))
+                                      widget.start.toLocal(), newDuration))
                                   : DateFormat('Hm').format(updateEndDateTime(
-                                      newStartDate, newDuration))
-                              : DateFormat('Hm').format(widget.end),
+                                      newStartDate.toLocal(), newDuration))
+                              : DateFormat('Hm').format(widget.end.toLocal()),
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color:
@@ -222,11 +223,11 @@ class _AddCreneauPageState extends State<AddCreneauPage> {
                                 child: CupertinoDatePicker(
                                   backgroundColor: Colors.white,
                                   minimumDate: startDateChanged == true
-                                      ? newStartDate
-                                      : widget.start,
+                                      ? newStartDate.toLocal()
+                                      : widget.start.toLocal(),
                                   initialDateTime: endDateChanged == true
-                                      ? newEndDate
-                                      : widget.end,
+                                      ? newEndDate.toLocal()
+                                      : widget.end.toLocal(),
                                   onDateTimeChanged: (DateTime newTime) {
                                     setState(() {
                                       endDateChanged = true;
