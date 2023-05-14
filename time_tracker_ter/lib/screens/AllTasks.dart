@@ -371,7 +371,7 @@ class _AllTasksPageState extends State<AllTasksPage> {
                 if (_isTimeFilterVisible == false) {
                   String text = '';
                   String date = '';
-                  DateTime now = DateTime.now();
+                  DateTime now = DateTime.now().toUtc();
                   DateFormat formatter = DateFormat('dd/MM/yyyy');
                   // jour
                   if (timeFilterPreference == 0) {
@@ -923,7 +923,7 @@ class _AllTasksPageState extends State<AllTasksPage> {
                             onTap: (() {
                               String text = '';
                               String date = '';
-                              DateTime now = DateTime.now();
+                              DateTime now = DateTime.now().toUtc();
                               DateFormat formatter = DateFormat('dd/MM/yyyy');
                               // jour par jour
                               if (timeFilterPreference == 0) {
@@ -1007,7 +1007,7 @@ class _AllTasksPageState extends State<AllTasksPage> {
                               if (t != null) {
                                 String text = '';
                                 String date = '';
-                                DateTime now = DateTime.now();
+                                DateTime now = DateTime.now().toUtc();
                                 DateFormat formatter = DateFormat('dd/MM/yyyy');
                                 await getTimeFilterPreference();
                                 // jour par jour

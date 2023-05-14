@@ -62,8 +62,10 @@ class _HistoryPageState extends State<HistoryPage> {
     Duration duration = Duration();
     String tempsEcoule = "00:00:00";
     for (int i = 0; i < deroulement_taches.length; i++) {
-      duration += (DateTime.parse(deroulement_taches[i].date_fin))
-          .difference(DateTime.parse(deroulement_taches[i].date_debut));
+      if(deroulement_taches[i].date_fin != ''){
+        duration += (DateTime.parse(deroulement_taches[i].date_fin))
+            .difference(DateTime.parse(deroulement_taches[i].date_debut));
+      }
     }
 
     tempsEcoule =
@@ -158,7 +160,7 @@ class _HistoryPageState extends State<HistoryPage> {
   Duration showDuration(var datedebut, var datefin) {
     Duration intervalDuration = const Duration();
 
-    if (datefin != null) {
+    if (datefin != '') {
       intervalDuration =
           DateTime.parse(datefin).difference(DateTime.parse(datedebut));
     }
@@ -172,8 +174,8 @@ class _HistoryPageState extends State<HistoryPage> {
     Duration duration;
 
     for (final elt in deroulement_taches) {
-      date = DateFormat('yMd').format(DateTime.parse(elt.date_debut));
-      if (date == group && elt.date_fin != null) {
+      date = DateFormat('dd/MM/y').format(DateTime.parse(elt.date_debut));
+      if (date == group && elt.date_fin != '') {
         duration = (DateTime.parse(elt.date_fin))
             .difference(DateTime.parse(elt.date_debut));
         totalMicroseconds += duration.inMicroseconds;
@@ -183,7 +185,7 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 
   bool dateFinChecker(var date) {
-    return (date == null);
+    return (date == '');
   }
 
   void _addCreneauItem() {
@@ -215,7 +217,7 @@ class _HistoryPageState extends State<HistoryPage> {
             child: GroupedListView<DeroulementTache, String>(
               elements: deroulement_taches,
               groupBy: (element) =>
-                  DateFormat('yMd').format(DateTime.parse(element.date_debut)),
+                  DateFormat('dd/MM/y').format(DateTime.parse(element.date_debut)),
               groupSeparatorBuilder: (String groupByValue) => Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(7),
@@ -285,7 +287,7 @@ class _HistoryPageState extends State<HistoryPage> {
               // cas où appuie sur le bouton +
 
               setState(() {
-                currentStartingDate = DateTime.now();
+                currentStartingDate = DateTime.now().toUtc();
                 currentEndingDate = currentStartingDate.add(const Duration(hours: 6));
               });
 
@@ -322,7 +324,7 @@ class _HistoryPageState extends State<HistoryPage> {
               else if (value == 4) {
                 String text = '';
                 String date = '';
-                DateTime now = DateTime.now();
+                DateTime now = DateTime.now().toUtc();
                 DateFormat formatter = DateFormat('dd/MM/yyyy');
                 // jour
                 if (timeFilterPreference == 0) {
@@ -445,9 +447,9 @@ class _HistoryPageState extends State<HistoryPage> {
             Expanded(
               child: Text(
                 dateFinChecker(element.date_fin)
-                    ? "${DateFormat('Hm').format(DateTime.parse(element.date_debut).add(Duration(hours: 2)))} - ${now}"
-                    : "${DateFormat('Hm').format(DateTime.parse(element.date_debut).add(Duration(hours: 2)))} - "
-                        "${DateFormat('Hm').format(DateTime.parse(element.date_fin).add(Duration(hours: 2)))}",
+                    ? "${DateFormat('Hm').format(DateTime.parse(element.date_debut).toLocal())} - ${now}"
+                    : "${DateFormat('Hm').format(DateTime.parse(element.date_debut).toLocal())} - "
+                        "${DateFormat('Hm').format(DateTime.parse(element.date_fin).toLocal())}",
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                 ),

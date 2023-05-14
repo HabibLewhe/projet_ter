@@ -281,7 +281,7 @@ class CategorieDetail_ extends State<CategorieDetail> {
                         // appuie sur le bouton gauche du time filter
                         String text = '';
                         String date = '';
-                        DateTime now = DateTime.now();
+                        DateTime now = DateTime.now().toUtc();
                         DateFormat formatter = DateFormat('dd/MM/yyyy');
                         // jour par jour
                         if (timeFilterPreference == 0) {
@@ -358,7 +358,7 @@ class CategorieDetail_ extends State<CategorieDetail> {
                         if (t != null) {
                           String text = '';
                           String date = '';
-                          DateTime now = DateTime.now();
+                          DateTime now = DateTime.now().toUtc();
                           DateFormat formatter = DateFormat('dd/MM/yyyy');
                           await getTimeFilterPreference();
                           // jour
@@ -672,7 +672,7 @@ class CategorieDetail_ extends State<CategorieDetail> {
                     if (_isTimeFilterVisible == false) {
                       String text = '';
                       String date = '';
-                      DateTime now = DateTime.now();
+                      DateTime now = DateTime.now().toUtc();
                       DateFormat formatter = DateFormat('dd/MM/yyyy');
                       // jour
                       if (timeFilterPreference == 0) {

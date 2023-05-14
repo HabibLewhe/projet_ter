@@ -52,6 +52,7 @@ class _TimeDetailsPageState extends State<TimeDetailsPage> {
 
   void updateCreneau() async {
     Database database = await InitDatabase().database;
+    final DateFormat formatter = DateFormat('yyyy-MM-ddTHH:mm:ss');
 
     print("widget.deroulementTache : ${widget.deroulementTache}");
     //mettre à jour un créneau
@@ -60,11 +61,11 @@ class _TimeDetailsPageState extends State<TimeDetailsPage> {
         {
           'id_tache': widget.deroulementTache.id_tache,
           'date_debut': newStartDate == null
-              ? widget.start.toUtc().toIso8601String()
-              : newStartDate.toUtc().toIso8601String(),
+              ? formatter.format(widget.start.toUtc())+'Z'
+              : formatter.format(newStartDate.toUtc())+'Z',
           'date_fin': newEndDate == null
-              ? widget.end.toUtc().toIso8601String()
-              : newEndDate.toUtc().toIso8601String(),
+              ? formatter.format(widget.end.toUtc())+'Z'
+              : formatter.format(newEndDate.toUtc())+'Z',
           'latitude': newLatitude == null ? widget.latitude : newLatitude,
           'longitude': newLongitude == null ? widget.duration : newLongitude
         },
@@ -89,7 +90,7 @@ class _TimeDetailsPageState extends State<TimeDetailsPage> {
   }
 
   DateTime updateEndDateTime(DateTime datedebut, Duration duree) {
-    DateTime datefin = DateTime.now();
+    DateTime datefin = DateTime.now().toUtc();
     datefin = datedebut.add(duree);
     return datefin;
   }

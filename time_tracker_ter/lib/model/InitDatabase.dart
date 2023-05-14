@@ -203,24 +203,24 @@ class InitDatabase {
     ''');
 
     // déroulement tache
-    final now = DateTime.now();
+    final now = DateTime.now().toUtc();
     final yesterday = now.subtract(Duration(days: 1));
     final oneWeekAgo = now.subtract(Duration(days: 7));
     final oneMonthAgo = now.subtract(Duration(days: 30));
-    final DateFormat formatter = DateFormat('yyyy-MM-ddTHH:mm:ss');
+    final formatter = DateFormat('yyyy-MM-ddTHH:mm:ss');
 
     await db.execute(
         "INSERT INTO deroulement_tache (id_tache, date_debut, date_fin, latitude, longitude) VALUES "
-            "(1, '${formatter.format(now.toUtc())}', '${formatter.format(now.toUtc().add(Duration(hours: 2)))}', 48.8566, 2.3522),"
-            "(1, '${formatter.format(yesterday.toUtc())}', '${formatter.format(yesterday.toUtc().add(Duration(minutes: 45)))}', 48.8647, 2.3490),"
-            "(2, '${formatter.format(oneWeekAgo.toUtc())}', '${formatter.format(oneWeekAgo.toUtc().add(Duration(hours: 1, minutes: 30)))}', 48.8534, 2.3488),"
-            "(3, '${formatter.format(oneMonthAgo.toUtc())}', '${formatter.format(oneMonthAgo.toUtc().add(Duration(hours: 2, minutes: 12)))}', 48.8606, 2.3522),"
-            "(4, '2023-03-13T14:00:00', '2023-03-13T15:00:00', 48.8566, 2.3382),"
-            "(4, '2023-03-14T11:00:00', '2023-03-14T12:00:00', 48.8599, 2.3414),"
-            "(4, '2023-03-15T15:30:00', '2023-03-15T17:00:00', 48.8631, 2.3455),"
-            "(5, '2023-03-16T08:30:00', '2023-03-16T10:00:00', 48.8566, 2.3522),"
-            "(6, '2023-03-17T14:30:00', '2023-03-17T15:10:00', 48.8566, 2.3522),"
-            "(6, '2023-03-18T08:30:00', '2023-03-18T10:00:00', 48.8566, 2.3522),"
-            "(7, '2023-03-18T10:30:00', '2023-03-18T12:00:00', 48.8566, 2.3522);");
+            "(1, '${formatter.format(now)+'Z'}', '${formatter.format(now.add(Duration(hours: 2)))+'Z'}', 48.8566, 2.3522),"
+            "(1, '${formatter.format(yesterday)+'Z'}', '${formatter.format(yesterday.add(Duration(minutes: 45)))+'Z'}', 48.8647, 2.3490),"
+            "(2, '${formatter.format(oneWeekAgo)+'Z'}', '${formatter.format(oneWeekAgo.add(Duration(hours: 1, minutes: 30)))+'Z'}', 48.8534, 2.3488),"
+            "(3, '${formatter.format(oneMonthAgo)+'Z'}', '${formatter.format(oneMonthAgo.add(Duration(hours: 2, minutes: 12)))+'Z'}', 48.8606, 2.3522),"
+            "(4, '2023-03-13T14:00:00Z', '2023-03-13T15:00:00Z', 48.8566, 2.3382),"
+            "(4, '2023-03-14T11:00:00Z', '2023-03-14T12:00:00Z', 48.8599, 2.3414),"
+            "(4, '2023-03-15T15:30:00Z', '2023-03-15T17:00:00Z', 48.8631, 2.3455),"
+            "(5, '2023-03-16T08:30:00Z', '2023-03-16T10:00:00Z', 48.8566, 2.3522),"
+            "(6, '2023-03-17T14:30:00Z', '2023-03-17T15:10:00Z', 48.8566, 2.3522),"
+            "(6, '2023-03-18T08:30:00Z', '2023-03-18T10:00:00Z', 48.8566, 2.3522),"
+            "(7, '2023-03-18T10:30:00Z', '2023-03-18T12:00:00Z', 48.8566, 2.3522);");
   }
 }

@@ -142,9 +142,9 @@ class _MyHomePageState extends State<MyHomePage> {
         _mapQuickStart[tache]['isActive'] = false;
         // on update le champ date_fin en base de donnée
         // de "" à DateTime.now()
-        final now = DateTime.now().add(Duration(hours: 2));
+        final now = DateTime.now().toUtc();
         final DateFormat formatter = DateFormat('yyyy-MM-ddTHH:mm:ss');
-        String formattedDate = formatter.format(now.toUtc());
+        String formattedDate = formatter.format(now)+'Z';
         updateLastDeroulementTache(tache.id, formattedDate);
 
         _idTacheEnCours = null;
@@ -155,9 +155,9 @@ class _MyHomePageState extends State<MyHomePage> {
         _mapQuickStart[tache]['isActive'] = true;
         _startTimer(tache);
         // Ajouter une nouvelle ligne dans la table deroulement_tache
-        final now = DateTime.now().add(Duration(hours: 2));
+        final now = DateTime.now().toUtc();
         final DateFormat formatter = DateFormat('yyyy-MM-ddTHH:mm:ss');
-        String formattedDate = formatter.format(now.toUtc());
+        String formattedDate = formatter.format(now)+'Z';
         insertDeroulementTache(tache.id, formattedDate);
         _idTacheEnCours = tache.id;
       }
@@ -188,7 +188,7 @@ class _MyHomePageState extends State<MyHomePage> {
         if(date_debut != null){
           // on calcule le temps écoulé à partir de la date_debut et de DateTime.now()
           DateTime debut = DateTime.parse(date_debut);
-          final now = DateTime.now().add(Duration(hours: 2)).toUtc();
+          final now = DateTime.now().toUtc();
           Duration tempsEcoule = now.difference(debut);
           int tempsEcouleSec = tempsEcoule.inSeconds;
           newMapQuickStart[liste[i]] = {'secValue': tempsEcouleSec, 'isActive': true};
@@ -279,11 +279,11 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   // Insertion d'une nouvelle ligne dans la table `deroulement_tache`
-  Future<int> insertDeroulementTache(int idTache, String dateDebut) async {
+  Future<int> insertDeroulementTache(int idTache, String formattedDate) async {
     final db = await database;
     final id = await db.insert('deroulement_tache', {
       'id_tache': idTache,
-      'date_debut': dateDebut,
+      'date_debut': formattedDate,
       'date_fin': '',
       'latitude': 48.8566,
       'longitude': 2.3382,
@@ -298,9 +298,8 @@ class _MyHomePageState extends State<MyHomePage> {
     // compter le nombre de tâches "Quick task"
     int quickTaskCount = Sqflite.firstIntValue(await database.rawQuery("SELECT COUNT(*) FROM taches WHERE nom LIKE 'Quick task %'")) ?? 0;
 
-    final now = DateTime.now().add(Duration(hours: 2));
+    final now = DateTime.now().toUtc();
     final DateFormat formatter = DateFormat('yyyy-MM-ddTHH:mm:ss');
-
     int id = await database.insert('taches', {
       'nom': "Quick task ${quickTaskCount + 1}",
       'couleur':selectedColor.value.toRadixString(16),
@@ -311,7 +310,7 @@ class _MyHomePageState extends State<MyHomePage> {
     //inserer une nouvelle deroulement de tache
     await database.insert('deroulement_tache', {
       'id_tache': id,
-      'date_debut':'${formatter.format(now.toUtc())}',
+      'date_debut': formatter.format(now)+'Z',
       'date_fin': '',
       'latitude': 48.8566,
       'longitude': 2.3382,
@@ -328,7 +327,9 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       taches = nouvellesTaches;
       _isPressed = true;
-      _startTimer(taches[0]);
+      if(taches.length > 1){
+        _startTimer(taches[0]);
+      }
     });
   }
 
