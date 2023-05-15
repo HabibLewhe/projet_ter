@@ -23,7 +23,11 @@ class InitDatabase {
   _initDatabase() async {
     String path = await getDatabasesPath();
     path = join(path, 'base.db');
-    return await openDatabase(path, version: 1, onCreate: _onCreate);
+    return await openDatabase(path, version: 1, onCreate: _onCreate, onConfigure: onConfigure);
+  }
+
+  Future onConfigure(Database db) async {
+    await db.execute('PRAGMA foreign_keys = ON');
   }
 
   _onCreate(Database db, int version) async {
@@ -39,7 +43,7 @@ class InitDatabase {
         // temps total des taches de la catégorie, calculé automatiquement
         "temps_ecoule	TEXT DEFAULT '00:00:00',"
         "id_categorie_sup	INTEGER,"
-        "FOREIGN KEY(id_categorie_sup) REFERENCES categories(id))");
+        "FOREIGN KEY(id_categorie_sup) REFERENCES categories(id) ON DELETE CASCADE)");
 
     await db.execute("CREATE TABLE IF NOT EXISTS taches ("
         "id	INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -54,7 +58,7 @@ class InitDatabase {
         "temps_ecoule	TEXT DEFAULT '00:00:00',"
         // id_categorie = 1 si la tache est une single task
         "id_categorie	INTEGER NOT NULL,"
-        "FOREIGN KEY(id_categorie) REFERENCES categories(id))");
+        "FOREIGN KEY(id_categorie) REFERENCES categories(id) ON DELETE CASCADE)");
 
     await db.execute("CREATE TABLE IF NOT EXISTS deroulement_tache ("
         "id	INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -64,7 +68,7 @@ class InitDatabase {
         "date_fin	TEXT,"
         "Longitude REAL NOT NULL,"
         "Latitude	REAL NOT NULL,"
-        "FOREIGN KEY(id_tache) REFERENCES taches(id))");
+        "FOREIGN KEY(id_tache) REFERENCES taches(id) ON DELETE CASCADE)");
 
     // table à update seulement, un seul insert à l'initialisation (car on a qu'un seul utilisateur pour l'instant)
     await db.execute(" CREATE TABLE parametres ("
@@ -95,20 +99,20 @@ class InitDatabase {
     // taches
     await db.execute('''
       INSERT INTO taches (nom, couleur, id_categorie) VALUES 
-        ("Communication", 'ffff0000', 1),
-        ("Invoicing", 'ff00ff00', 1),
-        ("Logo design", 'ff0000ff', 2),
-        ("Brochure", 'ffff7000', 2),
-        ("Webdesign", 'ffff00ff', 2),
-        ("Concept", 'ff00ffff', 3),
-        ("Screendesign", 'ff000000', 3),
-        ("Tache 8", 'ff800000', 4),
-        ("Tache 9", 'ff008000', 4),
-        ("Tache 10", 'ff000080', 5),
-        ("Tache 11", 'ff808080', 6),
-        ("Tache 12", 'ffff0000', 6),
-        ("Tache 13", 'ff00ff00', 7),
-        ("Tache 14", 'ff0000ff', 7)
+        ('Communication', 'ffff0000', 1),
+        ('Invoicing', 'ff00ff00', 1),
+        ('Logo design', 'ff0000ff', 2),
+        ('Brochure', 'ffff7000', 2),
+        ('Webdesign', 'ffff00ff', 2),
+        ('Concept', 'ff00ffff', 3),
+        ('Screendesign', 'ff000000', 3),
+        ('Tache 8', 'ff800000', 4),
+        ('Tache 9', 'ff008000', 4),
+        ('Tache 10', 'ff000080', 5),
+        ('Tache 11', 'ff808080', 6),
+        ('Tache 12', 'ffff0000', 6),
+        ('Tache 13', 'ff00ff00', 7),
+        ('Tache 14', 'ff0000ff', 7)
     ''');
 
     // procédure pour mettre à jour automatiquement les champs temp_ecoule

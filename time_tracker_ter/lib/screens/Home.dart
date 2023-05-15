@@ -189,8 +189,9 @@ class _MyHomePageState extends State<MyHomePage> {
           // on calcule le temps écoulé à partir de la date_debut et de DateTime.now()
           DateTime debut = DateTime.parse(date_debut);
           final now = DateTime.now().toUtc();
-          Duration tempsEcoule = now.difference(debut);
-          int tempsEcouleSec = tempsEcoule.inSeconds;
+          int lastTempsEcouleSec = durationStringToSeconds(liste[i].temps_ecoule);
+          Duration tempsEcouleLastDeroulement = now.difference(debut);
+          int tempsEcouleSec = lastTempsEcouleSec + tempsEcouleLastDeroulement.inSeconds;
           newMapQuickStart[liste[i]] = {'secValue': tempsEcouleSec, 'isActive': true};
         }
         // cas où le timer de la tâche ne tourne pas
@@ -697,13 +698,24 @@ class _MyHomePageState extends State<MyHomePage> {
           Container(
             height: 50,
             width: 50,
-            child: IconButton(
-              icon: _mapQuickStart[tache]['isActive'] ?
-              Icon(Icons.pause_circle) : Icon(Icons.play_circle),
-              onPressed: () {
+            child: GestureDetector(
+              onTap: () {
                 toggleStartStop(tache);
               },
-              color: Colors.blue,
+              child: Align(
+                alignment: Alignment.center,
+                child: FractionallySizedBox(
+                  widthFactor: 0.4,
+                  heightFactor: 0.4,
+                  child: _mapQuickStart[tache]['isActive']
+                      ? SvgPicture.asset(
+                    'assets/icons/pause.svg',
+                  )
+                      : SvgPicture.asset(
+                    'assets/icons/play_arrow.svg',
+                  ),
+                ),
+              ),
             ),
           ),
           Container(
@@ -727,8 +739,8 @@ class _MyHomePageState extends State<MyHomePage> {
                   width: 80,
                   alignment: Alignment.center,
                   child: Text(
-                      timerText(_mapQuickStart[tache]['secValue']),
-                    style: TextStyle(fontSize: 20.0, color: colorTime1),
+                    timerText(_mapQuickStart[tache]['secValue']),
+                    style: TextStyle(fontSize: 20.0, color: _mapQuickStart[tache]['isActive'] ? colorTime2 : colorTime1),
                   ),
                 ),
                 Container(
@@ -855,9 +867,6 @@ class _MyHomePageState extends State<MyHomePage> {
             itemCount: _mapQuickStart.length,
             itemBuilder: (context, index) {
               List<Tache> keysList=_mapQuickStart.keys.toList();
-              IconData iconButton;
-              bool b =_mapQuickStart[keysList[index]]['isActive'];
-              b? iconButton= Icons.pause_circle:iconButton= Icons.play_circle;
               return buildRowTaches(
                    keysList[index]);
             }),

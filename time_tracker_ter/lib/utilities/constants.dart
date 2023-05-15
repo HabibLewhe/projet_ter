@@ -7,6 +7,7 @@ const borderColor = Color(0x1A000000);
 const backgroundColor1 = Color(0xFFF3F3F3);
 const backgroundColor2 = Color(0xFFFFFEFE);
 const colorTime1 = Color(0xFF848484);
+const colorTime2 = Color(0xFFFE7171);
 const start = "Start";
 const end = "End";
 const duration = "Duration";

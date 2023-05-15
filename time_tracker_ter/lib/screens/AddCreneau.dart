@@ -57,11 +57,11 @@ class _AddCreneauPageState extends State<AddCreneauPage> {
     await database.insert('deroulement_tache', {
       'id_tache': widget.id_tache,
       'date_debut': newStartDate == null
-          ? formatter.format(widget.start)+'Z'
-          : formatter.format(newStartDate)+'Z',
+          ? formatter.format(widget.start.toUtc())+'Z'
+          : formatter.format(newStartDate.toUtc())+'Z',
       'date_fin': newEndDate == null
-          ? formatter.format(widget.end)+'Z'
-          : formatter.format(newEndDate)+'Z',
+          ? formatter.format(widget.end.toUtc())+'Z'
+          : formatter.format(newEndDate.toUtc())+'Z',
       'latitude': newLatitude,
       'longitude': newLongitude
     });
@@ -86,6 +86,7 @@ class _AddCreneauPageState extends State<AddCreneauPage> {
   DateTime updateEndDateTime(DateTime datedebut, Duration duree) {
     DateTime datefin = DateTime.now().toUtc();
     datefin = datedebut.add(duree);
+    newEndDate = datefin;
     return datefin;
   }
 
