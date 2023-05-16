@@ -1145,7 +1145,6 @@ class CategorieDetail_ extends State<CategorieDetail> {
                     motion: BehindMotion(),
                     children: [
                       SlidableAction(
-                        // An action can be bigger than the others.
                         flex: 2,
                         onPressed: (context) {
                           //TODO EDIT
@@ -1156,10 +1155,8 @@ class CategorieDetail_ extends State<CategorieDetail> {
                         label: edit,
                       ),
                       SlidableAction(
-                        // An action can be bigger than the others.
                         flex: 2,
                         onPressed: (context) {
-                          // TODO DELETE
                           showDialog(
                               context: context,
                               builder: (BuildContext context) {
@@ -1171,14 +1168,15 @@ class CategorieDetail_ extends State<CategorieDetail> {
                                     TextButton(
                                       child: const Text('Annuler'),
                                       onPressed: () {
+                                        // quand l'utilisateur annule la suppression
                                         Navigator.of(context)
                                             .pop(); //Dismiss Dialog
                                       },
                                     ),
                                     ElevatedButton(
                                       onPressed: () async {
-                                        //Dismiss Dialog
-                                        DeleteTache(tachesFiltre[index].id);
+                                        // quand l'utilisateur confirme la suppression
+                                        await DeleteTache(tachesFiltre[index].id);
                                         Navigator.of(context).pop();
                                         await refreshData();
                                       },
