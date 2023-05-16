@@ -491,15 +491,14 @@ class CategorieDetail_ extends State<CategorieDetail> {
               ),
             ),
           ),
-          leading: Container(
-              child: IconButton(
+          leading: IconButton(
             color: Colors.white,
             onPressed: () {
               // appuie sur le bouton retour
               Navigator.of(context).pop(true);
             },
             icon: Icon(Icons.backspace),
-          )),
+          ),
         ),
         body: Stack(
           children: [

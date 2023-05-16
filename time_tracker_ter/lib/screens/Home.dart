@@ -29,10 +29,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String tempsEcouleTotal = "00:00:00";
 
   //Quick start button
-  bool _isPressed = false;
-  Timer _timer;
   Tache lastQuickStart;
-  int _idTacheEnCours;
   Map<Tache, Map<String, dynamic>> _mapQuickStart = {};
   Map<Tache, Map<String, dynamic>> _mapTachesEnCours = {};
   // Liste des Quick Tasks
@@ -57,7 +54,6 @@ class _MyHomePageState extends State<MyHomePage> {
     futureCategories = getCategories();
     futureTachesEnCours = getTachesEnCours();
     futureQuickTasks = get_quick_taches();
-    _idTacheEnCours = null;
   }
 
   Future<void> refreshData() async {
@@ -145,7 +141,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _startTimerQuickTask(Tache tache) {
-    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+    Timer.periodic(Duration(seconds: 1), (timer) {
       if (!_mapQuickStart[tache]['isActive']) {
         timer.cancel(); // stop the timer if _isRunning is false
         return;
@@ -185,8 +181,6 @@ class _MyHomePageState extends State<MyHomePage> {
         final DateFormat formatter = DateFormat('yyyy-MM-ddTHH:mm:ss');
         String formattedDate = formatter.format(now)+'Z';
         updateLastDeroulementTache(tache.id, formattedDate);
-
-        _idTacheEnCours = null;
       }
       // cas où la tâche n'est pas en cours
       else{
@@ -198,7 +192,6 @@ class _MyHomePageState extends State<MyHomePage> {
         final DateFormat formatter = DateFormat('yyyy-MM-ddTHH:mm:ss');
         String formattedDate = formatter.format(now)+'Z';
         insertDeroulementTache(tache.id, formattedDate);
-        _idTacheEnCours = tache.id;
       }
     });
   }
@@ -477,7 +470,6 @@ class _MyHomePageState extends State<MyHomePage> {
     // Actualiser la liste de tâches dans l'état et redessiner l'interface utilisateur
     setState(() {
       quickTasks = nouvellesTaches;
-      _isPressed = true;
       if(quickTasks.length > 1){
         _startTimerQuickTask(quickTasks[0]);
       }
@@ -1260,19 +1252,6 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  getColorFromName(String name) {
-    switch (name) {
-      case "blue":
-        return Colors.blue;
-      case "red":
-        return Colors.red;
-      case "orange":
-        return Colors.orange;
-    }
-  }
-
-  int selectedValue = 0;
-
   showColorPickerDialog(BuildContext context) {
     //save button
     Widget backBtn = TextButton(
@@ -1288,11 +1267,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ],
       ),
       onPressed: () {
-        //save the categorie
-        //get the color from the dropdown
-        var colorIndex_ = colorIndex;
-        updatePreferedTheme(colorIndex_);
-        //saveCategorie(dropdownValue);
+        // appuie sur le bouton back
         Navigator.of(context).pop();
       },
     );
@@ -1311,9 +1286,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ],
           ),
           onPressed: () {
-            //get the color from the dropdown
             updatePreferedTheme(0);
-            //saveCategorie(dropdownValue);
           },
         ),
         TextButton(
@@ -1328,9 +1301,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ],
           ),
           onPressed: () {
-            //get the color from the dropdown
             updatePreferedTheme(1);
-            //saveCategorie(dropdownValue);
           },
         ),
         TextButton(
@@ -1345,9 +1316,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ],
           ),
           onPressed: () {
-            //get the color from the dropdown
             updatePreferedTheme(2);
-            //saveCategorie(dropdownValue);
           },
         ),
       ],

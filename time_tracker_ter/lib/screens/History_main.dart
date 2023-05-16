@@ -25,10 +25,6 @@ class HistoryPage extends StatefulWidget {
 class _HistoryPageState extends State<HistoryPage> {
   List<DeroulementTache> deroulement_taches = [];
 
-  static const Color _mainColor = Color.fromRGBO(0, 93, 164, 1);
-  static const Color _sndColor = Color.fromRGBO(0, 93, 164, .25);
-  static const Color _trdColor = Color.fromRGBO(150, 178, 200, 0.75);
-
   int hours;
   int minutes;
   String tempsEcouleTotal = "00:00:00";
@@ -202,11 +198,12 @@ class _HistoryPageState extends State<HistoryPage> {
           title: Text(widget.title),
           centerTitle: true,
           flexibleSpace: Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [_mainColor, _sndColor]),
+                colors: allColors[widget.colorIndex],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
             ),
           ),
         ),
@@ -226,8 +223,8 @@ class _HistoryPageState extends State<HistoryPage> {
                     Expanded(
                       child: Text(
                         groupByValue,
-                        style: const TextStyle(
-                          color: _mainColor,
+                        style: TextStyle(
+                          color: allColors[widget.colorIndex][1],
                           fontWeight: FontWeight.w500,
                         ),
                         textAlign: TextAlign.start,
@@ -238,8 +235,8 @@ class _HistoryPageState extends State<HistoryPage> {
                         "${(sumDuration(groupByValue).inHours).toString()}:"
                         "${(sumDuration(groupByValue).inMinutes % 60).toString().padLeft(2, '0')}:"
                         "${(sumDuration(groupByValue).inSeconds % 60).toString().padLeft(2, '0')}",
-                        style: const TextStyle(
-                          color: _mainColor,
+                        style: TextStyle(
+                          color: allColors[widget.colorIndex][1],
                           fontWeight: FontWeight.w500,
                         ),
                         textAlign: TextAlign.end,
@@ -426,6 +423,7 @@ class _HistoryPageState extends State<HistoryPage> {
                 onDataAdded: _addCreneauItem,
                 deroulementTache: element,
                 title: widget.title,
+                colorIndex: widget.colorIndex,
                 start: DateTime.parse(element.date_debut),
                 end: DateTime.parse(element.date_fin),
                 duration: showDuration(element.date_debut, element.date_fin),

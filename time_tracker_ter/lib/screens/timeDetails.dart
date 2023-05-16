@@ -9,6 +9,7 @@ import '../utilities/constants.dart';
 class TimeDetailsPage extends StatefulWidget {
   final Function() onDataAdded;
   final String title;
+  final int colorIndex;
   final DateTime start;
   final DateTime end;
   final Duration duration;
@@ -19,6 +20,7 @@ class TimeDetailsPage extends StatefulWidget {
   const TimeDetailsPage(
       {this.deroulementTache,
       this.title,
+      this.colorIndex,
       this.start,
       this.end,
       this.duration,
@@ -31,9 +33,6 @@ class TimeDetailsPage extends StatefulWidget {
 }
 
 class _TimeDetailsPageState extends State<TimeDetailsPage> {
-  static const Color _mainColor = Color.fromRGBO(0, 93, 164, 1);
-  static const Color _sndColor = Color.fromRGBO(0, 93, 164, .25);
-
   bool clickStart = false;
   bool clickEnd = false;
   bool clickDuration = false;
@@ -103,11 +102,12 @@ class _TimeDetailsPageState extends State<TimeDetailsPage> {
         title: Text(widget.title),
         centerTitle: true,
         flexibleSpace: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [_mainColor, _sndColor]),
+              colors: allColors[widget.colorIndex],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
           ),
         ),
         actions: [
@@ -130,7 +130,7 @@ class _TimeDetailsPageState extends State<TimeDetailsPage> {
                     topLeft: Radius.circular(10.0),
                     topRight: Radius.circular(10.0),
                   ),
-                  color: (clickStart == true) ? Colors.blue : Colors.white,
+                  color: (clickStart == true) ? allColors[widget.colorIndex][0] : Colors.white,
                 ),
                 child: ListTile(
                   title: Text(
@@ -191,7 +191,7 @@ class _TimeDetailsPageState extends State<TimeDetailsPage> {
                     top: BorderSide(color: Colors.black12, width: 1.0),
                     bottom: BorderSide(color: Colors.black12, width: 1.0),
                   ),
-                  color: (clickEnd == true) ? Colors.blue : Colors.white,
+                  color: (clickEnd == true) ? allColors[widget.colorIndex][0] : Colors.white,
                 ),
                 child: ListTile(
                   title: Text(
@@ -249,7 +249,7 @@ class _TimeDetailsPageState extends State<TimeDetailsPage> {
               ),
               Container(
                 decoration: BoxDecoration(
-                  color: (clickDuration == true) ? Colors.blue : Colors.white,
+                  color: (clickDuration == true) ? allColors[widget.colorIndex][0] : Colors.white,
                 ),
                 child: ListTile(
                   title: Text(
@@ -319,7 +319,7 @@ class _TimeDetailsPageState extends State<TimeDetailsPage> {
                     top: BorderSide(color: Colors.black12, width: 1.0),
                     bottom: BorderSide(color: Colors.black12, width: 1.0),
                   ),
-                  color: (clickLongitude == true) ? Colors.blue : Colors.white,
+                  color: (clickLongitude == true) ? allColors[widget.colorIndex][0] : Colors.white,
                 ),
                 child: ListTile(
                   title: Text(
@@ -353,7 +353,7 @@ class _TimeDetailsPageState extends State<TimeDetailsPage> {
                     bottomLeft: Radius.circular(10.0),
                     bottomRight: Radius.circular(10.0),
                   ),
-                  color: (clickLatitude == true) ? Colors.blue : Colors.white,
+                  color: (clickLatitude == true) ? allColors[widget.colorIndex][0] : Colors.white,
                 ),
                 child: ListTile(
                   title: Text(
