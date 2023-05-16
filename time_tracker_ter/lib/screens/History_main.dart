@@ -62,7 +62,7 @@ class _HistoryPageState extends State<HistoryPage> {
     Duration duration = Duration();
     String tempsEcoule = "00:00:00";
     for (int i = 0; i < deroulement_taches.length; i++) {
-      if(deroulement_taches[i].date_fin != ''){
+      if (deroulement_taches[i].date_fin != '') {
         duration += (DateTime.parse(deroulement_taches[i].date_fin))
             .difference(DateTime.parse(deroulement_taches[i].date_debut));
       }
@@ -216,8 +216,8 @@ class _HistoryPageState extends State<HistoryPage> {
             closeWhenOpened: true,
             child: GroupedListView<DeroulementTache, String>(
               elements: deroulement_taches,
-              groupBy: (element) =>
-                  DateFormat('dd/MM/y').format(DateTime.parse(element.date_debut)),
+              groupBy: (element) => DateFormat('dd/MM/y')
+                  .format(DateTime.parse(element.date_debut)),
               groupSeparatorBuilder: (String groupByValue) => Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(7),
@@ -251,7 +251,7 @@ class _HistoryPageState extends State<HistoryPage> {
               itemBuilder: (context, DeroulementTache element) {
                 return Slidable(
                     endActionPane: ActionPane(
-                      motion:  BehindMotion(),
+                      motion: BehindMotion(),
                       children: [
                         SlidableAction(
                           // An action can be bigger than the others.
@@ -261,7 +261,7 @@ class _HistoryPageState extends State<HistoryPage> {
                           },
                           backgroundColor: Colors.red,
                           foregroundColor: Colors.white,
-                          icon: Icons.archive,
+                          icon: Icons.delete,
                           label: delete,
                         ),
                       ],
@@ -288,7 +288,8 @@ class _HistoryPageState extends State<HistoryPage> {
 
               setState(() {
                 currentStartingDate = DateTime.now().toUtc();
-                currentEndingDate = currentStartingDate.add(const Duration(hours: 6));
+                currentEndingDate =
+                    currentStartingDate.add(const Duration(hours: 6));
               });
 
               if (value == 0) {

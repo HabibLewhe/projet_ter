@@ -1,9 +1,9 @@
 #!/bin/sh
 # This is a generated file; do not edit or check into version control.
-export "FLUTTER_ROOT=C:\src\flutterStable\flutter"
-export "FLUTTER_APPLICATION_PATH=C:\Users\bahia\Downloads\projet_ter-main (6)\projet_ter-main\time_tracker_ter"
+export "FLUTTER_ROOT=/home/tmt38/snap/flutter/common/flutter"
+export "FLUTTER_APPLICATION_PATH=/home/tmt38/vision/Vision_study/M1/S2/TER/Main_16_05/projet_ter/time_tracker_ter"
 export "COCOAPODS_PARALLEL_CODE_SIGN=true"
-export "FLUTTER_TARGET=lib\main.dart"
+export "FLUTTER_TARGET=lib/main.dart"
 export "FLUTTER_BUILD_DIR=build"
 export "FLUTTER_BUILD_NAME=1.0.0"
 export "FLUTTER_BUILD_NUMBER=1"
