@@ -317,8 +317,8 @@ class _MyHomePageState extends State<MyHomePage> {
         SELECT t.id
         FROM taches AS t
         INNER JOIN deroulement_tache AS dt ON t.id = dt.id_tache
-        WHERE dt.date_fin = ""
-        AND t.nom NOT LIKE "Quick task %"
+        WHERE dt.date_fin = ''
+        AND t.nom NOT LIKE 'Quick task %'
         GROUP BY t.id
         HAVING MAX(dt.id) = (
           SELECT MAX(id)

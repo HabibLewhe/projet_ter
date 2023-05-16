@@ -1178,10 +1178,9 @@ class CategorieDetail_ extends State<CategorieDetail> {
                                     ElevatedButton(
                                       onPressed: () async {
                                         //Dismiss Dialog
-
                                         DeleteTache(tachesFiltre[index].id);
-                                        await refreshData();
                                         Navigator.of(context).pop();
+                                        await refreshData();
                                       },
                                       child: const Text('Supprimer'),
                                     ),
