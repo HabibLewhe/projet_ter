@@ -128,6 +128,7 @@ class _AllTasksPageState extends State<AllTasksPage> {
     Database database = await InitDatabase().database;
     var t = await database.query('taches');
     List<Tache> liste = t.map((e) => Tache.fromMap(e)).toList();
+
     Map<Tache, Map<String, dynamic>> newMapTimer = {};
     if(liste.isNotEmpty){
       for(int i = 0; i < liste.length; i++){
@@ -147,8 +148,8 @@ class _AllTasksPageState extends State<AllTasksPage> {
           newMapTimer[liste[i]] = {'secValue': durationStringToSeconds(liste[i].temps_ecoule), 'isActive': false};
         }
       }
-
     }
+
     setState(() {
       taches = liste;
       if(_mapTimer.isEmpty){
@@ -319,6 +320,9 @@ class _AllTasksPageState extends State<AllTasksPage> {
     int result = await db.update('deroulement_tache', {'date_fin': formattedDate},
         where: 'id_tache = ? AND date_fin = ?', whereArgs: [id, '']);
     print('update result: $result'); // ajouter cette ligne pour afficher le résultat de l'opération de mise à jour
+
+    // pour mettre à jour le temps écoulé total
+    await getCategories();
   }
 
   // Insertion d'une nouvelle ligne dans la table `deroulement_tache`
@@ -492,7 +496,6 @@ class _AllTasksPageState extends State<AllTasksPage> {
     getCategories();
   }
 
-  // calcule le temps écoulé pour une tache donnée avec le filtre du moment
   // calcule le temps écoulé pour une tache donnée avec le filtre du moment
   String calculerTempsFiltre(Tache tache) {
     List<DeroulementTache> deroulementsFiltre = getDeroulementsByFilter();

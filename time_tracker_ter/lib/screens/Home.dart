@@ -28,6 +28,21 @@ class _MyHomePageState extends State<MyHomePage> {
   int colorIndex = 1;
   String tempsEcouleTotal = "00:00:00";
 
+  //Quick start button
+  bool _isPressed = false;
+  Timer _timer;
+  Tache lastQuickStart;
+  int _idTacheEnCours;
+  Map<Tache, Map<String, dynamic>> _mapQuickStart = {};
+  Map<Tache, Map<String, dynamic>> _mapTachesEnCours = {};
+  // Liste des Quick Tasks
+  Future<List<Tache>> futureQuickTasks;
+  List<Tache> quickTasks = [];
+  // Liste des autres tâches en cours
+  Future<List<Tache>> futureTachesEnCours;
+  List<Tache> tachesEnCours = [];
+  Map<Tache, Timer> listeTimerTachesEnCours = {};
+
   _MyHomePageState() {
     getPreferedTheme();
   }
@@ -40,8 +55,24 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     futureCategories = getCategories();
-    futureTaches = get_quick_taches();
+    futureTachesEnCours = getTachesEnCours();
+    futureQuickTasks = get_quick_taches();
     _idTacheEnCours = null;
+  }
+
+  Future<void> refreshData() async {
+    // on arrête tous les timers, ils seront relancés si besoin plus tard
+    if(listeTimerTachesEnCours.isNotEmpty){
+      for(Tache tache in listeTimerTachesEnCours.keys){
+        listeTimerTachesEnCours[tache].cancel();
+
+      }
+      listeTimerTachesEnCours.clear();
+    }
+    _mapTachesEnCours.clear();
+    _mapQuickStart.clear();
+    futureTachesEnCours = getTachesEnCours();
+    futureQuickTasks = get_quick_taches();
   }
 
   int durationStringToSeconds(String durationString) {
@@ -113,14 +144,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  //Quick start button
-  bool _isPressed = false;
-  Timer _timer;
-  Tache lastQuickStart;
-  int _idTacheEnCours;
-  Map<Tache, Map<String, dynamic>> _mapQuickStart = {};
-
-  void _startTimer(Tache tache) {
+  void _startTimerQuickTask(Tache tache) {
     _timer = Timer.periodic(Duration(seconds: 1), (timer) {
       if (!_mapQuickStart[tache]['isActive']) {
         timer.cancel(); // stop the timer if _isRunning is false
@@ -134,7 +158,22 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void toggleStartStop(Tache tache) {
+  void _startTimer(Tache tache) {
+    Timer timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      if (!_mapTachesEnCours[tache]['isActive']) {
+        timer.cancel(); // stop the timer if _isRunning is false
+        return;
+      }
+      setState(() {
+        Map<String, dynamic> myMap = _mapTachesEnCours[tache];
+        int sec = myMap['secValue']++;
+        _mapTachesEnCours.putIfAbsent(tache, () => {'secValue': sec});
+      });
+    });
+    listeTimerTachesEnCours[tache] = timer;
+  }
+
+  void toggleStartStopQuickTask(Tache tache) {
     setState(() {
       // cas où la tâche est en cours
       if(_mapQuickStart[tache]['isActive']){
@@ -153,13 +192,35 @@ class _MyHomePageState extends State<MyHomePage> {
       else{
         // on lance le chrono de la tâche
         _mapQuickStart[tache]['isActive'] = true;
-        _startTimer(tache);
+        _startTimerQuickTask(tache);
         // Ajouter une nouvelle ligne dans la table deroulement_tache
         final now = DateTime.now().toUtc();
         final DateFormat formatter = DateFormat('yyyy-MM-ddTHH:mm:ss');
         String formattedDate = formatter.format(now)+'Z';
         insertDeroulementTache(tache.id, formattedDate);
         _idTacheEnCours = tache.id;
+      }
+    });
+  }
+
+  void toggleStartStop(Tache tache) {
+    setState(() {
+      // cas où la tâche est en cours
+      if(_mapTachesEnCours[tache]['isActive']){
+        // on arrête la tâche
+        _mapTachesEnCours[tache]['isActive'] = false;
+        // on update le champ date_fin en base de donnée
+        // de "" à DateTime.now()
+        final now = DateTime.now().toUtc();
+        final DateFormat formatter = DateFormat('yyyy-MM-ddTHH:mm:ss');
+        String formattedDate = formatter.format(now)+'Z';
+        updateLastDeroulementTache(tache.id, formattedDate);
+        // on retire la tache des taches en cours
+        _mapTachesEnCours.remove(tache);
+        tachesEnCours.remove(tache);
+        // on stop son timer
+        listeTimerTachesEnCours[tache].cancel();
+        listeTimerTachesEnCours.remove(tache);
       }
     });
   }
@@ -172,10 +233,6 @@ class _MyHomePageState extends State<MyHomePage> {
     return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 
-  //list de quick tâches
-  Future<List<Tache>> futureTaches;
-  List<Tache> taches = [];
-
   Future<List<Tache>> get_quick_taches() async {
     Database database = await InitDatabase().database;
     var t = await database.query('taches', where: "nom LIKE '%Quick task%'", orderBy: "id DESC");
@@ -183,7 +240,7 @@ class _MyHomePageState extends State<MyHomePage> {
     Map<Tache, Map<String, dynamic>> newMapQuickStart = {};
     if(liste.isNotEmpty){
       for(int i = 0; i < liste.length; i++){
-        String date_debut = await repriseTimerQuickTask(liste[i]);
+        String date_debut = await repriseTimer(liste[i]);
         // cas où le timer de la tâche tourne
         if(date_debut != null){
           // on calcule le temps écoulé à partir de la date_debut et de DateTime.now()
@@ -202,7 +259,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     }
     setState(() {
-      taches = liste;
+      quickTasks = liste;
       if(_mapQuickStart.isEmpty){
         // si la map est vide, on ajoute toutes les nouvelles
         // valeurs depuis la base de donnée
@@ -212,7 +269,7 @@ class _MyHomePageState extends State<MyHomePage> {
           final value = entry.value;
           if(value['isActive'] == true){
             // on relance le timer des taches en cours
-            _startTimer(tache);
+            _startTimerQuickTask(tache);
           }
         }
       }
@@ -246,10 +303,103 @@ class _MyHomePageState extends State<MyHomePage> {
       _mapQuickStart = LinkedHashMap.fromEntries(sortedEntries);
     });
 
-    return taches;
+    return quickTasks;
   }
 
-  Future<String> repriseTimerQuickTask(Tache tache) async {
+  Future<List<Tache>> getTachesEnCours() async {
+    Database database = await InitDatabase().database;
+    // récupère les taches (qui ne sont pas des Quick Tasks)
+    // dont le dernier deroulement contient une date_fin vide
+    var t = await database.query(
+      'taches',
+      where: '''
+      id IN (
+        SELECT t.id
+        FROM taches AS t
+        INNER JOIN deroulement_tache AS dt ON t.id = dt.id_tache
+        WHERE dt.date_fin = ""
+        AND t.nom NOT LIKE "Quick task %"
+        GROUP BY t.id
+        HAVING MAX(dt.id) = (
+          SELECT MAX(id)
+          FROM deroulement_tache
+          WHERE id_tache = t.id
+        )
+      )
+    ''',
+    );
+
+    List<Tache> liste = t.map((e) => Tache.fromMap(e)).toList();
+    Map<Tache, Map<String, dynamic>> newMapTachesEnCours = {};
+    if(liste.isNotEmpty){
+      for(int i = 0; i < liste.length; i++){
+        String date_debut = await repriseTimer(liste[i]);
+        // cas où le timer de la tâche tourne
+        if(date_debut != null){
+          // on calcule le temps écoulé à partir de la date_debut et de DateTime.now()
+          DateTime debut = DateTime.parse(date_debut);
+          final now = DateTime.now().toUtc();
+          int lastTempsEcouleSec = durationStringToSeconds(liste[i].temps_ecoule);
+          Duration tempsEcouleLastDeroulement = now.difference(debut);
+          int tempsEcouleSec = lastTempsEcouleSec + tempsEcouleLastDeroulement.inSeconds;
+          newMapTachesEnCours[liste[i]] = {'secValue': tempsEcouleSec, 'isActive': true};
+        }
+        // cas où le timer de la tâche ne tourne pas
+        else{
+          newMapTachesEnCours[liste[i]] = {'secValue': durationStringToSeconds(liste[i].temps_ecoule), 'isActive': false};
+        }
+      }
+
+    }
+    setState(() {
+      tachesEnCours = liste;
+      if(_mapTachesEnCours.isEmpty){
+        // si la map est vide, on ajoute toutes les nouvelles
+        // valeurs depuis la base de donnée
+        _mapTachesEnCours = newMapTachesEnCours;
+        for(final entry in _mapTachesEnCours.entries){
+          final tache = entry.key;
+          final value = entry.value;
+          if(value['isActive'] == true){
+            // on relance le timer des taches en cours
+            _startTimer(tache);
+          }
+        }
+      }
+      else{
+        // sinon, on parcours les valeurs de la base de donnée
+        // pour mettre à jour le temps écoulé des tâches
+        // déjà instanciées et ajouter les nouvelles
+        for(final entry2 in newMapTachesEnCours.entries){
+          final tache2 = entry2.key;
+          final value = entry2.value;
+          bool hasMatchingId = false;
+          for(final entry1 in _mapTachesEnCours.entries){
+            final tache1 = entry1.key;
+            if(tache1.id == tache2.id){
+              // met à jour le temps écoulé des tâches déjà instanciées
+              tache1.temps_ecoule = tache2.temps_ecoule;
+              _mapTachesEnCours[tache1] = value;
+              hasMatchingId = true;
+              break;
+            }
+          }
+          if(!hasMatchingId){
+            // ajoute les nouvelles tâches
+            _mapTachesEnCours[tache2] = value;
+          }
+        }
+      }
+      // pour trier par ordre décroissant
+      final sortedEntries = _mapTachesEnCours.entries.toList()
+        ..sort((a, b) => b.key.id.compareTo(a.key.id));
+      _mapTachesEnCours = LinkedHashMap.fromEntries(sortedEntries);
+    });
+
+    return tachesEnCours;
+  }
+
+  Future<String> repriseTimer(Tache tache) async {
     Database database = await InitDatabase().database;
     // on cherche si cette tâche a un champ dans deroulement_tache qui a
     // une date_fin vide
@@ -326,10 +476,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
     // Actualiser la liste de tâches dans l'état et redessiner l'interface utilisateur
     setState(() {
-      taches = nouvellesTaches;
+      quickTasks = nouvellesTaches;
       _isPressed = true;
-      if(taches.length > 1){
-        _startTimer(taches[0]);
+      if(quickTasks.length > 1){
+        _startTimerQuickTask(quickTasks[0]);
       }
     });
   }
@@ -379,7 +529,7 @@ class _MyHomePageState extends State<MyHomePage> {
               );
             } else {
               return FutureBuilder<List<Tache>>(
-                future: futureTaches,
+                future: futureQuickTasks,
                 builder: (BuildContext context,
                     AsyncSnapshot<List<Tache>> snapshot2) {
                   if (snapshot2.connectionState == ConnectionState.waiting) {
@@ -389,113 +539,133 @@ class _MyHomePageState extends State<MyHomePage> {
                   } else if (snapshot2.hasError) {
                     return BottomAppBar(
                       child: Center(
-                        child: Text('Error loading categories'),
+                        child: Text('Error loading Tasks'),
                       ),
                     );
                   } else {
-                    return SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          Container(
-                            width: double.infinity,
-                            color: allColors[colorIndex][1],
-                            alignment: Alignment.center,
-                            height: 93,
-                            margin: const EdgeInsets.only(bottom: 35.0),
-                            child: Container(
-                                width: double.infinity,
-                                margin: const EdgeInsets.only(left: 20.0, right: 20.0),
-                                height: 50,
-                                child: MaterialButton(
-                                  color: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(50.0),
-                                  ),
-                                  onPressed: () async {
-                                    await add_quick_tache();
-                                  },
-                                  child: Text(
-                                    "Quick Start",
-                                    style: TextStyle(
-                                        fontSize: 20.0,
-                                        color: allColors[colorIndex][1]),
-                                  ),
-                                )
+                    return FutureBuilder<List<Tache>>(
+                      future: futureTachesEnCours,
+                      builder: (BuildContext context,
+                          AsyncSnapshot<List<Tache>> snapshot3) {
+                        if (snapshot3.connectionState == ConnectionState.waiting) {
+                          return Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        } else if (snapshot3.hasError) {
+                          return BottomAppBar(
+                            child: Center(
+                              child: Text('Error loading Tasks'),
                             ),
-                          ),
-                          // Container of my task create with button Quick Start
-                          getTachesContainer(),
-                          Container(
-                            width: double.infinity,
-                            alignment: Alignment.center,
-                            margin: const EdgeInsets.only(bottom: 20.0),
-                            child: Container(
-                              width: double.infinity,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                    color: allColors[colorIndex][0], width: 1),
-                                color: allColors[colorIndex][1],
-                              ),
-                              margin: const EdgeInsets.only(left: 20.0, right: 20.0),
-                              child: Column(
-                                children: [
-                                  GestureDetector(
-                                    onTap: () {
-                                      // sur un appuie sur la ligne "All Tasks"
-                                      // Naviguer vers la page All Tasks
-                                      Navigator.push(
-                                          context,
-                                          PageTransition(
-                                              type: PageTransitionType.rightToLeftWithFade,
-                                              child: AllTasksPage(
-                                                  timeFilterCounter: 0,
-                                                  colorIndex: colorIndex
-                                              ),
-                                              childCurrent: this.widget,
-                                              duration: Duration(milliseconds: 500)
-                                          )
-                                      );
-                                    },
-                                    child: Container(
-                                      color: Colors.transparent,
+                          );
+                        } else {
+                          return SingleChildScrollView(
+                            child: Column(
+                              children: [
+                                Container(
+                                  width: double.infinity,
+                                  color: allColors[colorIndex][1],
+                                  alignment: Alignment.center,
+                                  height: 93,
+                                  margin: const EdgeInsets.only(bottom: 35.0),
+                                  child: Container(
                                       width: double.infinity,
-                                      child: buildRow("papers", "All Tasks"),
+                                      margin: const EdgeInsets.only(left: 20.0, right: 20.0),
+                                      height: 50,
+                                      child: MaterialButton(
+                                        color: Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(50.0),
+                                        ),
+                                        onPressed: () async {
+                                          await add_quick_tache();
+                                        },
+                                        child: Text(
+                                          "Quick Start",
+                                          style: TextStyle(
+                                              fontSize: 20.0,
+                                              color: allColors[colorIndex][1]),
+                                        ),
+                                      )
+                                  ),
+                                ),
+                                // Affichage des taches en cours et des Quick Tasks
+                                getTachesContainer(),
+                                Container(
+                                  width: double.infinity,
+                                  alignment: Alignment.center,
+                                  margin: const EdgeInsets.only(bottom: 20.0),
+                                  child: Container(
+                                    width: double.infinity,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                          color: allColors[colorIndex][0], width: 1),
+                                      color: allColors[colorIndex][1],
+                                    ),
+                                    margin: const EdgeInsets.only(left: 20.0, right: 20.0),
+                                    child: Column(
+                                      children: [
+                                        GestureDetector(
+                                          onTap: () async {
+                                            // sur un appuie sur la ligne "All Tasks"
+                                            // Naviguer vers la page All Tasks
+                                            await Navigator.push(
+                                                context,
+                                                PageTransition(
+                                                    type: PageTransitionType.rightToLeftWithFade,
+                                                    child: AllTasksPage(
+                                                        timeFilterCounter: 0,
+                                                        colorIndex: colorIndex
+                                                    ),
+                                                    childCurrent: this.widget,
+                                                    duration: Duration(milliseconds: 500)
+                                                )
+                                            );
+                                            await refreshData();
+                                          },
+                                          child: Container(
+                                            color: Colors.transparent,
+                                            width: double.infinity,
+                                            child: buildRow("papers", "All Tasks"),
+                                          ),
+                                        ),
+                                        Divider(
+                                          color: backgroundColor2,
+                                          thickness: 0.6,
+                                        ),
+                                        GestureDetector(
+                                          onTap: () async {
+                                            // sur un appuie sur la ligne "Single Tasks"
+                                            // Naviguer vers la page Single Tasks
+                                            await Navigator.push(
+                                                context,
+                                                PageTransition(
+                                                    type: PageTransitionType.rightToLeftWithFade,
+                                                    child: CategorieDetail(
+                                                      categorie: categories[0], colorIndex: colorIndex, timeFilterCounter: 0,),
+                                                    childCurrent: this.widget,
+                                                    duration: Duration(milliseconds: 500)
+                                                )
+                                            );
+                                            await refreshData();
+                                          },
+                                          child: Container(
+                                            color: Colors.transparent,
+                                            width: double.infinity,
+                                            child: buildRow("paper", "Single Tasks"),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  Divider(
-                                    color: backgroundColor2,
-                                    thickness: 0.6,
-                                  ),
-                                  GestureDetector(
-                                    onTap: () {
-                                      // sur un appuie sur la ligne "Single Tasks"
-                                      // Naviguer vers la page Single Tasks
-                                      Navigator.push(
-                                          context,
-                                          PageTransition(
-                                              type: PageTransitionType.rightToLeftWithFade,
-                                              child: CategorieDetail(
-                                                categorie: categories[0], colorIndex: colorIndex, timeFilterCounter: 0,),
-                                              childCurrent: this.widget,
-                                              duration: Duration(milliseconds: 500)
-                                          )
-                                      );
-                                    },
-                                    child: Container(
-                                      color: Colors.transparent,
-                                      width: double.infinity,
-                                      child: buildRow("paper", "Single Tasks"),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                ),
+                                //container of my categories
+                                getCategoriesContainer()
+                              ],
                             ),
-                          ),
-                          //container of my categories
-                          getCategoriesContainer()
-                        ],
-                      ),
+                          );
+                        }
+                      }
                     );
                   }
                 },
@@ -671,15 +841,16 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget buildRowTaches( Tache tache) {
+  Widget buildRowQuickTask(Tache tache) {
     return GestureDetector(
       onLongPress: () {
         // Afficher le popup pour supprimer ou éditer la tache
+        // TODO : implémenter delete
         showDelModDialog(context, tache.id);
       },
-      onTap: () {
+      onTap: () async {
         // Naviguer vers la page de history_main de la tache
-        Navigator.push(
+        await Navigator.push(
             context,
             PageTransition(
                 type: PageTransitionType.rightToLeftWithFade,
@@ -689,7 +860,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   colorIndex: colorIndex,
                 ),
                 childCurrent: this.widget,
-                duration: Duration(milliseconds: 500)));
+                duration: Duration(milliseconds: 500))
+        );
+        await refreshData();
       },
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -700,7 +873,7 @@ class _MyHomePageState extends State<MyHomePage> {
             width: 50,
             child: GestureDetector(
               onTap: () {
-                toggleStartStop(tache);
+                toggleStartStopQuickTask(tache);
               },
               child: Align(
                 alignment: Alignment.center,
@@ -762,6 +935,98 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  Widget buildRowTache(Tache tache) {
+    return GestureDetector(
+      onLongPress: () {
+        // Afficher le popup pour supprimer ou éditer la tache
+        // TODO : implémenter delete
+        showDelModDialog(context, tache.id);
+      },
+      onTap: () {
+        // Naviguer vers la page de history_main de la tache
+        Navigator.push(
+            context,
+            PageTransition(
+                type: PageTransitionType.rightToLeftWithFade,
+                child: HistoryPage(
+                  title: tache.nom,
+                  id: tache.id,
+                  colorIndex: colorIndex,
+                ),
+                childCurrent: this.widget,
+                duration: Duration(milliseconds: 500)));
+      },
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            height: 50,
+            width: 50,
+            child: GestureDetector(
+              onTap: () {
+                toggleStartStop(tache);
+              },
+              child: Align(
+                alignment: Alignment.center,
+                child: FractionallySizedBox(
+                  widthFactor: 0.4,
+                  heightFactor: 0.4,
+                  child: _mapTachesEnCours[tache]['isActive']
+                      ? SvgPicture.asset(
+                    'assets/icons/pause.svg',
+                  )
+                      : SvgPicture.asset(
+                    'assets/icons/play_arrow.svg',
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Container(
+            height: 50,
+            width: 150,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              tache.nom,
+              style: TextStyle(fontSize: 20.0, color: Colors.black87),
+            ),
+          ),
+          Container(
+            height: 50,
+            width: 115,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  height: 50,
+                  width: 80,
+                  alignment: Alignment.center,
+                  child: Text(
+                    timerText(_mapTachesEnCours[tache]['secValue']),
+                    style: TextStyle(fontSize: 20.0, color: _mapTachesEnCours[tache]['isActive'] ? colorTime2 : colorTime1),
+                  ),
+                ),
+                Container(
+                  height: 35,
+                  width: 35,
+                  child: Padding(
+                    padding: EdgeInsets.all(10),
+                    child: SvgPicture.asset(
+                      'assets/icons/arrow_right_in_circle.svg',
+                      color: Color(0xff848484),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget buildRowCategorie(IconData icons, Categorie categorie) {
     // id != 1 pour ne pas afficher la categorie "Single Tasks"
     if (categorie.id != 1) {
@@ -771,10 +1036,10 @@ class _MyHomePageState extends State<MyHomePage> {
           // afficher le popup pour supprimer ou éditer la catégorie
           showDelModDialog(context, categorie.id);
         },
-        onTap: () {
+        onTap: () async {
           // sur un appuie court :
           // naviguer vers la page de détail de la catégorie
-          Navigator.push(
+          await Navigator.push(
               context,
               PageTransition(
                   type: PageTransitionType.rightToLeftWithFade,
@@ -784,7 +1049,9 @@ class _MyHomePageState extends State<MyHomePage> {
                     timeFilterCounter: 0,
                   ),
                   childCurrent: this.widget,
-                  duration: Duration(milliseconds: 500)));
+                  duration: Duration(milliseconds: 500))
+          );
+          await refreshData();
         },
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -847,7 +1114,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Container getTachesContainer() {
-    if (_mapQuickStart.length==0) {
+    if (_mapQuickStart.length == 0 && _mapTachesEnCours.length == 0) {
       return Container();
     }
     return Container(
@@ -861,15 +1128,30 @@ class _MyHomePageState extends State<MyHomePage> {
           color: backgroundColor2,
         ),
         margin: const EdgeInsets.only(left: 20.0, right: 20.0),
-        child: ListView.builder(
-            shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
-            itemCount: _mapQuickStart.length,
-            itemBuilder: (context, index) {
-              List<Tache> keysList=_mapQuickStart.keys.toList();
-              return buildRowTaches(
-                   keysList[index]);
-            }),
+        child: Column(
+          children: [
+            (_mapTachesEnCours.length == 0) ? Container() :
+            ListView.builder(
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
+                itemCount: _mapTachesEnCours.length,
+                itemBuilder: (context, index) {
+                  List<Tache> keysList=_mapTachesEnCours.keys.toList();
+                  return buildRowTache(keysList[index]);
+                }
+            ),
+            (_mapQuickStart.length == 0) ? Container() :
+            ListView.builder(
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
+                itemCount: _mapQuickStart.length,
+                itemBuilder: (context, index) {
+                  List<Tache> keysList=_mapQuickStart.keys.toList();
+                  return buildRowQuickTask(keysList[index]);
+                }
+            ),
+          ],
+        ),
       ),
     );
   }
