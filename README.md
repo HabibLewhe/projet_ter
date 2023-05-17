@@ -14,5 +14,5 @@
 
 ## Demo
 
-[![Video demo](https://i.imgur.com/SJxxOdt.png)](https://youtu.be/ae-omnoHJQg)
+[![Video demo](https://i.imgur.com/fd2whZZ.png)](https://youtu.be/ae-omnoHJQg)
 
