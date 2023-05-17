@@ -57,10 +57,9 @@ class _AllTasksPageState extends State<AllTasksPage> {
 
   Future<void> refreshData() async {
     // on arrête tous les timers, ils seront relancés si besoin plus tard
-    if(listeTimers.isNotEmpty){
-      for(int i = 0; i < listeTimers.length; i++){
+    if (listeTimers.isNotEmpty) {
+      for (int i = 0; i < listeTimers.length; i++) {
         listeTimers[i].cancel();
-
       }
       listeTimers.clear();
     }
@@ -69,10 +68,9 @@ class _AllTasksPageState extends State<AllTasksPage> {
   }
 
   Future<void> fetchData() async {
-    if(_isTimeFilterVisible){
+    if (_isTimeFilterVisible) {
       await getTachesByFilter();
-    }
-    else{
+    } else {
       await getTaches();
       await getDeroulements();
     }
@@ -88,10 +86,10 @@ class _AllTasksPageState extends State<AllTasksPage> {
   }
 
   @override
-  void dispose(){
+  void dispose() {
     super.dispose();
-    if(listeTimers.isNotEmpty){
-      for(int i = 0; i < listeTimers.length; i++){
+    if (listeTimers.isNotEmpty) {
+      for (int i = 0; i < listeTimers.length; i++) {
         listeTimers[i].cancel();
       }
       listeTimers.clear();
@@ -130,52 +128,59 @@ class _AllTasksPageState extends State<AllTasksPage> {
     List<Tache> liste = t.map((e) => Tache.fromMap(e)).toList();
 
     Map<Tache, Map<String, dynamic>> newMapTimer = {};
-    if(liste.isNotEmpty){
-      for(int i = 0; i < liste.length; i++){
+    if (liste.isNotEmpty) {
+      for (int i = 0; i < liste.length; i++) {
         String date_debut = await repriseTimer(liste[i]);
         // cas où le timer de la tâche tourne
-        if(date_debut != null){
+        if (date_debut != null) {
           // on calcule le temps écoulé à partir de la date_debut et de DateTime.now()
           DateTime debut = DateTime.parse(date_debut);
           final now = DateTime.now().toUtc();
-          int lastTempsEcouleSec = durationStringToSeconds(liste[i].temps_ecoule);
+          int lastTempsEcouleSec =
+              durationStringToSeconds(liste[i].temps_ecoule);
           Duration tempsEcouleLastDeroulement = now.difference(debut);
-          int tempsEcouleSec = lastTempsEcouleSec + tempsEcouleLastDeroulement.inSeconds;
-          newMapTimer[liste[i]] = {'secValue': tempsEcouleSec, 'isActive': true};
+          int tempsEcouleSec =
+              lastTempsEcouleSec + tempsEcouleLastDeroulement.inSeconds;
+          newMapTimer[liste[i]] = {
+            'secValue': tempsEcouleSec,
+            'isActive': true
+          };
         }
         // cas où le timer de la tâche ne tourne pas
-        else{
-          newMapTimer[liste[i]] = {'secValue': durationStringToSeconds(liste[i].temps_ecoule), 'isActive': false};
+        else {
+          newMapTimer[liste[i]] = {
+            'secValue': durationStringToSeconds(liste[i].temps_ecoule),
+            'isActive': false
+          };
         }
       }
     }
 
     setState(() {
       taches = liste;
-      if(_mapTimer.isEmpty){
+      if (_mapTimer.isEmpty) {
         // si la map est vide, on ajoute toutes les nouvelles
         // valeurs depuis la base de donnée
         _mapTimer = newMapTimer;
-        for(final entry in _mapTimer.entries){
+        for (final entry in _mapTimer.entries) {
           final tache = entry.key;
           final value = entry.value;
-          if(value['isActive'] == true){
+          if (value['isActive'] == true) {
             // on relance le timer des taches en cours
             _startTimer(tache);
           }
         }
-      }
-      else{
+      } else {
         // sinon, on parcours les valeurs de la base de donnée
         // pour mettre à jour le temps écoulé des tâches
         // déjà instanciées et ajouter les nouvelles
-        for(final entry2 in newMapTimer.entries){
+        for (final entry2 in newMapTimer.entries) {
           final tache2 = entry2.key;
           final value = entry2.value;
           bool hasMatchingId = false;
-          for(final entry1 in _mapTimer.entries){
+          for (final entry1 in _mapTimer.entries) {
             final tache1 = entry1.key;
-            if(tache1.id == tache2.id){
+            if (tache1.id == tache2.id) {
               // met à jour le temps écoulé des tâches déjà instanciées
               tache1.temps_ecoule = tache2.temps_ecoule;
               _mapTimer[tache1] = value;
@@ -183,7 +188,7 @@ class _AllTasksPageState extends State<AllTasksPage> {
               break;
             }
           }
-          if(!hasMatchingId){
+          if (!hasMatchingId) {
             // ajoute les nouvelles tâches
             _mapTimer[tache2] = value;
           }
@@ -201,17 +206,17 @@ class _AllTasksPageState extends State<AllTasksPage> {
     List<Tache> l = [];
     for (int i = 0; i < deroulementFiltre.length; i++) {
       Tache tache;
-      for(int j = 0; j < taches.length; j++){
-        if(taches[j].id == deroulementFiltre[i].id_tache){
+      for (int j = 0; j < taches.length; j++) {
+        if (taches[j].id == deroulementFiltre[i].id_tache) {
           tache = taches[j];
-          if(!l.contains(tache)){
+          if (!l.contains(tache)) {
             l.add(tache);
           }
           break;
         }
       }
     }
-    for(int i = 0; i < l.length; i++){
+    for (int i = 0; i < l.length; i++) {
       Tache tache = l[i];
       String date_debut = await repriseTimer(tache);
       // cas où le timer de la tâche tourne
@@ -219,13 +224,13 @@ class _AllTasksPageState extends State<AllTasksPage> {
         // on calcule le temps écoulé à partir de la date_debut et de DateTime.now()
         DateTime debut = DateTime.parse(date_debut);
         final now = DateTime.now().toUtc();
-        int lastTempsEcouleSec = durationStringToSeconds(calculerTempsFiltre(tache));
+        int lastTempsEcouleSec =
+            durationStringToSeconds(calculerTempsFiltre(tache));
         Duration tempsEcouleLastDeroulement = now.difference(debut);
-        int tempsEcouleSec = lastTempsEcouleSec +
-            tempsEcouleLastDeroulement.inSeconds;
+        int tempsEcouleSec =
+            lastTempsEcouleSec + tempsEcouleLastDeroulement.inSeconds;
         _mapTimer[tache] = {'secValue': tempsEcouleSec, 'isActive': true};
-      }
-      else{
+      } else {
         _mapTimer[tache]['secValue'] =
             durationStringToSeconds(calculerTempsFiltre(tache));
       }
@@ -253,25 +258,25 @@ class _AllTasksPageState extends State<AllTasksPage> {
   void toggleStartStop(Tache tache) {
     setState(() {
       // cas où la tâche est en cours
-      if(_mapTimer[tache]['isActive']){
+      if (_mapTimer[tache]['isActive']) {
         // on arrête la tâche
         _mapTimer[tache]['isActive'] = false;
         // on update le champ date_fin en base de donnée
         // de "" à DateTime.now()
         final now = DateTime.now().toUtc();
         final DateFormat formatter = DateFormat('yyyy-MM-ddTHH:mm:ss');
-        String formattedDate = formatter.format(now)+'Z';
+        String formattedDate = formatter.format(now) + 'Z';
         updateLastDeroulementTache(tache.id, formattedDate);
       }
       // cas où la tâche n'est pas en cours
-      else{
+      else {
         // on lance le chrono de la tâche
         _mapTimer[tache]['isActive'] = true;
         _startTimer(tache);
         // Ajouter une nouvelle ligne dans la table deroulement_tache
         final now = DateTime.now().toUtc();
         final DateFormat formatter = DateFormat('yyyy-MM-ddTHH:mm:ss');
-        String formattedDate = formatter.format(now)+'Z';
+        String formattedDate = formatter.format(now) + 'Z';
         insertDeroulementTache(tache.id, formattedDate);
       }
     });
@@ -314,12 +319,16 @@ class _AllTasksPageState extends State<AllTasksPage> {
   }
 
   Future<void> updateLastDeroulementTache(int id, String formattedDate) async {
-    print('updateLastDeroulementTache: $id'); // ajouter cette ligne pour afficher l'ID de la tâche
+    print(
+        'updateLastDeroulementTache: $id'); // ajouter cette ligne pour afficher l'ID de la tâche
     final db = await database;
-    print('formattedDate: $formattedDate'); // ajouter cette ligne pour afficher la date formatée
-    int result = await db.update('deroulement_tache', {'date_fin': formattedDate},
+    print(
+        'formattedDate: $formattedDate'); // ajouter cette ligne pour afficher la date formatée
+    int result = await db.update(
+        'deroulement_tache', {'date_fin': formattedDate},
         where: 'id_tache = ? AND date_fin = ?', whereArgs: [id, '']);
-    print('update result: $result'); // ajouter cette ligne pour afficher le résultat de l'opération de mise à jour
+    print(
+        'update result: $result'); // ajouter cette ligne pour afficher le résultat de l'opération de mise à jour
 
     // pour mettre à jour le temps écoulé total
     await getCategories();
@@ -338,7 +347,6 @@ class _AllTasksPageState extends State<AllTasksPage> {
     return id;
   }
 
-
   List<DeroulementTache> getDeroulementsByFilter() {
     List<DeroulementTache> deroulementsFiltre = [];
     // jour
@@ -354,17 +362,15 @@ class _AllTasksPageState extends State<AllTasksPage> {
         DateTime dateDebut = DateTime.parse(deroulement.date_debut);
         // on cherche à comparer seulement l'année, le mois et le jour
         dateDebut = DateTime(dateDebut.year, dateDebut.month, dateDebut.day);
-        if(deroulement.date_fin != ""){
+        if (deroulement.date_fin != "") {
           DateTime dateFin = DateTime.parse(deroulement.date_fin);
           dateFin = DateTime(dateFin.year, dateFin.month, dateFin.day);
           return dateDebut.isAtSameMomentAs(jourFiltre) &&
               dateFin.isAtSameMomentAs(jourFiltre);
-        }
-        else {
+        } else {
           // cas où la date de fin du deroulement est vide
           return dateDebut.isAtSameMomentAs(jourFiltre);
         }
-
       }).toList();
       return deroulementsFiltre;
     }
@@ -387,20 +393,18 @@ class _AllTasksPageState extends State<AllTasksPage> {
         DateTime dateDebut = DateTime.parse(deroulement.date_debut);
         // on cherche à comparer seulement l'année, le mois et le jour
         dateDebut = DateTime(dateDebut.year, dateDebut.month, dateDebut.day);
-        if(deroulement.date_fin != ""){
+        if (deroulement.date_fin != "") {
           DateTime dateFin = DateTime.parse(deroulement.date_fin);
           dateFin = DateTime(dateFin.year, dateFin.month, dateFin.day);
           return ((dateDebut.isAfter(premierJourFiltre) ||
-              dateDebut == premierJourFiltre) &&
+                  dateDebut == premierJourFiltre) &&
               (dateFin.isBefore(dernierJourFiltre) ||
                   dateFin == dernierJourFiltre));
-        }
-        else {
+        } else {
           // cas où la date de fin du deroulement est vide
           return (dateDebut.isAfter(premierJourFiltre) ||
               dateDebut == premierJourFiltre);
         }
-
       }).toList();
       return deroulementsFiltre;
     }
@@ -423,15 +427,14 @@ class _AllTasksPageState extends State<AllTasksPage> {
         DateTime dateDebut = DateTime.parse(deroulement.date_debut);
         // on cherche à comparer seulement l'année, le mois et le jour
         dateDebut = DateTime(dateDebut.year, dateDebut.month, dateDebut.day);
-        if(deroulement.date_fin != ""){
+        if (deroulement.date_fin != "") {
           DateTime dateFin = DateTime.parse(deroulement.date_fin);
           dateFin = DateTime(dateFin.year, dateFin.month, dateFin.day);
           return ((dateDebut.isAfter(premierJourFiltre) ||
-              dateDebut == premierJourFiltre) &&
+                  dateDebut == premierJourFiltre) &&
               (dateFin.isBefore(dernierJourFiltre) ||
                   dateFin == dernierJourFiltre));
-        }
-        else {
+        } else {
           // cas où la date de fin du deroulement est vide
           return (dateDebut.isAfter(premierJourFiltre) ||
               dateDebut == premierJourFiltre);
@@ -502,7 +505,7 @@ class _AllTasksPageState extends State<AllTasksPage> {
     Duration tempsEcoule = Duration();
     for (int i = 0; i < deroulementsFiltre.length; i++) {
       if (deroulementsFiltre[i].id_tache == tache.id) {
-        if(deroulementsFiltre[i].date_fin != ""){
+        if (deroulementsFiltre[i].date_fin != "") {
           DateTime dateDebut = DateTime.parse(deroulementsFiltre[i].date_debut);
           DateTime dateFin = DateTime.parse(deroulementsFiltre[i].date_fin);
           tempsEcoule = tempsEcoule + dateFin.difference(dateDebut);
@@ -749,7 +752,8 @@ class _AllTasksPageState extends State<AllTasksPage> {
     );
   }
 
-  Container buildRowCategorie(Categorie categorie, int id, List<Tache> listeTachesCat) {
+  Container buildRowCategorie(
+      Categorie categorie, int id, List<Tache> listeTachesCat) {
     if (listeTachesCat.isEmpty && _isTimeFilterVisible) return Container();
     return Container(
         width: double.infinity,
@@ -955,11 +959,11 @@ class _AllTasksPageState extends State<AllTasksPage> {
                   heightFactor: 0.4,
                   child: _mapTimer[tache]['isActive']
                       ? SvgPicture.asset(
-                    'assets/icons/pause.svg',
-                  )
+                          'assets/icons/pause.svg',
+                        )
                       : SvgPicture.asset(
-                    'assets/icons/play_arrow.svg',
-                  ),
+                          'assets/icons/play_arrow.svg',
+                        ),
                 ),
               ),
             ),
@@ -993,7 +997,11 @@ class _AllTasksPageState extends State<AllTasksPage> {
                   alignment: Alignment.centerLeft,
                   child: Text(
                     timerText(_mapTimer[tache]['secValue']),
-                    style: TextStyle(fontSize: 20.0, color: _mapTimer[tache]['isActive'] ? colorTime2 : Colors.black),
+                    style: TextStyle(
+                        fontSize: 20.0,
+                        color: _mapTimer[tache]['isActive']
+                            ? colorTime2
+                            : Colors.black),
                   ),
                 ),
                 Container(

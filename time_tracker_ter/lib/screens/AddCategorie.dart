@@ -53,7 +53,7 @@ class _AddCatePageState extends State<AddCatePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("new Catégorie"),
+        title: Text("Nouvelle Catégorie"),
         centerTitle: true,
         flexibleSpace: Container(
           decoration: BoxDecoration(

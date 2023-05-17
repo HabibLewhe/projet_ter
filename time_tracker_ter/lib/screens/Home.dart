@@ -18,7 +18,6 @@ import 'CategorieDetail.dart';
 import 'History_main.dart';
 import 'PieChart.dart';
 
-
 class MyHomePage extends StatefulWidget {
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -58,10 +57,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> refreshData() async {
     // on arrête tous les timers, ils seront relancés si besoin plus tard
-    if(listeTimerTachesEnCours.isNotEmpty){
-      for(Tache tache in listeTimerTachesEnCours.keys){
+    if (listeTimerTachesEnCours.isNotEmpty) {
+      for (Tache tache in listeTimerTachesEnCours.keys) {
         listeTimerTachesEnCours[tache].cancel();
-
       }
       listeTimerTachesEnCours.clear();
     }
@@ -101,7 +99,7 @@ class _MyHomePageState extends State<MyHomePage> {
       );
       Duration sum = duration1 + duration2;
       tempsEcoule =
-      "${sum.inHours}:${sum.inMinutes.remainder(60).toString().padLeft(2, '0')}:${sum.inSeconds.remainder(60).toString().padLeft(2, '0')}";
+          "${sum.inHours}:${sum.inMinutes.remainder(60).toString().padLeft(2, '0')}:${sum.inSeconds.remainder(60).toString().padLeft(2, '0')}";
     }
     setState(() {
       tempsEcouleTotal = tempsEcoule;
@@ -112,6 +110,19 @@ class _MyHomePageState extends State<MyHomePage> {
   void deleteCategorie(int id) async {
     Database database = await InitDatabase().database;
     await database.delete('categories', where: 'id = ?', whereArgs: [id]);
+    categories = await futureCategories;
+    categories.clear();
+    getCategories();
+  }
+
+  void updateCategorieNom(int id, String nouveauNom) async {
+    Database database = await InitDatabase().database;
+    await database.update(
+      'categories',
+      {'nom': nouveauNom},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
     categories = await futureCategories;
     categories.clear();
     getCategories();
@@ -172,25 +183,25 @@ class _MyHomePageState extends State<MyHomePage> {
   void toggleStartStopQuickTask(Tache tache) {
     setState(() {
       // cas où la tâche est en cours
-      if(_mapQuickStart[tache]['isActive']){
+      if (_mapQuickStart[tache]['isActive']) {
         // on arrête la tâche
         _mapQuickStart[tache]['isActive'] = false;
         // on update le champ date_fin en base de donnée
         // de "" à DateTime.now()
         final now = DateTime.now().toUtc();
         final DateFormat formatter = DateFormat('yyyy-MM-ddTHH:mm:ss');
-        String formattedDate = formatter.format(now)+'Z';
+        String formattedDate = formatter.format(now) + 'Z';
         updateLastDeroulementTache(tache.id, formattedDate);
       }
       // cas où la tâche n'est pas en cours
-      else{
+      else {
         // on lance le chrono de la tâche
         _mapQuickStart[tache]['isActive'] = true;
         _startTimerQuickTask(tache);
         // Ajouter une nouvelle ligne dans la table deroulement_tache
         final now = DateTime.now().toUtc();
         final DateFormat formatter = DateFormat('yyyy-MM-ddTHH:mm:ss');
-        String formattedDate = formatter.format(now)+'Z';
+        String formattedDate = formatter.format(now) + 'Z';
         insertDeroulementTache(tache.id, formattedDate);
       }
     });
@@ -199,14 +210,14 @@ class _MyHomePageState extends State<MyHomePage> {
   void toggleStartStop(Tache tache) {
     setState(() {
       // cas où la tâche est en cours
-      if(_mapTachesEnCours[tache]['isActive']){
+      if (_mapTachesEnCours[tache]['isActive']) {
         // on arrête la tâche
         _mapTachesEnCours[tache]['isActive'] = false;
         // on update le champ date_fin en base de donnée
         // de "" à DateTime.now()
         final now = DateTime.now().toUtc();
         final DateFormat formatter = DateFormat('yyyy-MM-ddTHH:mm:ss');
-        String formattedDate = formatter.format(now)+'Z';
+        String formattedDate = formatter.format(now) + 'Z';
         updateLastDeroulementTache(tache.id, formattedDate);
         // on retire la tache des taches en cours
         _mapTachesEnCours.remove(tache);
@@ -218,7 +229,6 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-
   String timerText(int sec) {
     int hours = sec ~/ 3600;
     int minutes = (sec % 3600) ~/ 60;
@@ -228,55 +238,62 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<List<Tache>> get_quick_taches() async {
     Database database = await InitDatabase().database;
-    var t = await database.query('taches', where: "nom LIKE '%Quick task%'", orderBy: "id DESC");
+    var t = await database.query('taches',
+        where: "nom LIKE '%Quick task%'", orderBy: "id DESC");
     List<Tache> liste = t.map((e) => Tache.fromMap(e)).toList();
     Map<Tache, Map<String, dynamic>> newMapQuickStart = {};
-    if(liste.isNotEmpty){
-      for(int i = 0; i < liste.length; i++){
+    if (liste.isNotEmpty) {
+      for (int i = 0; i < liste.length; i++) {
         String date_debut = await repriseTimer(liste[i]);
         // cas où le timer de la tâche tourne
-        if(date_debut != null){
+        if (date_debut != null) {
           // on calcule le temps écoulé à partir de la date_debut et de DateTime.now()
           DateTime debut = DateTime.parse(date_debut);
           final now = DateTime.now().toUtc();
-          int lastTempsEcouleSec = durationStringToSeconds(liste[i].temps_ecoule);
+          int lastTempsEcouleSec =
+              durationStringToSeconds(liste[i].temps_ecoule);
           Duration tempsEcouleLastDeroulement = now.difference(debut);
-          int tempsEcouleSec = lastTempsEcouleSec + tempsEcouleLastDeroulement.inSeconds;
-          newMapQuickStart[liste[i]] = {'secValue': tempsEcouleSec, 'isActive': true};
+          int tempsEcouleSec =
+              lastTempsEcouleSec + tempsEcouleLastDeroulement.inSeconds;
+          newMapQuickStart[liste[i]] = {
+            'secValue': tempsEcouleSec,
+            'isActive': true
+          };
         }
         // cas où le timer de la tâche ne tourne pas
-        else{
-          newMapQuickStart[liste[i]] = {'secValue': durationStringToSeconds(liste[i].temps_ecoule), 'isActive': false};
+        else {
+          newMapQuickStart[liste[i]] = {
+            'secValue': durationStringToSeconds(liste[i].temps_ecoule),
+            'isActive': false
+          };
         }
       }
-
     }
     setState(() {
       quickTasks = liste;
-      if(_mapQuickStart.isEmpty){
+      if (_mapQuickStart.isEmpty) {
         // si la map est vide, on ajoute toutes les nouvelles
         // valeurs depuis la base de donnée
         _mapQuickStart = newMapQuickStart;
-        for(final entry in _mapQuickStart.entries){
+        for (final entry in _mapQuickStart.entries) {
           final tache = entry.key;
           final value = entry.value;
-          if(value['isActive'] == true){
+          if (value['isActive'] == true) {
             // on relance le timer des taches en cours
             _startTimerQuickTask(tache);
           }
         }
-      }
-      else{
+      } else {
         // sinon, on parcours les valeurs de la base de donnée
         // pour mettre à jour le temps écoulé des tâches
         // déjà instanciées et ajouter les nouvelles
-        for(final entry2 in newMapQuickStart.entries){
+        for (final entry2 in newMapQuickStart.entries) {
           final tache2 = entry2.key;
           final value = entry2.value;
           bool hasMatchingId = false;
-          for(final entry1 in _mapQuickStart.entries){
+          for (final entry1 in _mapQuickStart.entries) {
             final tache1 = entry1.key;
-            if(tache1.id == tache2.id){
+            if (tache1.id == tache2.id) {
               // met à jour le temps écoulé des tâches déjà instanciées
               tache1.temps_ecoule = tache2.temps_ecoule;
               _mapQuickStart[tache1] = value;
@@ -284,7 +301,7 @@ class _MyHomePageState extends State<MyHomePage> {
               break;
             }
           }
-          if(!hasMatchingId){
+          if (!hasMatchingId) {
             // ajoute les nouvelles tâches
             _mapQuickStart[tache2] = value;
           }
@@ -324,52 +341,58 @@ class _MyHomePageState extends State<MyHomePage> {
 
     List<Tache> liste = t.map((e) => Tache.fromMap(e)).toList();
     Map<Tache, Map<String, dynamic>> newMapTachesEnCours = {};
-    if(liste.isNotEmpty){
-      for(int i = 0; i < liste.length; i++){
+    if (liste.isNotEmpty) {
+      for (int i = 0; i < liste.length; i++) {
         String date_debut = await repriseTimer(liste[i]);
         // cas où le timer de la tâche tourne
-        if(date_debut != null){
+        if (date_debut != null) {
           // on calcule le temps écoulé à partir de la date_debut et de DateTime.now()
           DateTime debut = DateTime.parse(date_debut);
           final now = DateTime.now().toUtc();
-          int lastTempsEcouleSec = durationStringToSeconds(liste[i].temps_ecoule);
+          int lastTempsEcouleSec =
+              durationStringToSeconds(liste[i].temps_ecoule);
           Duration tempsEcouleLastDeroulement = now.difference(debut);
-          int tempsEcouleSec = lastTempsEcouleSec + tempsEcouleLastDeroulement.inSeconds;
-          newMapTachesEnCours[liste[i]] = {'secValue': tempsEcouleSec, 'isActive': true};
+          int tempsEcouleSec =
+              lastTempsEcouleSec + tempsEcouleLastDeroulement.inSeconds;
+          newMapTachesEnCours[liste[i]] = {
+            'secValue': tempsEcouleSec,
+            'isActive': true
+          };
         }
         // cas où le timer de la tâche ne tourne pas
-        else{
-          newMapTachesEnCours[liste[i]] = {'secValue': durationStringToSeconds(liste[i].temps_ecoule), 'isActive': false};
+        else {
+          newMapTachesEnCours[liste[i]] = {
+            'secValue': durationStringToSeconds(liste[i].temps_ecoule),
+            'isActive': false
+          };
         }
       }
-
     }
     setState(() {
       tachesEnCours = liste;
-      if(_mapTachesEnCours.isEmpty){
+      if (_mapTachesEnCours.isEmpty) {
         // si la map est vide, on ajoute toutes les nouvelles
         // valeurs depuis la base de donnée
         _mapTachesEnCours = newMapTachesEnCours;
-        for(final entry in _mapTachesEnCours.entries){
+        for (final entry in _mapTachesEnCours.entries) {
           final tache = entry.key;
           final value = entry.value;
-          if(value['isActive'] == true){
+          if (value['isActive'] == true) {
             // on relance le timer des taches en cours
             _startTimer(tache);
           }
         }
-      }
-      else{
+      } else {
         // sinon, on parcours les valeurs de la base de donnée
         // pour mettre à jour le temps écoulé des tâches
         // déjà instanciées et ajouter les nouvelles
-        for(final entry2 in newMapTachesEnCours.entries){
+        for (final entry2 in newMapTachesEnCours.entries) {
           final tache2 = entry2.key;
           final value = entry2.value;
           bool hasMatchingId = false;
-          for(final entry1 in _mapTachesEnCours.entries){
+          for (final entry1 in _mapTachesEnCours.entries) {
             final tache1 = entry1.key;
-            if(tache1.id == tache2.id){
+            if (tache1.id == tache2.id) {
               // met à jour le temps écoulé des tâches déjà instanciées
               tache1.temps_ecoule = tache2.temps_ecoule;
               _mapTachesEnCours[tache1] = value;
@@ -377,7 +400,7 @@ class _MyHomePageState extends State<MyHomePage> {
               break;
             }
           }
-          if(!hasMatchingId){
+          if (!hasMatchingId) {
             // ajoute les nouvelles tâches
             _mapTachesEnCours[tache2] = value;
           }
@@ -414,12 +437,16 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> updateLastDeroulementTache(int id, String formattedDate) async {
-    print('updateLastDeroulementTache: $id'); // ajouter cette ligne pour afficher l'ID de la tâche
+    print(
+        'updateLastDeroulementTache: $id'); // ajouter cette ligne pour afficher l'ID de la tâche
     final db = await database;
-    print('formattedDate: $formattedDate'); // ajouter cette ligne pour afficher la date formatée
-    int result = await db.update('deroulement_tache', {'date_fin': formattedDate},
+    print(
+        'formattedDate: $formattedDate'); // ajouter cette ligne pour afficher la date formatée
+    int result = await db.update(
+        'deroulement_tache', {'date_fin': formattedDate},
         where: 'id_tache = ? AND date_fin = ?', whereArgs: [id, '']);
-    print('update result: $result'); // ajouter cette ligne pour afficher le résultat de l'opération de mise à jour
+    print(
+        'update result: $result'); // ajouter cette ligne pour afficher le résultat de l'opération de mise à jour
   }
 
   // Insertion d'une nouvelle ligne dans la table `deroulement_tache`
@@ -437,16 +464,18 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Color selectedColor = Colors.blue;
 
-  void add_quick_tache() async{
+  void add_quick_tache() async {
     Database database = await InitDatabase().database;
     // compter le nombre de tâches "Quick task"
-    int quickTaskCount = Sqflite.firstIntValue(await database.rawQuery("SELECT COUNT(*) FROM taches WHERE nom LIKE 'Quick task %'")) ?? 0;
+    int quickTaskCount = Sqflite.firstIntValue(await database.rawQuery(
+            "SELECT COUNT(*) FROM taches WHERE nom LIKE 'Quick task %'")) ??
+        0;
 
     final now = DateTime.now().toUtc();
     final DateFormat formatter = DateFormat('yyyy-MM-ddTHH:mm:ss');
     int id = await database.insert('taches', {
       'nom': "Quick task ${quickTaskCount + 1}",
-      'couleur':selectedColor.value.toRadixString(16),
+      'couleur': selectedColor.value.toRadixString(16),
       'temps_ecoule': "00:00:00",
       'id_categorie': 1,
     });
@@ -454,23 +483,24 @@ class _MyHomePageState extends State<MyHomePage> {
     //inserer une nouvelle deroulement de tache
     await database.insert('deroulement_tache', {
       'id_tache': id,
-      'date_debut': formatter.format(now)+'Z',
+      'date_debut': formatter.format(now) + 'Z',
       'date_fin': '',
       'latitude': 48.8566,
       'longitude': 2.3382,
     });
 
     // Récupérer la dernière tâche insérée
-    List<Map<String, dynamic>> maps = await database.rawQuery('SELECT * FROM taches ORDER BY id DESC LIMIT 1');
+    List<Map<String, dynamic>> maps = await database
+        .rawQuery('SELECT * FROM taches ORDER BY id DESC LIMIT 1');
     lastQuickStart = Tache.fromMap(maps.first);
 
     // Récupérer les nouvelles tâches depuis la base de données
-    List<Tache> nouvellesTaches =  await get_quick_taches();
+    List<Tache> nouvellesTaches = await get_quick_taches();
 
     // Actualiser la liste de tâches dans l'état et redessiner l'interface utilisateur
     setState(() {
       quickTasks = nouvellesTaches;
-      if(quickTasks.length > 1){
+      if (quickTasks.length > 1) {
         _startTimerQuickTask(quickTasks[0]);
       }
     });
@@ -493,17 +523,19 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ),
           leading: Padding(
-            padding: const EdgeInsets.only(left: 25.0),
-            child: IconButton(
-                icon: Icon(Icons.color_lens_rounded, color: Colors.white,),
+              padding: const EdgeInsets.only(left: 25.0),
+              child: IconButton(
+                icon: Icon(
+                  Icons.color_lens_rounded,
+                  color: Colors.white,
+                ),
                 iconSize: 36,
                 onPressed: () {
                   // appuie sur le bouton palette de couleur
                   // on affiche le popup pour choisir le theme de l'app
                   showColorPickerDialog(context);
                 },
-              )
-          ),
+              )),
         ),
         body: FutureBuilder<List<Categorie>>(
           future: futureCategories,
@@ -536,129 +568,139 @@ class _MyHomePageState extends State<MyHomePage> {
                     );
                   } else {
                     return FutureBuilder<List<Tache>>(
-                      future: futureTachesEnCours,
-                      builder: (BuildContext context,
-                          AsyncSnapshot<List<Tache>> snapshot3) {
-                        if (snapshot3.connectionState == ConnectionState.waiting) {
-                          return Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        } else if (snapshot3.hasError) {
-                          return BottomAppBar(
-                            child: Center(
-                              child: Text('Error loading Tasks'),
-                            ),
-                          );
-                        } else {
-                          return SingleChildScrollView(
-                            child: Column(
-                              children: [
-                                Container(
-                                  width: double.infinity,
-                                  color: allColors[colorIndex][1],
-                                  alignment: Alignment.center,
-                                  height: 93,
-                                  margin: const EdgeInsets.only(bottom: 35.0),
-                                  child: Container(
-                                      width: double.infinity,
-                                      margin: const EdgeInsets.only(left: 20.0, right: 20.0),
-                                      height: 50,
-                                      child: MaterialButton(
-                                        color: Colors.white,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(50.0),
-                                        ),
-                                        onPressed: () async {
-                                          await add_quick_tache();
-                                        },
-                                        child: Text(
-                                          "Quick Start",
-                                          style: TextStyle(
-                                              fontSize: 20.0,
-                                              color: allColors[colorIndex][1]),
-                                        ),
-                                      )
-                                  ),
-                                ),
-                                // Affichage des taches en cours et des Quick Tasks
-                                getTachesContainer(),
-                                Container(
-                                  width: double.infinity,
-                                  alignment: Alignment.center,
-                                  margin: const EdgeInsets.only(bottom: 20.0),
-                                  child: Container(
+                        future: futureTachesEnCours,
+                        builder: (BuildContext context,
+                            AsyncSnapshot<List<Tache>> snapshot3) {
+                          if (snapshot3.connectionState ==
+                              ConnectionState.waiting) {
+                            return Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          } else if (snapshot3.hasError) {
+                            return BottomAppBar(
+                              child: Center(
+                                child: Text('Error loading Tasks'),
+                              ),
+                            );
+                          } else {
+                            return SingleChildScrollView(
+                              child: Column(
+                                children: [
+                                  Container(
                                     width: double.infinity,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      border: Border.all(
-                                          color: allColors[colorIndex][0], width: 1),
-                                      color: allColors[colorIndex][1],
-                                    ),
-                                    margin: const EdgeInsets.only(left: 20.0, right: 20.0),
-                                    child: Column(
-                                      children: [
-                                        GestureDetector(
-                                          onTap: () async {
-                                            // sur un appuie sur la ligne "All Tasks"
-                                            // Naviguer vers la page All Tasks
-                                            await Navigator.push(
-                                                context,
-                                                PageTransition(
-                                                    type: PageTransitionType.rightToLeftWithFade,
-                                                    child: AllTasksPage(
+                                    color: allColors[colorIndex][1],
+                                    alignment: Alignment.center,
+                                    height: 93,
+                                    margin: const EdgeInsets.only(bottom: 35.0),
+                                    child: Container(
+                                        width: double.infinity,
+                                        margin: const EdgeInsets.only(
+                                            left: 20.0, right: 20.0),
+                                        height: 50,
+                                        child: MaterialButton(
+                                          color: Colors.white,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(50.0),
+                                          ),
+                                          onPressed: () async {
+                                            await add_quick_tache();
+                                          },
+                                          child: Text(
+                                            "Quick Start",
+                                            style: TextStyle(
+                                                fontSize: 20.0,
+                                                color: allColors[colorIndex]
+                                                    [1]),
+                                          ),
+                                        )),
+                                  ),
+                                  // Affichage des taches en cours et des Quick Tasks
+                                  getTachesContainer(),
+                                  Container(
+                                    width: double.infinity,
+                                    alignment: Alignment.center,
+                                    margin: const EdgeInsets.only(bottom: 20.0),
+                                    child: Container(
+                                      width: double.infinity,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(
+                                            color: allColors[colorIndex][0],
+                                            width: 1),
+                                        color: allColors[colorIndex][1],
+                                      ),
+                                      margin: const EdgeInsets.only(
+                                          left: 20.0, right: 20.0),
+                                      child: Column(
+                                        children: [
+                                          GestureDetector(
+                                            onTap: () async {
+                                              // sur un appuie sur la ligne "All Tasks"
+                                              // Naviguer vers la page All Tasks
+                                              await Navigator.push(
+                                                  context,
+                                                  PageTransition(
+                                                      type: PageTransitionType
+                                                          .rightToLeftWithFade,
+                                                      child: AllTasksPage(
+                                                          timeFilterCounter: 0,
+                                                          colorIndex:
+                                                              colorIndex),
+                                                      childCurrent: this.widget,
+                                                      duration: Duration(
+                                                          milliseconds: 500)));
+                                              await refreshData();
+                                            },
+                                            child: Container(
+                                              color: Colors.transparent,
+                                              width: double.infinity,
+                                              child: buildRow(
+                                                  "papers", "All Tasks"),
+                                            ),
+                                          ),
+                                          Divider(
+                                            color: backgroundColor2,
+                                            thickness: 0.6,
+                                          ),
+                                          GestureDetector(
+                                            onTap: () async {
+                                              // sur un appuie sur la ligne "Single Tasks"
+                                              // Naviguer vers la page Single Tasks
+                                              await Navigator.push(
+                                                  context,
+                                                  PageTransition(
+                                                      type: PageTransitionType
+                                                          .rightToLeftWithFade,
+                                                      child: CategorieDetail(
+                                                        categorie:
+                                                            categories[0],
+                                                        colorIndex: colorIndex,
                                                         timeFilterCounter: 0,
-                                                        colorIndex: colorIndex
-                                                    ),
-                                                    childCurrent: this.widget,
-                                                    duration: Duration(milliseconds: 500)
-                                                )
-                                            );
-                                            await refreshData();
-                                          },
-                                          child: Container(
-                                            color: Colors.transparent,
-                                            width: double.infinity,
-                                            child: buildRow("papers", "All Tasks"),
+                                                      ),
+                                                      childCurrent: this.widget,
+                                                      duration: Duration(
+                                                          milliseconds: 500)));
+                                              await refreshData();
+                                            },
+                                            child: Container(
+                                              color: Colors.transparent,
+                                              width: double.infinity,
+                                              child: buildRow(
+                                                  "paper", "Single Tasks"),
+                                            ),
                                           ),
-                                        ),
-                                        Divider(
-                                          color: backgroundColor2,
-                                          thickness: 0.6,
-                                        ),
-                                        GestureDetector(
-                                          onTap: () async {
-                                            // sur un appuie sur la ligne "Single Tasks"
-                                            // Naviguer vers la page Single Tasks
-                                            await Navigator.push(
-                                                context,
-                                                PageTransition(
-                                                    type: PageTransitionType.rightToLeftWithFade,
-                                                    child: CategorieDetail(
-                                                      categorie: categories[0], colorIndex: colorIndex, timeFilterCounter: 0,),
-                                                    childCurrent: this.widget,
-                                                    duration: Duration(milliseconds: 500)
-                                                )
-                                            );
-                                            await refreshData();
-                                          },
-                                          child: Container(
-                                            color: Colors.transparent,
-                                            width: double.infinity,
-                                            child: buildRow("paper", "Single Tasks"),
-                                          ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                ),
-                                //container of my categories
-                                getCategoriesContainer()
-                              ],
-                            ),
-                          );
-                        }
-                      }
-                    );
+                                  //container of my categories
+                                  getCategoriesContainer()
+                                ],
+                              ),
+                            );
+                          }
+                        });
                   }
                 },
               );
@@ -686,15 +728,17 @@ class _MyHomePageState extends State<MyHomePage> {
               // créer la data map qui associe à chaque catégorie son temps en secondes
               Map<String, double> dataMap = {};
               List<Color> colorList = [];
-              for(int i=0; i<categories.length; i++){
+              for (int i = 0; i < categories.length; i++) {
                 List<String> parts = categories[i].temps_ecoule.split(':');
                 int hours = int.parse(parts[0]);
                 int minutes = int.parse(parts[1]);
                 int seconds = int.parse(parts[2]);
-                Duration duration = Duration(hours: hours, minutes: minutes, seconds: seconds);
+                Duration duration =
+                    Duration(hours: hours, minutes: minutes, seconds: seconds);
                 double tempsEcouleEnSec = duration.inSeconds.toDouble();
                 dataMap[categories[i].nom] = tempsEcouleEnSec;
-                colorList.add(Color(int.parse(categories[i].couleur, radix: 16)));
+                colorList
+                    .add(Color(int.parse(categories[i].couleur, radix: 16)));
               }
               // l'envoyer à PieChartPage pour l'afficher
               Navigator.push(
@@ -852,8 +896,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   colorIndex: colorIndex,
                 ),
                 childCurrent: this.widget,
-                duration: Duration(milliseconds: 500))
-        );
+                duration: Duration(milliseconds: 500)));
         await refreshData();
       },
       child: Row(
@@ -874,11 +917,11 @@ class _MyHomePageState extends State<MyHomePage> {
                   heightFactor: 0.4,
                   child: _mapQuickStart[tache]['isActive']
                       ? SvgPicture.asset(
-                    'assets/icons/pause.svg',
-                  )
+                          'assets/icons/pause.svg',
+                        )
                       : SvgPicture.asset(
-                    'assets/icons/play_arrow.svg',
-                  ),
+                          'assets/icons/play_arrow.svg',
+                        ),
                 ),
               ),
             ),
@@ -905,7 +948,11 @@ class _MyHomePageState extends State<MyHomePage> {
                   alignment: Alignment.center,
                   child: Text(
                     timerText(_mapQuickStart[tache]['secValue']),
-                    style: TextStyle(fontSize: 20.0, color: _mapQuickStart[tache]['isActive'] ? colorTime2 : colorTime1),
+                    style: TextStyle(
+                        fontSize: 20.0,
+                        color: _mapQuickStart[tache]['isActive']
+                            ? colorTime2
+                            : colorTime1),
                   ),
                 ),
                 Container(
@@ -966,11 +1013,11 @@ class _MyHomePageState extends State<MyHomePage> {
                   heightFactor: 0.4,
                   child: _mapTachesEnCours[tache]['isActive']
                       ? SvgPicture.asset(
-                    'assets/icons/pause.svg',
-                  )
+                          'assets/icons/pause.svg',
+                        )
                       : SvgPicture.asset(
-                    'assets/icons/play_arrow.svg',
-                  ),
+                          'assets/icons/play_arrow.svg',
+                        ),
                 ),
               ),
             ),
@@ -997,7 +1044,11 @@ class _MyHomePageState extends State<MyHomePage> {
                   alignment: Alignment.center,
                   child: Text(
                     timerText(_mapTachesEnCours[tache]['secValue']),
-                    style: TextStyle(fontSize: 20.0, color: _mapTachesEnCours[tache]['isActive'] ? colorTime2 : colorTime1),
+                    style: TextStyle(
+                        fontSize: 20.0,
+                        color: _mapTachesEnCours[tache]['isActive']
+                            ? colorTime2
+                            : colorTime1),
                   ),
                 ),
                 Container(
@@ -1041,8 +1092,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     timeFilterCounter: 0,
                   ),
                   childCurrent: this.widget,
-                  duration: Duration(milliseconds: 500))
-          );
+                  duration: Duration(milliseconds: 500)));
           await refreshData();
         },
         child: Row(
@@ -1050,14 +1100,13 @@ class _MyHomePageState extends State<MyHomePage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(
-              height: 50,
-              width: 50,
-              child: Icon(
-                Icons.folder,
-                size: 30,
-                color: Color(int.parse(categorie.couleur, radix: 16)),
-              )
-            ),
+                height: 50,
+                width: 50,
+                child: Icon(
+                  Icons.folder,
+                  size: 30,
+                  color: Color(int.parse(categorie.couleur, radix: 16)),
+                )),
             Container(
               height: 50,
               width: 150,
@@ -1122,26 +1171,26 @@ class _MyHomePageState extends State<MyHomePage> {
         margin: const EdgeInsets.only(left: 20.0, right: 20.0),
         child: Column(
           children: [
-            (_mapTachesEnCours.length == 0) ? Container() :
-            ListView.builder(
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                itemCount: _mapTachesEnCours.length,
-                itemBuilder: (context, index) {
-                  List<Tache> keysList=_mapTachesEnCours.keys.toList();
-                  return buildRowTache(keysList[index]);
-                }
-            ),
-            (_mapQuickStart.length == 0) ? Container() :
-            ListView.builder(
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                itemCount: _mapQuickStart.length,
-                itemBuilder: (context, index) {
-                  List<Tache> keysList=_mapQuickStart.keys.toList();
-                  return buildRowQuickTask(keysList[index]);
-                }
-            ),
+            (_mapTachesEnCours.length == 0)
+                ? Container()
+                : ListView.builder(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    itemCount: _mapTachesEnCours.length,
+                    itemBuilder: (context, index) {
+                      List<Tache> keysList = _mapTachesEnCours.keys.toList();
+                      return buildRowTache(keysList[index]);
+                    }),
+            (_mapQuickStart.length == 0)
+                ? Container()
+                : ListView.builder(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    itemCount: _mapQuickStart.length,
+                    itemBuilder: (context, index) {
+                      List<Tache> keysList = _mapQuickStart.keys.toList();
+                      return buildRowQuickTask(keysList[index]);
+                    }),
           ],
         ),
       ),
@@ -1228,8 +1277,11 @@ class _MyHomePageState extends State<MyHomePage> {
           Text("Edit", style: TextStyle(color: Colors.blue)),
         ],
       ),
-      onPressed: () {
+      onPressed: () async {
         // TODO : traitement bouton edit categorie
+        Navigator.of(context).pop();
+        String nom = await getCategoryNameById(id);
+        showEditCategorieDialog(context, id, nom);
       },
     );
 
@@ -1248,6 +1300,59 @@ class _MyHomePageState extends State<MyHomePage> {
       context: context,
       builder: (BuildContext context) {
         return alert;
+      },
+    );
+  }
+
+  Future<String> getCategoryNameById(int id) async {
+    Database database = await InitDatabase().database;
+    List<Map<String, dynamic>> results = await database.query(
+      'categories',
+      columns: ['nom'],
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    if (results.isNotEmpty) {
+      // Assuming there is only one category with this ID
+      return results.first['nom'];
+    } else {
+      throw Exception('No category found with ID: $id');
+    }
+  }
+
+  void showEditCategorieDialog(BuildContext context, int id, String oldName) {
+    TextEditingController textController = TextEditingController(text: oldName);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Modifier La Catégorie'),
+          content: TextField(
+            controller: textController,
+            decoration: InputDecoration(
+              labelText: 'Nom De La Catégorie',
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Annuler'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('Sauvegarder'),
+              onPressed: () async {
+                String newName = textController.text;
+                // call your function to update the category name in the database
+                await updateCategorieNom(id, newName);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
       },
     );
   }

@@ -12,6 +12,7 @@ import '../services/DatabaseService.dart';
 import '../services/exportService.dart';
 import '../utilities/constants.dart';
 import 'AddTache.dart';
+import 'EditTask.dart';
 import 'History_main.dart';
 import 'package:intl/intl.dart';
 
@@ -34,6 +35,7 @@ class CategorieDetail_ extends State<CategorieDetail> {
   List<Tache> tachesFiltre = [];
   List<DeroulementTache> deroulementTaches = [];
   Categorie categorie;
+  List<Categorie> categories = [];
 
   bool _isTimeFilterVisible = false;
   int timeFilterPreference;
@@ -78,11 +80,23 @@ class CategorieDetail_ extends State<CategorieDetail> {
   }
 
   Future<void> fetchData() async {
+    getCategories();
     if (_isTimeFilterVisible) {
       await getTachesByFilter();
     } else {
       await getTaches();
       await getDeroulements();
+    }
+  }
+
+  void getCategories() async {
+    Database database = await InitDatabase().database;
+    var cats = await database.query('categories');
+    List<Categorie> liste = cats.map((e) => Categorie.fromMap(e)).toList();
+    if (mounted) {
+      setState(() {
+        categories = liste;
+      });
     }
   }
 
@@ -139,49 +153,50 @@ class CategorieDetail_ extends State<CategorieDetail> {
         }
       }
     }
-
-    setState(() {
-      taches = liste;
-      if (_mapTimer.isEmpty) {
-        // si la map est vide, on ajoute toutes les nouvelles
-        // valeurs depuis la base de donnée
-        _mapTimer = newMapTimer;
-        for (final entry in _mapTimer.entries) {
-          final tache = entry.key;
-          final value = entry.value;
-          if (value['isActive'] == true) {
-            // on relance le timer des taches en cours
-            _startTimer(tache);
-          }
-        }
-      } else {
-        // sinon, on parcours les valeurs de la base de donnée
-        // pour mettre à jour le temps écoulé des tâches
-        // déjà instanciées et ajouter les nouvelles
-        for (final entry2 in newMapTimer.entries) {
-          final tache2 = entry2.key;
-          final value = entry2.value;
-          bool hasMatchingId = false;
-          for (final entry1 in _mapTimer.entries) {
-            final tache1 = entry1.key;
-            if (tache1.id == tache2.id) {
-              // met à jour le temps écoulé des tâches déjà instanciées
-              tache1.temps_ecoule = tache2.temps_ecoule;
-              _mapTimer[tache1] = value;
-              hasMatchingId = true;
-              break;
+    if (mounted) {
+      setState(() {
+        taches = liste;
+        if (_mapTimer.isEmpty) {
+          // si la map est vide, on ajoute toutes les nouvelles
+          // valeurs depuis la base de donnée
+          _mapTimer = newMapTimer;
+          for (final entry in _mapTimer.entries) {
+            final tache = entry.key;
+            final value = entry.value;
+            if (value['isActive'] == true) {
+              // on relance le timer des taches en cours
+              _startTimer(tache);
             }
           }
-          if (!hasMatchingId) {
-            // ajoute les nouvelles tâches
-            _mapTimer[tache2] = value;
+        } else {
+          // sinon, on parcours les valeurs de la base de donnée
+          // pour mettre à jour le temps écoulé des tâches
+          // déjà instanciées et ajouter les nouvelles
+          for (final entry2 in newMapTimer.entries) {
+            final tache2 = entry2.key;
+            final value = entry2.value;
+            bool hasMatchingId = false;
+            for (final entry1 in _mapTimer.entries) {
+              final tache1 = entry1.key;
+              if (tache1.id == tache2.id) {
+                // met à jour le temps écoulé des tâches déjà instanciées
+                tache1.temps_ecoule = tache2.temps_ecoule;
+                _mapTimer[tache1] = value;
+                hasMatchingId = true;
+                break;
+              }
+            }
+            if (!hasMatchingId) {
+              // ajoute les nouvelles tâches
+              _mapTimer[tache2] = value;
+            }
           }
         }
-      }
 
-      // initialisation
-      tachesFiltre = taches;
-    });
+        // initialisation
+        tachesFiltre = taches;
+      });
+    }
   }
 
   Future<void> getTachesByFilter() async {
@@ -341,9 +356,11 @@ class CategorieDetail_ extends State<CategorieDetail> {
   void getDeroulements() async {
     Database database = await InitDatabase().database;
     var t = await database.query('deroulement_tache');
-    setState(() {
-      deroulementTaches = t.map((e) => DeroulementTache.fromMap(e)).toList();
-    });
+    if (mounted) {
+      setState(() {
+        deroulementTaches = t.map((e) => DeroulementTache.fromMap(e)).toList();
+      });
+    }
   }
 
   List<DeroulementTache> getDeroulementsByFilter() {
@@ -987,13 +1004,10 @@ class CategorieDetail_ extends State<CategorieDetail> {
                 child: FractionallySizedBox(
                   widthFactor: 0.4,
                   heightFactor: 0.4,
-                  child: _mapTimer[tache]['isActive']
-                      ? SvgPicture.asset(
-                          'assets/icons/pause.svg',
-                        )
-                      : SvgPicture.asset(
-                          'assets/icons/play_arrow.svg',
-                        ),
+                  child: _mapTimer[tache] != null &&
+                          _mapTimer[tache]['isActive'] == true
+                      ? SvgPicture.asset('assets/icons/pause.svg')
+                      : SvgPicture.asset('assets/icons/play_arrow.svg'),
                 ),
               ),
             ),
@@ -1070,55 +1084,6 @@ class CategorieDetail_ extends State<CategorieDetail> {
     );
   }
 
-  showDelModDialog(BuildContext context, int id) {
-    // set up the buttons
-    Widget deletBtn = TextButton(
-      child: Row(
-        children: [
-          Icon(Icons.delete, color: Colors.red),
-          Text("Delete", style: TextStyle(color: Colors.red)),
-        ],
-      ),
-      onPressed: () async {
-        // appuie sur le bouton delete
-        // on supprime la tache
-        deleteTache(id);
-        // on ferme le popup
-        Navigator.of(context).pop();
-        await refreshData();
-      },
-    );
-    Widget editBtn = TextButton(
-      child: Row(
-        children: [
-          Icon(Icons.edit, color: Colors.blue),
-          Text("Edit", style: TextStyle(color: Colors.blue)),
-        ],
-      ),
-      onPressed: () {
-        // TODO : traitement bouton edit tache
-      },
-    );
-
-    // set up the AlertDialog
-    AlertDialog alert = AlertDialog(
-      title: Text("Confirmation"),
-      content: Text("Que voulez vous faire?"),
-      actions: [
-        deletBtn,
-        editBtn,
-      ],
-    );
-
-    // show the dialog
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return alert;
-      },
-    );
-  }
-
   Container getCategorieContainer() {
     if (tachesFiltre == null || tachesFiltre.length == 0) {
       return Container();
@@ -1147,6 +1112,12 @@ class CategorieDetail_ extends State<CategorieDetail> {
                         flex: 2,
                         onPressed: (context) {
                           //TODO EDIT
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => EditTask(
+                                  tachesFiltre[index], categories, refreshData),
+                            ),
+                          );
                         },
                         backgroundColor: allColors[1][1],
                         foregroundColor: Colors.white,
@@ -1175,7 +1146,8 @@ class CategorieDetail_ extends State<CategorieDetail> {
                                     ElevatedButton(
                                       onPressed: () async {
                                         // quand l'utilisateur confirme la suppression
-                                        await DeleteTache(tachesFiltre[index].id);
+                                        await DeleteTache(
+                                            tachesFiltre[index].id);
                                         Navigator.of(context).pop();
                                         await refreshData();
                                       },
