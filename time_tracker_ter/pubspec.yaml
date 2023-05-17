@@ -24,7 +24,6 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_colorpicker: ^1.0.3
-  flutter_launcher_icons: ^0.13.1
   flutter_slidable: ^2.0.0
   flutter_svg: ^1.1.6
   fluttertoast: ^8.2.1
@@ -61,9 +60,4 @@ flutter:
     - family: Montserrat
       fonts:
         - asset: assets/fonts/Montserrat-SemiBold.ttf
-
-flutter_icons:
-  image_path: "assets/icons/logo1.png"
-  android: true
-  ios: true
 
