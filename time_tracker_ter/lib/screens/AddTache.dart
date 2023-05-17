@@ -48,7 +48,6 @@ class _AddTacheState extends State<AddTache> {
   }
 
   void changeColor(Color color) {
-    print(color.toString());
     setState(() => selectedColor = color);
   }
 
@@ -167,18 +166,28 @@ class _AddTacheState extends State<AddTache> {
                             borderRadius:
                                 BorderRadius.all(Radius.circular(16.0))),
                         content: SingleChildScrollView(
-                          child: ColorPicker(
-                            pickerColor: selectedColor,
-                            onColorChanged: changeColor,
-                            colorPickerWidth: 300.0,
-                            pickerAreaHeightPercent: 0.7,
-                            enableAlpha: true,
-                            displayThumbColor: true,
-                            labelTypes: [],
-                            paletteType: PaletteType.hsv,
-                            pickerAreaBorderRadius: const BorderRadius.all(
-                              Radius.circular(16.0),
-                            ),
+                          child: Column(
+                            children: [
+                              ColorPicker(
+                                pickerColor: selectedColor,
+                                onColorChanged: changeColor,
+                                colorPickerWidth: 300.0,
+                                pickerAreaHeightPercent: 0.7,
+                                enableAlpha: true,
+                                displayThumbColor: true,
+                                labelTypes: [],
+                                paletteType: PaletteType.hsv,
+                                pickerAreaBorderRadius: const BorderRadius.all(
+                                  Radius.circular(16.0),
+                                ),
+                              ),
+                              ElevatedButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                                child: Text('Ok')
+                              ),
+                            ]
                           ),
                         ),
                       );

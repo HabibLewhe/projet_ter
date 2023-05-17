@@ -80,7 +80,7 @@ class CategorieDetail_ extends State<CategorieDetail> {
   }
 
   Future<void> fetchData() async {
-    getCategories();
+    await getCategories();
     if (_isTimeFilterVisible) {
       await getTachesByFilter();
     } else {
@@ -96,6 +96,11 @@ class CategorieDetail_ extends State<CategorieDetail> {
     if (mounted) {
       setState(() {
         categories = liste;
+        for(Categorie cat in categories){
+          if(cat.id == categorie.id){
+            categorie.temps_ecoule = cat.temps_ecoule;
+          }
+        }
       });
     }
   }
@@ -303,16 +308,9 @@ class CategorieDetail_ extends State<CategorieDetail> {
   }
 
   Future<void> updateLastDeroulementTache(int id, String formattedDate) async {
-    print(
-        'updateLastDeroulementTache: $id'); // ajouter cette ligne pour afficher l'ID de la tâche
     final db = await database;
-    print(
-        'formattedDate: $formattedDate'); // ajouter cette ligne pour afficher la date formatée
-    int result = await db.update(
-        'deroulement_tache', {'date_fin': formattedDate},
+    await db.update('deroulement_tache', {'date_fin': formattedDate},
         where: 'id_tache = ? AND date_fin = ?', whereArgs: [id, '']);
-    print(
-        'update result: $result'); // ajouter cette ligne pour afficher le résultat de l'opération de mise à jour
     // pour mettre à jour le temps ecoule total
     await getTempsEcouleCategorie();
   }
@@ -1035,7 +1033,7 @@ class CategorieDetail_ extends State<CategorieDetail> {
                   child: Text(
                     timerText(_mapTimer != null && _mapTimer[tache] != null
                         ? _mapTimer[tache]['secValue']
-                        : ''),
+                        : 0),
                     style: TextStyle(
                       fontSize: 20.0,
                       color: _mapTimer != null &&
@@ -1116,7 +1114,6 @@ class CategorieDetail_ extends State<CategorieDetail> {
                       SlidableAction(
                         flex: 2,
                         onPressed: (context) {
-                          //TODO EDIT
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (context) => EditTask(

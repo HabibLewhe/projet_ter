@@ -14,9 +14,11 @@ class AddCreneauPage extends StatefulWidget {
   final double latitude;
   final double longitude;
   final int id_tache;
+  final int colorIndex;
 
   const AddCreneauPage(
       {this.id_tache,
+      this.colorIndex,
       this.title,
       this.start,
       this.end,
@@ -30,9 +32,6 @@ class AddCreneauPage extends StatefulWidget {
 }
 
 class _AddCreneauPageState extends State<AddCreneauPage> {
-  static const Color _mainColor = Color.fromRGBO(0, 93, 164, 1);
-  static const Color _sndColor = Color.fromRGBO(0, 93, 164, .25);
-
   bool clickStart = false;
   bool clickEnd = false;
   bool clickDuration = false;
@@ -57,11 +56,11 @@ class _AddCreneauPageState extends State<AddCreneauPage> {
     await database.insert('deroulement_tache', {
       'id_tache': widget.id_tache,
       'date_debut': newStartDate == null
-          ? formatter.format(widget.start.toUtc())+'Z'
-          : formatter.format(newStartDate.toUtc())+'Z',
+          ? formatter.format(widget.start.toUtc()) + 'Z'
+          : formatter.format(newStartDate.toUtc()) + 'Z',
       'date_fin': newEndDate == null
-          ? formatter.format(widget.end.toUtc())+'Z'
-          : formatter.format(newEndDate.toUtc())+'Z',
+          ? formatter.format(widget.end.toUtc()) + 'Z'
+          : formatter.format(newEndDate.toUtc()) + 'Z',
       'latitude': newLatitude,
       'longitude': newLongitude
     });
@@ -95,14 +94,15 @@ class _AddCreneauPageState extends State<AddCreneauPage> {
     return Scaffold(
       backgroundColor: const Color.fromRGBO(233, 233, 233, 1),
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Text("Ajouter Créneau"),
         centerTitle: true,
         flexibleSpace: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [_mainColor, _sndColor]),
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: allColors[widget.colorIndex],
+            ),
           ),
         ),
         actions: [
@@ -125,7 +125,7 @@ class _AddCreneauPageState extends State<AddCreneauPage> {
                     topLeft: Radius.circular(10.0),
                     topRight: Radius.circular(10.0),
                   ),
-                  color: (clickStart == true) ? Colors.blue : Colors.white,
+                  color: (clickStart == true) ? allColors[widget.colorIndex][1] : Colors.white,
                 ),
                 child: ListTile(
                   title: Text(
@@ -186,7 +186,7 @@ class _AddCreneauPageState extends State<AddCreneauPage> {
                     top: BorderSide(color: Colors.black12, width: 1.0),
                     bottom: BorderSide(color: Colors.black12, width: 1.0),
                   ),
-                  color: (clickEnd == true) ? Colors.blue : Colors.white,
+                  color: (clickEnd == true) ? allColors[widget.colorIndex][1] : Colors.white,
                 ),
                 child: ListTile(
                   title: Text(
@@ -244,7 +244,7 @@ class _AddCreneauPageState extends State<AddCreneauPage> {
               ),
               Container(
                 decoration: BoxDecoration(
-                  color: (clickDuration == true) ? Colors.blue : Colors.white,
+                  color: (clickDuration == true) ? allColors[widget.colorIndex][1] : Colors.white,
                 ),
                 child: ListTile(
                   title: Text(
@@ -313,7 +313,7 @@ class _AddCreneauPageState extends State<AddCreneauPage> {
                     top: BorderSide(color: Colors.black12, width: 1.0),
                     bottom: BorderSide(color: Colors.black12, width: 1.0),
                   ),
-                  color: (clickLongitude == true) ? Colors.blue : Colors.white,
+                  color: (clickLongitude == true) ? allColors[widget.colorIndex][1] : Colors.white,
                 ),
                 child: ListTile(
                   title: Text(
@@ -347,7 +347,7 @@ class _AddCreneauPageState extends State<AddCreneauPage> {
                     bottomLeft: Radius.circular(10.0),
                     bottomRight: Radius.circular(10.0),
                   ),
-                  color: (clickLatitude == true) ? Colors.blue : Colors.white,
+                  color: (clickLatitude == true) ? allColors[widget.colorIndex][1] : Colors.white,
                 ),
                 child: ListTile(
                   title: Text(

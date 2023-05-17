@@ -42,7 +42,7 @@ class PieChartPage_ extends State<PieChartPage> {
     return Scaffold(
       backgroundColor: backgroundColor1,
       appBar: AppBar(
-        title: Text("Diagramme Circulaire"),
+        title: Text("Pie Chart"),
         centerTitle: true,
         flexibleSpace: Container(
           decoration: BoxDecoration(

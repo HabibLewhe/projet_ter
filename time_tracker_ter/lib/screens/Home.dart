@@ -66,8 +66,9 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     _mapTachesEnCours.clear();
     _mapQuickStart.clear();
-    futureTachesEnCours = getTachesEnCours();
-    futureQuickTasks = get_quick_taches();
+    await getCategories();
+    await getTachesEnCours();
+    await get_quick_taches();
   }
 
   int durationStringToSeconds(String durationString) {
@@ -441,16 +442,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> updateLastDeroulementTache(int id, String formattedDate) async {
-    print(
-        'updateLastDeroulementTache: $id'); // ajouter cette ligne pour afficher l'ID de la tâche
     final db = await database;
-    print(
-        'formattedDate: $formattedDate'); // ajouter cette ligne pour afficher la date formatée
-    int result = await db.update(
+    await db.update(
         'deroulement_tache', {'date_fin': formattedDate},
         where: 'id_tache = ? AND date_fin = ?', whereArgs: [id, '']);
-    print(
-        'update result: $result'); // ajouter cette ligne pour afficher le résultat de l'opération de mise à jour
   }
 
   // Insertion d'une nouvelle ligne dans la table `deroulement_tache`
@@ -660,7 +655,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                               color: Colors.transparent,
                                               width: double.infinity,
                                               child: buildRow("papers",
-                                                  "Toutes Les Tâches"),
+                                                  "All Tasks"),
                                             ),
                                           ),
                                           Divider(
@@ -691,7 +686,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                               color: Colors.transparent,
                                               width: double.infinity,
                                               child: buildRow(
-                                                  "paper", "Single Tâches"),
+                                                  "paper", "Single Tasks"),
                                             ),
                                           ),
                                         ],
@@ -885,7 +880,6 @@ class _MyHomePageState extends State<MyHomePage> {
     return GestureDetector(
       onLongPress: () {
         // Afficher le popup pour supprimer ou éditer la tache
-        // TODO : implémenter delete
         showDelModDialog(context, tache);
       },
       onTap: () async {
@@ -982,7 +976,6 @@ class _MyHomePageState extends State<MyHomePage> {
     return GestureDetector(
       onLongPress: () {
         // Afficher le popup pour supprimer ou éditer la tache
-        // TODO : implémenter delete
         showDelModDialog(context, tache);
       },
       onTap: () {
@@ -1229,34 +1222,6 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  showAlertDialog(BuildContext context) {
-    // set up the buttons
-
-    Widget continueButton = TextButton(
-      child: Icon(Icons.add),
-      onPressed: () {
-        // do something
-      },
-    );
-
-    // set up the AlertDialog
-    AlertDialog alert = AlertDialog(
-      title: Text("AlertDialog"),
-      content: Text("Would you like to continue?"),
-      actions: [
-        continueButton,
-      ],
-    );
-
-    // show the dialog
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return alert;
-      },
-    );
-  }
-
   showDelModDialog(BuildContext context, var object) {
     // set up the buttons
     Widget deletBtn = TextButton(
@@ -1288,7 +1253,6 @@ class _MyHomePageState extends State<MyHomePage> {
         ],
       ),
       onPressed: () async {
-        // TODO : traitement bouton edit categorie
         if (object.runtimeType.toString() == typeCategorie) {
           Navigator.of(context).pop();
           String nom = await getCategoryNameById(object.id);

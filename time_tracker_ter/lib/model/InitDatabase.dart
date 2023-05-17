@@ -23,7 +23,8 @@ class InitDatabase {
   _initDatabase() async {
     String path = await getDatabasesPath();
     path = join(path, 'base.db');
-    return await openDatabase(path, version: 1, onCreate: _onCreate, onConfigure: onConfigure);
+    return await openDatabase(path,
+        version: 1, onCreate: _onCreate, onConfigure: onConfigure);
   }
 
   Future onConfigure(Database db) async {
@@ -72,8 +73,6 @@ class InitDatabase {
 
     // table à update seulement, un seul insert à l'initialisation (car on a qu'un seul utilisateur pour l'instant)
     await db.execute(" CREATE TABLE parametres ("
-        // utilisé pour l'autocomplétion du champ email lors de l'export, par défaut le string est vide
-        "email_export TEXT DEFAULT '',"
         // theme préféré : 0 = rouge, 1 = bleu, 2 = orange, défaut = 1
         "theme_prefere INTEGER DEFAULT 1,"
         // settings time filter, 0 = jour par jour, 1 = semaine par semaine, 2 = mois par mois
@@ -206,6 +205,20 @@ class InitDatabase {
     END;
     ''');
 
+    // procédure pour mettre à jour automatiquement le champ temp_ecoule
+    // dans la table categories à chaque fois que l'on supprime une ligne dans la table taches
+    await db.execute('''
+    CREATE TRIGGER update_temps_ecoule_delete_task AFTER DELETE ON taches
+    BEGIN
+      UPDATE categories SET temps_ecoule = COALESCE(
+        (SELECT time(SUM(strftime('%s', datetime(date_fin)) - strftime('%s', datetime(date_debut))), 'unixepoch')
+        FROM deroulement_tache
+        INNER JOIN taches ON deroulement_tache.id_tache = taches.id
+        WHERE taches.id_categorie = categories.id), '00:00:00')
+      WHERE id = OLD.id_categorie;
+    END;
+    ''');
+
     // déroulement tache
     final now = DateTime.now().toUtc();
     final yesterday = now.subtract(Duration(days: 1));
@@ -215,16 +228,16 @@ class InitDatabase {
 
     await db.execute(
         "INSERT INTO deroulement_tache (id_tache, date_debut, date_fin, latitude, longitude) VALUES "
-            "(1, '${formatter.format(now)+'Z'}', '${formatter.format(now.add(Duration(hours: 2)))+'Z'}', 48.8566, 2.3522),"
-            "(1, '${formatter.format(yesterday)+'Z'}', '${formatter.format(yesterday.add(Duration(minutes: 45)))+'Z'}', 48.8647, 2.3490),"
-            "(2, '${formatter.format(oneWeekAgo)+'Z'}', '${formatter.format(oneWeekAgo.add(Duration(hours: 1, minutes: 30)))+'Z'}', 48.8534, 2.3488),"
-            "(3, '${formatter.format(oneMonthAgo)+'Z'}', '${formatter.format(oneMonthAgo.add(Duration(hours: 2, minutes: 12)))+'Z'}', 48.8606, 2.3522),"
-            "(4, '2023-03-13T14:00:00Z', '2023-03-13T15:00:00Z', 48.8566, 2.3382),"
-            "(4, '2023-03-14T11:00:00Z', '2023-03-14T12:00:00Z', 48.8599, 2.3414),"
-            "(4, '2023-03-15T15:30:00Z', '2023-03-15T17:00:00Z', 48.8631, 2.3455),"
-            "(5, '2023-03-16T08:30:00Z', '2023-03-16T10:00:00Z', 48.8566, 2.3522),"
-            "(6, '2023-03-17T14:30:00Z', '2023-03-17T15:10:00Z', 48.8566, 2.3522),"
-            "(6, '2023-03-18T08:30:00Z', '2023-03-18T10:00:00Z', 48.8566, 2.3522),"
-            "(7, '2023-03-18T10:30:00Z', '2023-03-18T12:00:00Z', 48.8566, 2.3522);");
+        "(1, '${formatter.format(now) + 'Z'}', '${formatter.format(now.add(Duration(hours: 2))) + 'Z'}', 48.8566, 2.3522),"
+        "(1, '${formatter.format(yesterday) + 'Z'}', '${formatter.format(yesterday.add(Duration(minutes: 45))) + 'Z'}', 48.8647, 2.3490),"
+        "(2, '${formatter.format(oneWeekAgo) + 'Z'}', '${formatter.format(oneWeekAgo.add(Duration(hours: 1, minutes: 30))) + 'Z'}', 48.8534, 2.3488),"
+        "(3, '${formatter.format(oneMonthAgo) + 'Z'}', '${formatter.format(oneMonthAgo.add(Duration(hours: 2, minutes: 12))) + 'Z'}', 48.8606, 2.3522),"
+        "(4, '2023-03-13T14:00:00Z', '2023-03-13T15:00:00Z', 48.8566, 2.3382),"
+        "(4, '2023-03-14T11:00:00Z', '2023-03-14T12:00:00Z', 48.8599, 2.3414),"
+        "(4, '2023-03-15T15:30:00Z', '2023-03-15T17:00:00Z', 48.8631, 2.3455),"
+        "(5, '2023-03-16T08:30:00Z', '2023-03-16T10:00:00Z', 48.8566, 2.3522),"
+        "(6, '2023-03-17T14:30:00Z', '2023-03-17T15:10:00Z', 48.8566, 2.3522),"
+        "(6, '2023-03-18T08:30:00Z', '2023-03-18T10:00:00Z', 48.8566, 2.3522),"
+        "(7, '2023-03-18T10:30:00Z', '2023-03-18T12:00:00Z', 48.8566, 2.3522);");
   }
 }

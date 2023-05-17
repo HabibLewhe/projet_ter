@@ -68,6 +68,7 @@ class _AllTasksPageState extends State<AllTasksPage> {
   }
 
   Future<void> fetchData() async {
+    await getCategories();
     if (_isTimeFilterVisible) {
       await getTachesByFilter();
     } else {
@@ -247,6 +248,22 @@ class _AllTasksPageState extends State<AllTasksPage> {
     getTaches();
   }
 
+  void deleteAll() async {
+    Database database = await InitDatabase().database;
+    // supprime toutes les catégories sauf la catégorie Single Tasks
+    await database.delete('categories',
+        where: 'id != ?', whereArgs: [1]);
+    // supprime toutes les Single Tasks
+    await database.delete('taches',
+        where: 'id_categorie = ?', whereArgs: [1]);
+    // afficher un message de succès
+    showSuccessMessage("Données supprimées");
+    // rafraichir l'affichage
+    await refreshData();
+
+    Navigator.of(context).pop();
+  }
+
   void getDeroulements() async {
     Database database = await InitDatabase().database;
     var t = await database.query('deroulement_tache');
@@ -319,17 +336,9 @@ class _AllTasksPageState extends State<AllTasksPage> {
   }
 
   Future<void> updateLastDeroulementTache(int id, String formattedDate) async {
-    print(
-        'updateLastDeroulementTache: $id'); // ajouter cette ligne pour afficher l'ID de la tâche
     final db = await database;
-    print(
-        'formattedDate: $formattedDate'); // ajouter cette ligne pour afficher la date formatée
-    int result = await db.update(
-        'deroulement_tache', {'date_fin': formattedDate},
+    await db.update('deroulement_tache', {'date_fin': formattedDate},
         where: 'id_tache = ? AND date_fin = ?', whereArgs: [id, '']);
-    print(
-        'update result: $result'); // ajouter cette ligne pour afficher le résultat de l'opération de mise à jour
-
     // pour mettre à jour le temps écoulé total
     await getCategories();
   }
@@ -521,7 +530,7 @@ class _AllTasksPageState extends State<AllTasksPage> {
     return Scaffold(
       backgroundColor: backgroundColor1,
       appBar: AppBar(
-        title: Text("Gérer toutes les tâches"),
+        title: Text("All Tasks"),
         centerTitle: true,
         flexibleSpace: Container(
           decoration: BoxDecoration(
@@ -586,7 +595,7 @@ class _AllTasksPageState extends State<AllTasksPage> {
             }
             // cas où appuie sur le bouton balai
             else if (value == 1) {
-              // TODO : traitement appuie bouton balai
+              showConfirmDialogdeleteAll(context);
             }
             // cas où appuie sur le bouton export
             else if (value == 3) {
@@ -605,7 +614,7 @@ class _AllTasksPageState extends State<AllTasksPage> {
                   // jour
                   if (timeFilterPreference == 0) {
                     date = formatter.format(now);
-                    text = "Aujourd'hui";
+                    text = "Today";
                   }
                   // semaine
                   else if (timeFilterPreference == 1) {
@@ -968,20 +977,13 @@ class _AllTasksPageState extends State<AllTasksPage> {
               ),
             ),
           ),
-          GestureDetector(
-            // sur un appuie long :
-            // afficher le popup pour supprimer ou éditer la tache
-            onLongPress: () {
-              showDelModDialog(context, id);
-            },
-            child: Container(
-              height: 50,
-              width: 150.3,
-              alignment: Alignment.centerLeft,
-              child: Text(
-                titre,
-                style: TextStyle(fontSize: 20.0, color: Colors.black),
-              ),
+          Container(
+            height: 50,
+            width: 150.3,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              titre,
+              style: TextStyle(fontSize: 20.0, color: Colors.black),
             ),
           ),
           Container(
@@ -1047,78 +1049,28 @@ class _AllTasksPageState extends State<AllTasksPage> {
     );
   }
 
-  showAlertDialog(BuildContext context) {
-    // set up the buttons
-    Widget continueButton = TextButton(
-      child: Icon(Icons.add),
-      onPressed: () {
-        // do something
-      },
-    );
-
-    // set up the AlertDialog
-    AlertDialog alert = AlertDialog(
-      title: Text("AlertDialog"),
-      content: Text("Would you like to continue?"),
-      actions: [
-        continueButton,
-      ],
-    );
-
-    // show the dialog
-    showDialog(
+  Future showConfirmDialogdeleteAll(BuildContext context) {
+    return showDialog(
       context: context,
       builder: (BuildContext context) {
-        return alert;
-      },
-    );
-  }
-
-  showDelModDialog(BuildContext context, int id) {
-    // set up the buttons
-    Widget deletBtn = TextButton(
-      child: Row(
-        children: [
-          Icon(Icons.delete, color: Colors.red),
-          Text("Delete", style: TextStyle(color: Colors.red)),
-        ],
-      ),
-      onPressed: () async {
-        // appuie sur le bouton delete
-        // on supprime la tache
-        deleteTache(id);
-        // on ferme le popup
-        Navigator.of(context).pop();
-        await refreshData();
-      },
-    );
-    Widget editBtn = TextButton(
-      child: Row(
-        children: [
-          Icon(Icons.edit, color: Colors.blue),
-          Text("Edit", style: TextStyle(color: Colors.blue)),
-        ],
-      ),
-      onPressed: () {
-        // TODO : traitement bouton edit tache
-      },
-    );
-
-    // set up the AlertDialog
-    AlertDialog alert = AlertDialog(
-      title: Text("Confirmation"),
-      content: Text("Que voulez vous faire?"),
-      actions: [
-        deletBtn,
-        editBtn,
-      ],
-    );
-
-    // show the dialog
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return alert;
+        return AlertDialog(
+          title: Text(confirmerSuppression),
+          content: Text("Supprimer toutes les tâches et catégories ?"),
+          actions: <Widget>[
+            TextButton(
+              child: Text(annuler),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text(supprimer),
+              onPressed: () {
+                deleteAll();
+              },
+            ),
+          ],
+        );
       },
     );
   }

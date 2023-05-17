@@ -225,7 +225,7 @@ class _SettingsTimeFilter extends State<SettingsTimeFilter> {
         ),
         Container(
           height: 50,
-          width: 150,
+          width: visibility ? 120 : 150,
           alignment: Alignment.centerLeft,
           child: Text(
             titre,
