@@ -1033,12 +1033,17 @@ class CategorieDetail_ extends State<CategorieDetail> {
                   width: 80,
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    timerText(_mapTimer[tache]['secValue']),
+                    timerText(_mapTimer != null && _mapTimer[tache] != null
+                        ? _mapTimer[tache]['secValue']
+                        : ''),
                     style: TextStyle(
-                        fontSize: 20.0,
-                        color: _mapTimer[tache]['isActive']
-                            ? colorTime2
-                            : Colors.black),
+                      fontSize: 20.0,
+                      color: _mapTimer != null &&
+                              _mapTimer[tache] != null &&
+                              _mapTimer[tache]['isActive']
+                          ? colorTime2
+                          : Colors.black,
+                    ),
                   ),
                 ),
                 Container(
