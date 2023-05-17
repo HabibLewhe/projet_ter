@@ -15,6 +15,7 @@ import '../utilities/constants.dart';
 import 'AddCategorie.dart';
 import 'AllTasks.dart';
 import 'CategorieDetail.dart';
+import 'EditTask.dart';
 import 'History_main.dart';
 import 'PieChart.dart';
 
@@ -153,15 +154,18 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _startTimerQuickTask(Tache tache) {
     Timer.periodic(Duration(seconds: 1), (timer) {
-      if (!_mapQuickStart[tache]['isActive']) {
+      if (_mapQuickStart[tache] != null && !_mapQuickStart[tache]['isActive']) {
         timer.cancel(); // stop the timer if _isRunning is false
         return;
       }
-      setState(() {
-        Map<String, dynamic> myMap = _mapQuickStart[tache];
-        int sec = myMap['secValue']++;
-        _mapQuickStart.putIfAbsent(tache, () => {'secValue': sec});
-      });
+      if (_mapQuickStart[tache] != null) {
+        setState(() {
+          Map<String, dynamic> myMap = _mapQuickStart[tache];
+
+          int sec = myMap['secValue']++;
+          _mapQuickStart.putIfAbsent(tache, () => {'secValue': sec});
+        });
+      }
     });
   }
 
@@ -655,8 +659,8 @@ class _MyHomePageState extends State<MyHomePage> {
                                             child: Container(
                                               color: Colors.transparent,
                                               width: double.infinity,
-                                              child: buildRow(
-                                                  "papers", "All Tasks"),
+                                              child: buildRow("papers",
+                                                  "Toutes Les Tâches"),
                                             ),
                                           ),
                                           Divider(
@@ -687,7 +691,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                               color: Colors.transparent,
                                               width: double.infinity,
                                               child: buildRow(
-                                                  "paper", "Single Tasks"),
+                                                  "paper", "Single Tâches"),
                                             ),
                                           ),
                                         ],
@@ -777,7 +781,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    "Total ",
+                    "Total",
                     overflow: TextOverflow.visible,
                     style: TextStyle(
                         fontSize: 19, color: allColors[colorIndex][1]),
@@ -814,7 +818,7 @@ class _MyHomePageState extends State<MyHomePage> {
     String tempsEcoule = "00:00:00";
     if (titre == alltasks) {
       tempsEcoule = tempsEcouleTotal;
-    } else if (titre == "Single Tasks") {
+    } else if (titre == singleTask) {
       tempsEcoule = categories[0].temps_ecoule;
     }
     return Row(
@@ -840,7 +844,7 @@ class _MyHomePageState extends State<MyHomePage> {
           alignment: Alignment.centerLeft,
           child: Text(
             titre,
-            style: TextStyle(fontSize: 20.0, color: Colors.white),
+            style: TextStyle(fontSize: 18.0, color: Colors.white),
           ),
         ),
         Container(
@@ -882,7 +886,7 @@ class _MyHomePageState extends State<MyHomePage> {
       onLongPress: () {
         // Afficher le popup pour supprimer ou éditer la tache
         // TODO : implémenter delete
-        showDelModDialog(context, tache.id);
+        showDelModDialog(context, tache);
       },
       onTap: () async {
         // Naviguer vers la page de history_main de la tache
@@ -979,7 +983,7 @@ class _MyHomePageState extends State<MyHomePage> {
       onLongPress: () {
         // Afficher le popup pour supprimer ou éditer la tache
         // TODO : implémenter delete
-        showDelModDialog(context, tache.id);
+        showDelModDialog(context, tache);
       },
       onTap: () {
         // Naviguer vers la page de history_main de la tache
@@ -1077,7 +1081,7 @@ class _MyHomePageState extends State<MyHomePage> {
         onLongPress: () {
           // sur un appuie long :
           // afficher le popup pour supprimer ou éditer la catégorie
-          showDelModDialog(context, categorie.id);
+          showDelModDialog(context, categorie);
         },
         onTap: () async {
           // sur un appuie court :
@@ -1253,21 +1257,27 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  showDelModDialog(BuildContext context, int id) {
+  showDelModDialog(BuildContext context, var object) {
     // set up the buttons
     Widget deletBtn = TextButton(
       child: Row(
         children: [
           Icon(Icons.delete, color: Colors.red),
-          Text("Delete", style: TextStyle(color: Colors.red)),
+          Text("Supprimer", style: TextStyle(color: Colors.red)),
         ],
       ),
-      onPressed: () {
+      onPressed: () async {
         // appuie bouton delete
         // on supprime la catégorie
-        deleteCategorie(id);
-        // on ferme le popup
-        Navigator.of(context).pop();
+        if (object.runtimeType.toString() == typeCategorie) {
+          deleteCategorie(object.id);
+          // on ferme le popup
+          Navigator.of(context).pop();
+        } else if (object.runtimeType.toString() == typeTache) {
+          await DeleteTache(object.id);
+          Navigator.of(context).pop();
+          await refreshData();
+        }
       },
     );
     Widget editBtn = TextButton(
@@ -1279,9 +1289,19 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       onPressed: () async {
         // TODO : traitement bouton edit categorie
-        Navigator.of(context).pop();
-        String nom = await getCategoryNameById(id);
-        showEditCategorieDialog(context, id, nom);
+        if (object.runtimeType.toString() == typeCategorie) {
+          Navigator.of(context).pop();
+          String nom = await getCategoryNameById(object.id);
+          showEditCategorieDialog(context, object.id, nom);
+        } else if (object.runtimeType.toString() == typeTache) {
+          //Edit single Task
+          Navigator.of(context).pop();
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => EditTask(object, categories, refreshData),
+            ),
+          );
+        }
       },
     );
 
@@ -1365,7 +1385,7 @@ class _MyHomePageState extends State<MyHomePage> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            "Back",
+            "Fermer",
             style: TextStyle(color: Colors.white),
             textAlign: TextAlign.center,
           ),
@@ -1387,7 +1407,7 @@ class _MyHomePageState extends State<MyHomePage> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text("Red", style: TextStyle(color: Colors.white)),
+              Text("Rouge", style: TextStyle(color: Colors.white)),
             ],
           ),
           onPressed: () {
@@ -1402,7 +1422,7 @@ class _MyHomePageState extends State<MyHomePage> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text("Blue", style: TextStyle(color: Colors.white)),
+              Text("Bleu", style: TextStyle(color: Colors.white)),
             ],
           ),
           onPressed: () {
@@ -1444,8 +1464,8 @@ class _MyHomePageState extends State<MyHomePage> {
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 Text(
-                  "Prefered theme",
-                  style: TextStyle(fontSize: 24.0),
+                  "Thème De l'Application ",
+                  style: TextStyle(fontSize: 20.0),
                 ),
               ],
             ),

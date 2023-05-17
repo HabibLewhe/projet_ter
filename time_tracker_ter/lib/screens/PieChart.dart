@@ -4,14 +4,14 @@ import 'package:pie_chart/pie_chart.dart';
 import '../utilities/constants.dart';
 
 class PieChartPage extends StatefulWidget {
-  final Map<String,double> dataMap;
+  final Map<String, double> dataMap;
   final List<Color> colorList;
   final int colorIndex;
 
   PieChartPage({this.dataMap, this.colorList, this.colorIndex});
 
   @override
-  PieChartPage_ createState() => PieChartPage_ ();
+  PieChartPage_ createState() => PieChartPage_();
 }
 
 class PieChartPage_ extends State<PieChartPage> {
@@ -20,9 +20,9 @@ class PieChartPage_ extends State<PieChartPage> {
     super.initState();
   }
 
-  String calculerTempsTotal(){
+  String calculerTempsTotal() {
     double totalSecondes = 0;
-    for(var entry in widget.dataMap.entries){
+    for (var entry in widget.dataMap.entries) {
       totalSecondes += entry.value;
     }
     int totalSecondesInt = totalSecondes.toInt();
@@ -42,7 +42,7 @@ class PieChartPage_ extends State<PieChartPage> {
     return Scaffold(
       backgroundColor: backgroundColor1,
       appBar: AppBar(
-        title: Text("Pie Chart"),
+        title: Text("Diagramme Circulaire"),
         centerTitle: true,
         flexibleSpace: Container(
           decoration: BoxDecoration(
@@ -55,13 +55,13 @@ class PieChartPage_ extends State<PieChartPage> {
         ),
         leading: Container(
             child: IconButton(
-              color: Colors.white,
-              onPressed: () {
-                // appuie sur le bouton retour
-                Navigator.of(context).pop(true);
-              },
-              icon: Icon(Icons.backspace),
-            )),
+          color: Colors.white,
+          onPressed: () {
+            // appuie sur le bouton retour
+            Navigator.of(context).pop(true);
+          },
+          icon: Icon(Icons.backspace),
+        )),
       ),
       body: Container(
           padding: EdgeInsets.symmetric(horizontal: 16),
@@ -70,10 +70,13 @@ class PieChartPage_ extends State<PieChartPage> {
             children: [
               Row(
                 children: [
-                  Text("Temps total : "+calculerTempsTotal(), style: TextStyle(fontSize: 20.0, color: Colors.black87)),
+                  Text("Temps total : " + calculerTempsTotal(),
+                      style: TextStyle(fontSize: 20.0, color: Colors.black87)),
                 ],
               ),
-              SizedBox(height: 10,),
+              SizedBox(
+                height: 10,
+              ),
               PieChart(
                 chartValuesOptions: ChartValuesOptions(
                   showChartValuesInPercentage: true,
@@ -84,8 +87,7 @@ class PieChartPage_ extends State<PieChartPage> {
                 colorList: widget.colorList,
               ),
             ],
-          )
-      ),
+          )),
     );
   }
 }

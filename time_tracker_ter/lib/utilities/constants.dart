@@ -24,11 +24,13 @@ const supprimerCreneau = "Supprimer ce créneau ?";
 const viderHistorique = "Vider l'historique de cette tâche ?";
 const annuler = "Annuler";
 const supprimer = "Supprimer";
-const alltasks = "All Tasks";
-const singleTask = "Single Tasks";
+const alltasks = "Toutes Les Tâches";
+const singleTask = "Single Tâches";
 const papers = "papers";
 const paper = "paper";
 const edit = "edit";
+const typeCategorie = "Categorie";
+const typeTache = "Tache";
 
 final kHintTextStyle = TextStyle(
   color: Colors.white54,

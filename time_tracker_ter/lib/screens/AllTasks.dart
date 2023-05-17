@@ -521,7 +521,7 @@ class _AllTasksPageState extends State<AllTasksPage> {
     return Scaffold(
       backgroundColor: backgroundColor1,
       appBar: AppBar(
-        title: Text("All Tasks"),
+        title: Text("Gérer toutes les tâches"),
         centerTitle: true,
         flexibleSpace: Container(
           decoration: BoxDecoration(
@@ -605,7 +605,7 @@ class _AllTasksPageState extends State<AllTasksPage> {
                   // jour
                   if (timeFilterPreference == 0) {
                     date = formatter.format(now);
-                    text = "Today";
+                    text = "Aujourd'hui";
                   }
                   // semaine
                   else if (timeFilterPreference == 1) {
@@ -1170,11 +1170,11 @@ class _AllTasksPageState extends State<AllTasksPage> {
                                     Duration(days: localTimeFilterCounter + 1));
                                 date = formatter.format(before);
                                 if (localTimeFilterCounter + 1 == 1) {
-                                  text = "Yesterday";
+                                  text = "Hier";
                                 } else {
-                                  text =
+                                  text = "Il y a " +
                                       (localTimeFilterCounter + 1).toString() +
-                                          " days ago";
+                                      " jours";
                                 }
                               }
                               // semaine par semaine

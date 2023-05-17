@@ -10,16 +10,15 @@ import '../model/Categorie.dart';
 import '../model/Tache.dart';
 
 class ExportService {
-
   // Use in device app or remote smtp server
   static bool sendUsingLocalApp = true;
   TextEditingController mail = TextEditingController();
 
-
   /**
    * fonction qui envoi un mail avec le fichier csv en pièce jointe
    */
-  Future<void> sendEmailWithAttachment(String filePath,String recipient) async {
+  Future<void> sendEmailWithAttachment(
+      String filePath, String recipient) async {
     //configurer le serveur smtp avec les identifiants de l'adresse gmail : timetrucker5
     //le mot de passe est généré par google (2 étapes de vérification)
     final smtpServer = gmail('timetrucker5@gmail.com', 'vommpnzpffrxxsio');
@@ -39,7 +38,7 @@ class ExportService {
       print('Message sent: ' + sendReport.toString());
     } on MailerException catch (e) {
       //si le message n'a pas été envoyé, on affiche les problèmes
-      print('Message not sent. \n'+ e.toString());
+      print('Message not sent. \n' + e.toString());
       for (var p in e.problems) {
         print('Problem: ${p.code}: ${p.msg}');
       }
@@ -65,17 +64,18 @@ class ExportService {
     ]);
 
     //parcourir les catégories
-    for (var index = 0;  index < categories.length; index++) {
+    for (var index = 0; index < categories.length; index++) {
       //créer une instance de la catégorie
       Categorie category = Categorie.fromMap(categories[index]);
       //ajouter les données de la catégorie dans le fichier csv
       csvData.add([
-        index+1,
+        index + 1,
         category.nom,
         category.temps_ecoule,
       ]);
       //avoir toutes les taches de la catégorie
-      List<Map> tasks = await db.rawQuery('SELECT * FROM taches WHERE id_categorie = ?', [category.id]);
+      List<Map> tasks = await db.rawQuery(
+          'SELECT * FROM taches WHERE id_categorie = ?', [category.id]);
       //parcourir les taches
       for (var taskIndex = 0; taskIndex < tasks.length; taskIndex++) {
         //créer une instance de la tache
@@ -83,7 +83,7 @@ class ExportService {
         //ajouter les données de la tache dans le fichier csv
         csvData.add([
           '', //laisser un espace vide pour le numéro de la catégorie
-          taskIndex+1,
+          taskIndex + 1,
           task.nom,
           task.temps_ecoule,
         ]);
@@ -98,9 +98,8 @@ class ExportService {
     final file = File('${dir.path}/TimeTrucker.csv');
     // Write the CSV data into the file
     await file.writeAsString(csv);
-    await sendEmailWithAttachment(file.path,recipient);
+    await sendEmailWithAttachment(file.path, recipient);
   }
-
 
   //fonction qui affiche une boite de dialogue pour entrer l'adresse mail
   Future<void> promptEmail(BuildContext context) async {
@@ -108,13 +107,14 @@ class ExportService {
     await showDialog(
         context: context,
         builder: (ctx) => SimpleDialog(
-              title: Text('Export to Email'),
+              title: Text('Exporter vers un e-mail'),
               contentPadding: EdgeInsets.all(20),
               children: [
                 TextField(
                   controller: mail,
                   decoration: InputDecoration(
-                      hintText: 'example@example.com', labelText: 'Email'),
+                      hintText: 'example@example.com',
+                      labelText: 'Votre e-mail'),
                 ),
                 SizedBox(
                   height: 20,

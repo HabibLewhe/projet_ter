@@ -56,7 +56,7 @@ class _AddTacheState extends State<AddTache> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Nouvelle Tache"),
+        title: Text("Nouvelle Tâche"),
         centerTitle: true,
         flexibleSpace: Container(
           decoration: BoxDecoration(

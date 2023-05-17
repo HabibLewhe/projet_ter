@@ -44,7 +44,7 @@ class _EditTaskState extends State<EditTask> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: Text("Edit"),
+          title: Text("Modifier La Tâche"),
           centerTitle: true,
           flexibleSpace: Container(
             decoration: BoxDecoration(
@@ -142,7 +142,7 @@ class _EditTaskState extends State<EditTask> {
                         ),
                         validator: (value) {
                           if (value.isEmpty) {
-                            return "Please enter a task name";
+                            return "Veuillez compléter ce champ";
                           }
                           return null;
                         },
@@ -182,7 +182,7 @@ class _EditTaskState extends State<EditTask> {
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    "Project",
+                    "Categorie",
                     style: TextStyle(
                       color: Colors.blueGrey,
                       fontSize: 18,
