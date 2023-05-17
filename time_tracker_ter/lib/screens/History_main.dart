@@ -28,11 +28,6 @@ class _HistoryPageState extends State<HistoryPage> {
   int hours;
   int minutes;
   String tempsEcouleTotal = "00:00:00";
-  bool _isTimeFilterVisible = false;
-  int timeFilterPreference;
-  String timeFilterText = '';
-  String timeFilterDate = '';
-  int localTimeFilterCounter;
   DateTime currentStartingDate;
   DateTime currentEndingDate;
   double currentLatitude;
@@ -298,6 +293,7 @@ class _HistoryPageState extends State<HistoryPage> {
                         child: AddCreneauPage(
                           onDataAdded: _addCreneauItem,
                           id_tache: widget.id,
+                          colorIndex: widget.colorIndex,
                           title: widget.title,
                           start: currentStartingDate,
                           end: currentEndingDate,
@@ -310,53 +306,8 @@ class _HistoryPageState extends State<HistoryPage> {
                         duration: Duration(milliseconds: 300)));
               }
               // cas où appuie sur le bouton balai
-              else if (value == 1) {
-                // TODO : traitement appuie bouton balai
+              else if (value == 2) {
                 showConfirmDialogdeleteAll(context);
-              }
-              // cas où appuie sur le bouton export
-              else if (value == 3) {
-                // TODO : traitement appuie bouton export
-              }
-              // cas où appuie sur le bouton time filter
-              else if (value == 4) {
-                String text = '';
-                String date = '';
-                DateTime now = DateTime.now().toUtc();
-                DateFormat formatter = DateFormat('dd/MM/yyyy');
-                // jour
-                if (timeFilterPreference == 0) {
-                  date = formatter.format(now);
-                  text = today;
-                }
-                // semaine
-                else if (timeFilterPreference == 1) {
-                  DateTime datePremierJour =
-                      now.subtract(Duration(days: now.weekday - 1));
-                  DateTime dateDernierJour =
-                      datePremierJour.add(Duration(days: 6));
-                  date = formatter.format(datePremierJour) +
-                      " - " +
-                      formatter.format(dateDernierJour);
-                  text = thisWeek;
-                }
-                // mois
-                else if (timeFilterPreference == 2) {
-                  DateTime datePremierJour = DateTime(now.year, now.month, 1);
-                  DateTime dateDernierJour =
-                      DateTime(now.year, now.month + 1, 0);
-                  date = formatter.format(datePremierJour) +
-                      " - " +
-                      formatter.format(dateDernierJour);
-                  text = thisMonth;
-                }
-                setState(() {
-                  timeFilterDate = date;
-                  timeFilterText = text;
-                  // si le bandeau de filtre est affiché on le retire, sinon on l'affiche
-                  _isTimeFilterVisible = !_isTimeFilterVisible;
-                  localTimeFilterCounter = 0;
-                });
               }
             },
             backgroundColor: backgroundColor2,
@@ -369,13 +320,6 @@ class _HistoryPageState extends State<HistoryPage> {
             items: <BottomNavigationBarItem>[
               BottomNavigationBarItem(
                 icon: Icon(Icons.add_circle),
-                label: '',
-              ),
-              BottomNavigationBarItem(
-                icon: SvgPicture.asset(
-                  'assets/icons/broom.svg',
-                  color: allColors[widget.colorIndex][1],
-                ),
                 label: '',
               ),
               BottomNavigationBarItem(
@@ -400,7 +344,7 @@ class _HistoryPageState extends State<HistoryPage> {
               ),
               BottomNavigationBarItem(
                 icon: SvgPicture.asset(
-                  'assets/icons/calendar.svg',
+                  'assets/icons/broom.svg',
                   color: allColors[widget.colorIndex][1],
                 ),
                 label: '',

@@ -9,6 +9,7 @@ import '../model/Categorie.dart';
 import '../model/DeroulementTache.dart';
 import '../model/InitDatabase.dart';
 import '../model/Tache.dart';
+import '../services/exportService.dart';
 import '../utilities/constants.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
@@ -599,7 +600,7 @@ class _AllTasksPageState extends State<AllTasksPage> {
             }
             // cas où appuie sur le bouton export
             else if (value == 3) {
-              // TODO : traitement appuie bouton export
+              _export(context);
             }
             // cas où appuie sur le bouton time filter
             else if (value == 4) {
@@ -1427,5 +1428,10 @@ class _AllTasksPageState extends State<AllTasksPage> {
                     getPageContainer());
           }
         });
+  }
+
+  _export(BuildContext context) async {
+    ExportService service = ExportService();
+    await service.promptEmail(context);
   }
 }
